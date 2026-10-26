@@ -157,7 +157,7 @@ async function openPublic(worldId: string): Promise<void> {
       fetch,
       {
         budget,
-        onProgress: (d, t) => (progress.textContent = `Reading ${meta.name}: ${d} of ${t} kinds`),
+        onProgress: (d, t) => (progress.textContent = `Reading ${meta.name}: ${d} of ${t} types`),
         onWait: (s) => (progress.textContent = `OnlyWorlds asks Little Lens to pace its reading. Continuing in ${s} seconds…`),
       },
       ctl.signal,
@@ -200,7 +200,7 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
     h('a', { href: worldHash(l.worldId, null, 'web'), class: view === 'web' ? 'on' : '', 'aria-current': view === 'web' ? 'page' : null }, 'Web'),
     h('a', { href: worldHash(l.worldId, null, 'list'), class: view === 'list' ? 'on' : '', 'aria-current': view === 'list' ? 'page' : null }, 'List'),
   );
-  const pills = h('div', { class: 'pills', role: 'group', 'aria-label': 'Kinds' });
+  const pills = h('div', { class: 'pills', role: 'group', 'aria-label': 'Types' });
   const drawPills = () => {
     clear(pills);
     const all = h('button', { type: 'button', class: `pill${filter.type === null ? ' on' : ''}`, 'aria-pressed': String(filter.type === null), onclick: () => setType(null) }, `all ${g.nodes.length}`);

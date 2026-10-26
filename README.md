@@ -12,7 +12,7 @@ Little Lens only reads. It never changes a world: to edit one, open it in [Atlas
 
 ## What it shows
 
-- **The world web**: every element once, coloured by its kind, laid out so the same world always lands the same way. Dot size follows links, and the most linked are named. Filter by kind or search by name and description; switch to a list of cards.
+- **The world web**: every element once, coloured by its type, laid out so the same world always lands the same way. Dot size follows links, and the most linked are named. Filter by type or search by name and description; switch to a list of cards.
 - **An element**: its fields in the schema's sections, links as chips you can follow, and its neighbourhood as a small radial graph (solid lines for what it links to, dashed for what links to it).
 
 What the graph draws follows the OnlyWorlds graph rules: the schema's link fields are the edges, a Relation is an element like any other, and map space (maps, pins, markers, zones) is left out. Elements marked hidden or proposed, and the elements of a room, are left out too, and the page says how many.

@@ -129,7 +129,7 @@ export function elementView(o: ElementViewOptions): HTMLElement {
     picture(el.image_url, o.pictures),
     isKnownOfStub(el) ? h('p', { class: 'note' }, 'Known of: only part of this element is known here. Its other fields are unknown, not empty.') : null,
     textOf(el.description) ? h('p', { class: 'edesc' }, String(el.description)) : null,
-    h('dl', { class: 'fields' }, h('div', { class: 'frow' }, h('dt', {}, 'Kind'), h('dd', { class: 'kind' }, typeIcon(el.type, 14), h('span', {}, kind))), ...fieldRows(o.graph, el, o.hrefOf)),
+    h('dl', { class: 'fields' }, h('div', { class: 'frow' }, h('dt', {}, 'Type'), h('dd', { class: 'kind' }, typeIcon(el.type, 14), h('span', {}, kind))), ...fieldRows(o.graph, el, o.hrefOf)),
     outside > 0 ? h('p', { class: 'note' }, `${outside} ${outside === 1 ? 'link goes' : 'links go'} to elements not shown here.`) : null,
     h('p', { class: 'note' }, 'Little Lens only reads. To change this element, open it in Atlas or Lantern.'),
   );
