@@ -1,0 +1,24 @@
+{
+  "name": "little-lens",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/d3-force": "3.0.10",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@onlyworlds/sdk": "4.84.1",
+    "d3-force": "3.0.0"
+  }
+}

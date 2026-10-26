@@ -1,0 +1,33 @@
+# Little Lens
+
+Look at an [OnlyWorlds](https://www.onlyworlds.com) world through a lens: the whole world as a web of its elements and links, and each element with what it links to and what links to it.
+
+Little Lens only reads. It never changes a world: to edit one, open it in [Atlas](https://atlas.onlyworlds.com) or [Lantern](https://lantern.onlyworlds.com).
+
+## Ways in
+
+- **A public world, without an account.** A world whose owner has opened it to the public is read from OnlyWorlds with no key and no sign-in. Moppetopia, a small demo world, is one click from the first screen. Any public world opens at `#/w/<world id>`.
+- **A world file or folder.** A `.owworld` file, or a world folder as Atlas keeps one on disk. It is read in your browser and held only while the page is open: nothing from it is sent anywhere or stored.
+- **Sign in with OnlyWorlds** comes next, for the worlds you own or have joined.
+
+## What it shows
+
+- **The world web**: every element once, coloured by its kind, laid out so the same world always lands the same way. Dot size follows links, and the most linked are named. Filter by kind or search by name and description; switch to a list of cards.
+- **An element**: its fields in the schema's sections, links as chips you can follow, and its neighbourhood as a small radial graph (solid lines for what it links to, dashed for what links to it).
+
+What the graph draws follows the OnlyWorlds graph rules: the schema's link fields are the edges, a Relation is an element like any other, and map space (maps, pins, markers, zones) is left out. Elements marked hidden or proposed, and the elements of a room, are left out too, and the page says how many.
+
+## Run it
+
+```sh
+npm install
+npm run dev      # http://localhost:5173
+npm test         # the unit tests
+npm run build    # dist/, served as static files
+```
+
+It uses [`@onlyworlds/sdk`](https://www.npmjs.com/package/@onlyworlds/sdk) for the schema, the world file reader and the marks, and [`d3-force`](https://github.com/d3/d3-force) for the layout.
+
+## License
+
+MIT
