@@ -77,10 +77,10 @@ export function sweepStaleRecord(store: RecordStore | null = recordStore(), now:
   }
 }
 
-/** Only what Little Lens itself would write: a signed-in world's address, or an element in one. */
+/** Only what Little Lens itself would write: a signed-in world's address, an element in one, or its time view at a moment. */
 export function resumeHashOf(raw: unknown): string | null {
   const id = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
-  return typeof raw === 'string' && new RegExp(`^#/me/${id}(/e/${id})?$`, 'i').test(raw) ? raw : null;
+  return typeof raw === 'string' && new RegExp(`^#/me/${id}(/e/${id}|/time(\\?at=(0|-?[1-9]\\d{0,9}))?)?$`, 'i').test(raw) ? raw : null;
 }
 
 export const NEEDS_CONNECTION_LINE = 'Signing in needs a connection. Check yours and try again.';

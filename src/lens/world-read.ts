@@ -9,6 +9,7 @@
 
 import { ELEMENT_TYPES, SPATIAL_TYPES } from '@onlyworlds/sdk';
 import { isElementType, type Element } from './graph';
+import { timeOfWorldBody, type WorldTime } from './time';
 
 export const API_BASE = 'https://www.onlyworlds.com/api/v2';
 export const REQUEST_LIMIT_MS = 15_000;
@@ -23,6 +24,8 @@ export interface WorldMeta {
   imageUrl: string;
   /** Elements per type as keel counted them, or null when the body carries no counts. */
   counts: Record<string, number> | null;
+  /** The world's unit and now, as the world GET serves them to every reader. */
+  time: WorldTime;
 }
 
 export type ReadFailure =
@@ -105,7 +108,7 @@ export async function readWorldMeta(worldId: string, fetchImpl: Fetch = fetch, s
     counts = {};
     for (const [t, n] of Object.entries(types as Record<string, unknown>)) if (typeof n === 'number' && n > 0) counts[t] = n;
   }
-  return { id: worldId, name: str(body.name) || 'Untitled world', description: str(body.description), imageUrl: str(body.image_url), counts };
+  return { id: worldId, name: str(body.name) || 'Untitled world', description: str(body.description), imageUrl: str(body.image_url), counts, time: timeOfWorldBody(body) };
 }
 
 /**

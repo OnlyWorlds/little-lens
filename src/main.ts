@@ -14,6 +14,8 @@ import { beginOnlyWorldsSignIn, canSignInWithOnlyWorlds, isSignInCallback, signI
 import { listMyWorlds, revokeToken, type SignedIn } from './lens/account';
 import { clear, h, inkOf, owMark, pluralWord, typeIcon } from './ui/dom';
 import { mountWeb, type WebHandle } from './ui/web';
+import { mountTime, type TimeHandle } from './ui/time-view';
+import { readTime, type TimeReading, type WorldTime } from './lens/time';
 import { elementView } from './ui/element-view';
 
 export const MOPPETOPIA = '0695db52-5433-7332-8000-db7fe10da375';
@@ -27,6 +29,9 @@ interface Loaded {
   sub: string;
   graph: WorldGraph;
   degree: Map<string, number>;
+  /** The world's unit and now; the time reading of its kept elements, made on first use. */
+  time: WorldTime;
+  reading: TimeReading | null;
   /** Lines under the counts: what was left out and why, files that would not read. */
   notes: string[];
 }
@@ -36,6 +41,8 @@ let loaded: Loaded | null = null;
 /** The one read in flight; any new read aborts it. */
 let loading: { reader: 'public' | 'me'; worldId: string; ctl: AbortController } | null = null;
 let web: WebHandle | null = null;
+/** The time view on screen, and the world it stands for: a change of moment alone redraws it in place. */
+let timeView: { handle: TimeHandle; key: string } | null = null;
 /** The world web's filter: one kind or all, and the search text. */
 let filter: { type: ElementType | null; q: string } = { type: null, q: '' };
 
@@ -126,6 +133,8 @@ async function signOut(): Promise<void> {
 function screen(...children: (Node | null)[]): void {
   web?.destroy();
   web = null;
+  timeView?.handle.destroy();
+  timeView = null;
   clear(app);
   app.append(...children.filter((c): c is Node => c !== null));
 }
@@ -196,7 +205,7 @@ function signInWay(said: HTMLElement): HTMLElement | null {
       type: 'button',
       onclick: () => {
         const r = parseRoute(location.hash);
-        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId) : null;
+        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId, r.view === 'time' ? 'time' : 'web', r.view === 'time' ? r.at : null) : null;
         said.textContent = 'Going to OnlyWorlds…';
         beginOnlyWorldsSignIn(resume).catch((err: unknown) => (said.textContent = err instanceof Error ? err.message : 'Signing in did not start. Try again.'));
       },
@@ -260,7 +269,7 @@ function holdFile(w: FileWorld): void {
   const notes = leftOutNotes(g);
   if (w.unreadable > 0) notes.push(`${w.unreadable} ${w.unreadable === 1 ? 'file' : 'files'} could not be read.`);
   dropRead();
-  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), notes };
+  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes };
   filter = { type: null, q: '' };
   if (location.hash === '#/file') route();
   else location.hash = '#/file';
@@ -339,7 +348,7 @@ async function openWorld(reader: 'public' | 'me', worldId: string): Promise<void
     if (!stillWanted(ctl, s, reader, worldId)) return;
     const g = buildGraph(els);
     const sub = s ? `signed in as ${s.username}` : session ? 'public world, read without your sign-in' : 'public world, signed out';
-    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), notes: leftOutNotes(g) };
+    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g) };
     filter = { type: null, q: '' };
     loading = null;
     route();
@@ -388,6 +397,7 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
     { class: 'switch', 'aria-label': 'View' },
     h('a', { href: worldHash(l.reader, l.worldId, null, 'web'), class: view === 'web' ? 'on' : '', 'aria-current': view === 'web' ? 'page' : null }, 'Web'),
     h('a', { href: worldHash(l.reader, l.worldId, null, 'list'), class: view === 'list' ? 'on' : '', 'aria-current': view === 'list' ? 'page' : null }, 'List'),
+    h('a', { href: worldHash(l.reader, l.worldId, null, 'time') }, 'Time'),
   );
   const pills = h('div', { class: 'pills', role: 'group', 'aria-label': 'Types' });
   const drawPills = () => {
@@ -456,6 +466,29 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
   else drawList();
 }
 
+/** The time view: the strip, the moment and the dated list, read from the web's own kept elements. */
+function timePage(l: Loaded, at: number | null): void {
+  const reading = (l.reading ??= readTime(l.graph.nodes));
+  const switcher = h(
+    'nav',
+    { class: 'switch', 'aria-label': 'View' },
+    h('a', { href: worldHash(l.reader, l.worldId, null, 'web') }, 'Web'),
+    h('a', { href: worldHash(l.reader, l.worldId, null, 'list') }, 'List'),
+    h('a', { href: worldHash(l.reader, l.worldId, null, 'time'), class: 'on', 'aria-current': 'page' }, 'Time'),
+  );
+  const body = h('section', { class: 'time', 'aria-label': 'Time' });
+  screen(top(l.name, l.sub), h('main', { class: 'world' }, h('div', { class: 'bar' }, h('h2', { class: 'ttitle' }, 'Time'), switcher), ...l.notes.map((n) => h('p', { class: 'leftout' }, n)), body));
+  timeView = {
+    handle: mountTime(body, { reading, time: l.time, at, hrefOf: (id) => worldHash(l.reader, l.worldId, id), hashFor: (a) => worldHash(l.reader, l.worldId, null, 'time', a) }),
+    key: timeKey(l),
+  };
+}
+
+/** Which world a time view stands for: the reader and the id, or the file. */
+function timeKey(l: Loaded): string {
+  return `${l.reader}:${l.worldId ?? ''}`;
+}
+
 function elementPage(l: Loaded, id: string): void {
   const el = l.graph.byId.get(id);
   if (!el) {
@@ -490,7 +523,8 @@ function route(): void {
   if (r.kind === 'closed') return closedDoor(location.hash.startsWith('#/me/') ? 'me' : 'public');
   if (r.kind === 'file') {
     if (!loaded || loaded.reader !== 'file') return waysIn('Open the file again: Little Lens keeps nothing once the page closes.');
-    return r.elementId ? elementPage(loaded, r.elementId) : worldPage(loaded, r.view);
+    if (r.elementId) return elementPage(loaded, r.elementId);
+    return r.view === 'time' ? timePage(loaded, r.at) : worldPage(loaded, r.view);
   }
   // A signed-in address never falls back to a public read of the same world.
   if (r.reader === 'me' && !session) return waysIn(canSignInWithOnlyWorlds() ? 'Sign in to open this world.' : 'This address opens a world signed in, on little-lens.onlyworlds.com.');
@@ -499,10 +533,17 @@ function route(): void {
     return;
   }
   if (r.elementId) elementPage(loaded, r.elementId);
+  else if (r.view === 'time') timePage(loaded, r.at);
   else worldPage(loaded, r.view);
 }
 
 window.addEventListener('hashchange', () => {
+  // Back and Forward between moments of the time view on screen: redrawn in place, no scroll.
+  const r = parseRoute(location.hash);
+  if (timeView && loaded && !exchanging && (r.kind === 'world' || r.kind === 'file') && r.view === 'time' && !r.elementId) {
+    const key = r.kind === 'file' ? 'file:' : `${r.reader}:${r.worldId}`;
+    if (key === timeView.key && key === timeKey(loaded)) return timeView.handle.setAt(r.at);
+  }
   route();
   window.scrollTo(0, 0);
 });

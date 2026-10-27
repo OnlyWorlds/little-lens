@@ -26,7 +26,7 @@ describe('the world read', () => {
       [`${API_BASE}/character/?world=${W}&limit=1000&cursor=c2`]: json({ data: [{ id: id(3) }], has_more: false, next_cursor: null }),
       [`${API_BASE}/character/?world=${W}&limit=1000`]: json({ data: [{ id: id(1) }, { id: id(2) }], has_more: true, next_cursor: 'c2' }),
     });
-    const els = await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', counts: { character: 3 } }, f);
+    const els = await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 3 } }, f);
     expect(els.map((e) => e.id)).toEqual([id(1), id(2), id(3)]);
     expect(els.every((e) => e.type === 'character')).toBe(true);
     expect(seen).toHaveLength(2);
@@ -34,7 +34,7 @@ describe('the world read', () => {
 
   it('stops when a cursor comes back unchanged', async () => {
     const { f, seen } = fake({ [`${API_BASE}/character/`]: json({ data: [{ id: id(1) }], has_more: true, next_cursor: 'same' }) });
-    await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', counts: { character: 1 } }, f);
+    await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 1 } }, f);
     expect(seen).toHaveLength(2);
   });
 
@@ -66,7 +66,7 @@ describe('the world read', () => {
       [`${API_BASE}/character/?world=${W}&limit=1000&cursor=c2`]: json({ data: [{ id: id(1), name: 'new' }], has_more: false, next_cursor: null }),
       [`${API_BASE}/character/?world=${W}&limit=1000`]: json({ data: [{ id: id(1), name: 'old' }], has_more: true, next_cursor: 'c2' }),
     });
-    const els = await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', counts: { character: 1 } }, f);
+    const els = await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 1 } }, f);
     expect(els.map((e) => e.name)).toEqual(['new']);
   });
 
@@ -76,7 +76,7 @@ describe('the world read', () => {
       [`${API_BASE}/character/`]: json({ data: [], has_more: false, next_cursor: null }, 200, { 'RateLimit-Remaining': '0', 'RateLimit-Reset': '7' }),
       [`${API_BASE}/location/`]: json({ data: [], has_more: false, next_cursor: null }),
     });
-    await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', counts: { character: 1, location: 1 } }, f, {
+    await readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 1, location: 1 } }, f, {
       budget: { remaining: 40, reset: 30 },
       onWait: (s) => waits.push(s),
       sleep: async () => {},
@@ -88,7 +88,7 @@ describe('the world read', () => {
 
   it('reads the world meta and its counts', async () => {
     const { f } = fake({ [`${API_BASE}/world/?world=${W}`]: json({ id: W, name: 'Moppetopia', description: 'd', image_url: '', counts: { total: 3, types: { character: 2, pin: 1, law: 0 } } }) });
-    expect(await readWorldMeta(W, f)).toEqual({ id: W, name: 'Moppetopia', description: 'd', imageUrl: '', counts: { character: 2, pin: 1 } });
+    expect(await readWorldMeta(W, f)).toEqual({ id: W, name: 'Moppetopia', description: 'd', imageUrl: '', time: { unit: null, now: null }, counts: { character: 2, pin: 1 } });
   });
 
   it('reads a body with no counts as every type the graph keeps, each to its end', async () => {
@@ -120,7 +120,7 @@ describe('the world read', () => {
     const gone = fake({ [`${API_BASE}/world/`]: json({ error: { code: 'key_revoked' } }, 401) });
     await expect(readWorldMeta(W, gone.f, undefined, undefined, 'ow_a_tok')).rejects.toMatchObject({ failure: { kind: 'ended' } });
     const list = fake({ [`${API_BASE}/character/`]: json({}, 401) });
-    await expect(readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', counts: { character: 1 } }, list.f, {}, undefined, 'ow_a_tok')).rejects.toMatchObject({ failure: { kind: 'ended' } });
+    await expect(readWorldElements({ id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 1 } }, list.f, {}, undefined, 'ow_a_tok')).rejects.toMatchObject({ failure: { kind: 'ended' } });
     const shut = fake({ [`${API_BASE}/world/`]: json({}, 404) });
     await expect(readWorldMeta(W, shut.f, undefined, undefined, 'ow_a_tok')).rejects.toMatchObject({ failure: { kind: 'closed' } });
   });

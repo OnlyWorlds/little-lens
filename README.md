@@ -13,6 +13,7 @@ Little Lens only reads. It never changes a world: to edit one, open it in [Atlas
 ## What it shows
 
 - **The world web**: every element once, coloured by its type, laid out so the same world always lands the same way. Dot size follows links, and the most linked are named. Filter by type or search by name and description; switch to a list of cards.
+- **Time**: the world's dated elements on a strip, each at its own date (a Character's birth date, a Location's founding date, an Event's start date, and so on, by the OnlyWorlds lens profile's date table), named in the world's calendar when it has exactly one, with the world's now as a line. Drag along the strip or use the arrow keys to choose a moment; the address keeps it (`/time?at=<step>`), and the list below marks what comes after it. Elements of a dated type with no date are counted, never placed.
 - **An element**: its fields in the schema's sections, links as chips you can follow, and its neighbourhood as a small radial graph (solid lines for what it links to, dashed for what links to it).
 
 What the graph draws follows the OnlyWorlds graph rules: the schema's link fields are the edges, a Relation is an element like any other, and map space (maps, pins, markers, zones) is left out. Elements marked hidden or proposed, and the elements of a room, are left out too, and the page says how many.

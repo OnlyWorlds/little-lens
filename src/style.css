@@ -64,6 +64,29 @@ button{font:inherit;color:inherit}
 .cdeg{color:var(--muted);font-size:12px}
 .cdesc{color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
+/* Time */
+.ttitle{margin:0;font-size:22px;flex:1;align-self:center}
+.time{margin-top:12px}
+.trange{margin:0 0 12px;color:var(--muted);font-size:14px}
+.strip{position:relative;border:1px solid var(--line);border-radius:10px;background:#05080c;touch-action:none;cursor:pointer;user-select:none}
+.tsvg{display:block}
+.taxis{stroke:var(--line)}
+.ttick{stroke:#3a4a5e}
+.tlabel{fill:var(--muted);font-size:12px}
+.tdot.tlater{opacity:.32}
+.tmore{fill:var(--muted);font-size:11px}
+.tnow{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:3 3}
+.tnowlabel{fill:var(--accent);font-size:11px}
+.tat{stroke:#d6a548;stroke-width:2}
+.tmoment{margin:10px 0 12px;color:var(--muted);font-size:14px}
+.tmoment b{color:var(--text)}
+.tlist{list-style:none;margin:0;padding:0;max-height:60vh;overflow:auto;border-top:1px solid var(--line)}
+.trow{display:flex;align-items:center;gap:12px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;content-visibility:auto;contain-intrinsic-size:auto 45px}
+.tkind{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.twhen{color:var(--muted);text-align:right}
+.tafter{color:#d6a548;font-weight:600}
+.trow.after .chip{opacity:.7}
+
 /* A closed door, a wait, a failure */
 .closed{max-width:520px;margin:0 auto;padding:72px 16px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 .closed h1{margin:0;font-size:22px}
@@ -100,6 +123,11 @@ button{font:inherit;color:inherit}
 .r-node:focus-visible circle{stroke:var(--accent);stroke-width:3}
 .key{color:var(--muted);font-size:12px;margin:6px 0 0}
 
+@media (max-width:560px){
+  .trow{flex-wrap:wrap}
+  .tkind{display:none}
+  .twhen{margin-left:auto}
+}
 @media (max-width:760px){
   .eview{grid-template-columns:minmax(0,1fr)}
   .frow{grid-template-columns:110px minmax(0,1fr)}

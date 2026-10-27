@@ -10,6 +10,7 @@
 
 import { OwWorldFileError, SPATIAL_TYPES, readWorldFile } from '@onlyworlds/sdk';
 import { isElementType, type Element } from './graph';
+import { timeOfWorldFile, type WorldTime } from './time';
 
 export interface FileWorld {
   id: string;
@@ -18,6 +19,8 @@ export interface FileWorld {
   elements: Element[];
   /** Element files that were not JSON, had no id, or repeated an id already read. */
   unreadable: number;
+  /** The world's unit and now, from its `world.json`. */
+  time: WorldTime;
 }
 
 export const NOT_A_WORLD = 'That is not a world Little Lens can open: it holds no world.json.';
@@ -73,6 +76,7 @@ function fromEntries(world: Record<string, unknown>, entries: Entry[]): FileWorl
     description: typeof world.description === 'string' ? world.description : '',
     elements: [...byId.values()],
     unreadable,
+    time: timeOfWorldFile(world),
   };
 }
 

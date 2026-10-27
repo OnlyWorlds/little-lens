@@ -91,6 +91,9 @@ describe('the round trip', () => {
     const out = await startSignInCallback(`${SIGN_IN_REDIRECT_URI}?code=abc&state=${url.searchParams.get('state')}`, { store, fetchImpl: tokenAnswer().f });
     expect(out).toMatchObject({ ok: true, resume: `#/me/${W}/e/${E}` });
     for (const bad of [`#/w/${W}`, 'javascript:alert(1)', `#/me/${W}?view=list`, `https://evil.example/#/me/${W}`, 42, null]) expect(resumeHashOf(bad)).toBeNull();
+    // The time view and its moment come back too; anything after the moment does not.
+    for (const good of [`#/me/${W}/time`, `#/me/${W}/time?at=300`, `#/me/${W}/time?at=-4`]) expect(resumeHashOf(good)).toBe(good);
+    for (const bad of [`#/me/${W}/time?at=007`, `#/me/${W}/time?at=3&x=1`, `#/me/${W}/time/e/${E}`]) expect(resumeHashOf(bad)).toBeNull();
   });
 
   it('on Cancel, says so, sends nothing, and leaves no record, stamp or resume', async () => {
