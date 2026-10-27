@@ -8,7 +8,7 @@ Little Lens only reads. It never changes a world: to edit one, open it in [Atlas
 
 - **A public world, without an account.** A world whose owner has opened it to the public is read from OnlyWorlds with no key and no sign-in. Moppetopia, a small demo world, is one click from the first screen. Any public world opens at `#/w/<world id>`.
 - **A world file or folder.** A `.owworld` file, or a world folder as Atlas keeps one on disk. It is read in your browser and held only while the page is open: nothing from it is sent anywhere or stored.
-- **Sign in with OnlyWorlds** comes next, for the worlds you own or have joined.
+- **Sign in with OnlyWorlds**, for the worlds you own or have joined. It is offered only on little-lens.onlyworlds.com, the address OnlyWorlds sends you back to. Little Lens holds one sign-in in the page's memory and never stores it, so a reload asks you to sign in again. It removes the sign-in from your account when you sign out, and tries to when you leave the page; if the browser closes first, the sign-in stays listed under Account settings on onlyworlds.com until you remove it there. It never makes keys on your account. Your worlds open at `#/me/<world id>`, read as your account reads them, through the same graph rules as any other world.
 
 ## What it shows
 

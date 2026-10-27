@@ -1,8 +1,14 @@
-/** Little Lens's addresses, all in the hash: the ways in, a public world, the world held from a file. */
+/**
+ * Little Lens's addresses, all in the hash: the ways in, a public world (`#/w/`), a world read as
+ * the signed-in account (`#/me/`), the world held from a file.
+ */
+
+/** Who a world is read as: keyless, as the signed-in account, or from a file held in this tab. */
+export type Reader = 'public' | 'me' | 'file';
 
 export type Route =
   | { kind: 'home' }
-  | { kind: 'world'; worldId: string; elementId: string | null; view: 'web' | 'list' }
+  | { kind: 'world'; reader: 'public' | 'me'; worldId: string; elementId: string | null; view: 'web' | 'list' }
   | { kind: 'file'; elementId: string | null; view: 'web' | 'list' }
   /** An address with an id that is no id: drawn as the closed door, with no request. */
   | { kind: 'closed' };
@@ -19,11 +25,12 @@ export function parseRoute(hash: string): Route {
   const parts = path.split('/').filter(Boolean);
   const view = new URLSearchParams(query).get('view') === 'list' ? 'list' : 'web';
   if (parts.length === 0) return { kind: 'home' };
-  if (parts[0] === 'w' && (parts.length === 2 || (parts.length === 4 && parts[2] === 'e'))) {
+  if ((parts[0] === 'w' || parts[0] === 'me') && (parts.length === 2 || (parts.length === 4 && parts[2] === 'e'))) {
     const worldId = parts[1];
     const elementId = parts[3] ?? null;
     if (!isId(worldId) || (elementId !== null && !isId(elementId))) return { kind: 'closed' };
-    return { kind: 'world', worldId: worldId.toLowerCase(), elementId: elementId?.toLowerCase() ?? null, view };
+    const reader = parts[0] === 'me' ? 'me' : 'public';
+    return { kind: 'world', reader, worldId: worldId.toLowerCase(), elementId: elementId?.toLowerCase() ?? null, view };
   }
   if (parts[0] === 'file' && (parts.length === 1 || (parts.length === 3 && parts[1] === 'e'))) {
     // A file's ids are any non-empty string (folder spec), kept as written and looked up in a Map.
@@ -40,8 +47,8 @@ export function parseRoute(hash: string): Route {
   return { kind: 'home' };
 }
 
-export function worldHash(worldId: string | null, elementId: string | null = null, view: 'web' | 'list' = 'web'): string {
-  const base = worldId ? `#/w/${worldId}` : '#/file';
+export function worldHash(reader: Reader, worldId: string | null, elementId: string | null = null, view: 'web' | 'list' = 'web'): string {
+  const base = reader === 'file' || !worldId ? '#/file' : `#/${reader === 'me' ? 'me' : 'w'}/${worldId}`;
   const el = elementId ? `/e/${encodeURIComponent(elementId)}` : '';
   return `${base}${el}${view === 'list' && !elementId ? '?view=list' : ''}`;
 }
