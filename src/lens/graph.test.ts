@@ -56,8 +56,9 @@ describe('buildGraph', () => {
       el(3, 'narrative', { supertype: ' Message ', x_room_of: '   ' }),
       el(4, 'narrative', { supertype: 'Message', x_room_of: null }),
     ]);
-    expect(g.leftOut.room).toBe(3);
-    expect(g.nodes.map((n) => n.id)).toEqual([id(4)]);
+    // A blank mark is no mark for either reader since SDK 4.111 (it once held the older SDK's room).
+    expect(g.leftOut.room).toBe(2);
+    expect(g.nodes.map((n) => n.id)).toEqual([id(3), id(4)]);
   });
 
   it('gives the same order whatever order the elements came in', () => {
