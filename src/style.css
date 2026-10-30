@@ -173,3 +173,29 @@ a.dn:hover{text-decoration:underline}
   .frow{grid-template-columns:110px minmax(0,1fr)}
   .wname{font-size:18px}
 }
+
+/* The small worlds: one list the page scrolls, full width */
+.std .mine{max-height:none;overflow:visible;align-self:stretch}
+.std .mine .way{width:100%}
+
+/* Messages: the conversations, and one conversation */
+.messages{max-width:760px;margin:12px auto 0}
+.mhead{margin:0 0 12px}
+.mcount{margin:0;color:var(--muted);font-size:14px}
+.mcheck{margin:4px 0 0;color:var(--muted);font-size:13px}
+.threads{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.thread{display:flex;flex-direction:column;gap:2px;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surf);color:var(--text);text-decoration:none}
+.thread:hover{border-color:var(--accent)}
+.tsubject{font-weight:600;overflow-wrap:anywhere}
+.tmeta{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.mback{margin:0 0 8px;font-size:14px}
+.mback a{text-decoration:none}
+.mthread{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.msg{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surf)}
+.msg.proposed{border-style:dashed}
+.msg p{margin:2px 0}
+.msubject{margin:0 0 4px;font-size:16px;overflow-wrap:anywhere}
+.mfrom,.mto,.mwhen,.mread{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.mfrom b{color:var(--text)}
+.mflag{font-size:13px;color:var(--accent)}
+.msg .mbody{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}

@@ -1,0 +1,2053 @@
+{
+ "tag": "v0.33.0-dist.93",
+ "serial": 93,
+ "commit": "9f357431094ff311b394aac8a1f9627e10d0ca38",
+ "worlds": [
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f001",
+   "name": "Harrow Vale",
+   "time_basic_unit": "year",
+   "now": 1200,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000001",
+     "type": "character",
+     "name": "Ada Venn",
+     "birth_date": 1170,
+     "birthplace": "019a7f00-0000-7000-8000-000000000002",
+     "institutions": [
+      "019a7f00-0000-7000-8000-000000000003"
+     ],
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000004"
+     ],
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000004",
+     "type": "character",
+     "name": "Brin Hale",
+     "birth_date": null,
+     "location": "019a7f00-0000-7000-8000-000000000002",
+     "institutions": [
+      "019a7f00-0000-7000-8000-000000000005"
+     ],
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000006",
+     "type": "character",
+     "name": "Cass Orr",
+     "birth_date": 1175,
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000001"
+     ],
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000007",
+     "type": "character",
+     "name": "Dov Marr",
+     "birth_date": 1160,
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000002",
+     "type": "location",
+     "name": "Harrowgate",
+     "founding_date": 1020,
+     "primary_power": "019a7f00-0000-7000-8000-000000000003",
+     "description": "A harbour town on the grey coast.",
+     "updated_at": "2026-09-20T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000003",
+     "type": "institution",
+     "name": "Lamplighters' Guild",
+     "founding_date": 1150,
+     "description": "Keepers of the harbour lamps.\nFounded after the first great fire.",
+     "updated_at": "2026-09-21T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000005",
+     "type": "institution",
+     "name": "Tower of Tides",
+     "founding_date": 1205,
+     "updated_at": "2026-09-22T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000008",
+     "type": "event",
+     "name": "The Harbour Fire",
+     "start_date": 1195,
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000001",
+      "019a7f00-0000-7000-8000-000000000004"
+     ],
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000002"
+     ],
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000009",
+     "type": "event",
+     "name": "The Long Flood",
+     "start_date": null,
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000002"
+     ],
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000010",
+     "type": "event",
+     "name": "The First Lamp",
+     "start_date": 1150,
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000002"
+     ],
+     "updated_at": "2026-09-25T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000011",
+     "type": "narrative",
+     "name": "The Harbour Ledger",
+     "start_date": 1190,
+     "narrator": "019a7f00-0000-7000-8000-000000000001",
+     "events": [
+      "019a7f00-0000-7000-8000-000000000008"
+     ],
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000012",
+     "type": "narrative",
+     "name": "A Rumour of Cass",
+     "start_date": 1196,
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000001"
+     ],
+     "x_review_proposed": {
+      "by": null,
+      "at": "2026-10-08T12:00:00Z"
+     },
+     "updated_at": "2026-10-08T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000013",
+     "type": "narrative",
+     "name": "Shift swap",
+     "supertype": "Message",
+     "start_date": null,
+     "narrator": "019a7f00-0000-7000-8000-000000000004",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000001"
+     ],
+     "x_room_of": "019a7f00-0000-7000-8000-00000000f001",
+     "updated_at": "2026-10-09T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000014",
+     "type": "relation",
+     "name": "Oath of the Lamps",
+     "supertype": "Oath",
+     "start_date": 1180,
+     "actor": "019a7f00-0000-7000-8000-000000000007",
+     "institutions": [
+      "019a7f00-0000-7000-8000-000000000003"
+     ],
+     "updated_at": "2026-10-10T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000006"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": "019a7f00-0000-7000-8000-000000000007"
+    },
+    "guest": {
+     "rung": "guest",
+     "character": "019a7f00-0000-7000-8000-000000000004",
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000004",
+      "019a7f00-0000-7000-8000-000000000001",
+      "019a7f00-0000-7000-8000-000000000007",
+      "019a7f00-0000-7000-8000-000000000008",
+      "019a7f00-0000-7000-8000-000000000013"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000002",
+      "019a7f00-0000-7000-8000-000000000005"
+     ]
+    },
+    "public": {
+     "rung": "public",
+     "character": null
+    },
+    "owner-as-guest": {
+     "rung": "owner",
+     "as": "guest",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "vale"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f002",
+   "name": "The Press Office",
+   "time_basic_unit": "day",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000015",
+     "type": "character",
+     "name": "Mira Sol",
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000016",
+     "type": "character",
+     "name": "Tobin Reed",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000017",
+     "type": "institution",
+     "name": "The Press",
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000018",
+     "type": "construct",
+     "name": "Roadmap",
+     "supertype": "Plan",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000015"
+     ],
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000019",
+     "type": "construct",
+     "name": "People",
+     "supertype": "Lens",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000015",
+      "019a7f00-0000-7000-8000-000000000016"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000020",
+     "type": "construct",
+     "name": "House",
+     "supertype": "Lens",
+     "institutions": [
+      "019a7f00-0000-7000-8000-000000000017"
+     ],
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000021"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-09-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000021",
+     "type": "construct",
+     "name": "Office",
+     "supertype": "Lens",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000019",
+      "019a7f00-0000-7000-8000-000000000020",
+      "019a7f00-0000-7000-8000-000000000021"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-09-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000022",
+     "type": "construct",
+     "name": "Solo",
+     "supertype": "Lens",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000016"
+     ],
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000022"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-09-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000023",
+     "type": "construct",
+     "name": "Plan",
+     "supertype": "Lens",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000018"
+     ],
+     "x_lens": {
+      "depth": 1
+     },
+     "updated_at": "2026-09-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000080",
+     "type": "institution",
+     "name": "The Desk",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000082"
+     ],
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000081",
+     "type": "law",
+     "name": "House Rules",
+     "supertype": "Charter",
+     "author": "019a7f00-0000-7000-8000-000000000080",
+     "updated_at": "2026-10-03T12:00:00Z",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f002"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000082",
+     "type": "construct",
+     "name": "Reporting",
+     "supertype": "Domain",
+     "updated_at": "2026-10-04T12:00:00Z",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f002"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000083",
+     "type": "institution",
+     "name": "The Bindery",
+     "objects": [
+      "019a7f00-0000-7000-8000-000000000084",
+      "019a7f00-0000-7000-8000-000000000085"
+     ],
+     "updated_at": "2026-09-17T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000084",
+     "type": "object",
+     "name": "Proof Sheet",
+     "updated_at": "2026-10-24T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000085",
+     "type": "object",
+     "name": "Old Plate",
+     "updated_at": "2026-09-27T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000089",
+     "type": "institution",
+     "name": "The Harbour Board",
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000088",
+     "type": "law",
+     "name": "Harbour Charter",
+     "supertype": "Charter",
+     "author": "019a7f00-0000-7000-8000-000000000089",
+     "updated_at": "2026-10-06T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": "019a7f00-0000-7000-8000-000000000015"
+    }
+   },
+   "profile": "lens",
+   "key": "office"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f003",
+   "name": "Planted",
+   "time_basic_unit": "day",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000024",
+     "type": "character",
+     "name": "Ada",
+     "location": "019a7f00-0000-7000-8000-000000000025",
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000026"
+     ],
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000027",
+     "type": "character",
+     "name": "Brin",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000026",
+     "type": "character",
+     "name": "Secret Heir",
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000027"
+     ],
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000025",
+     "type": "location",
+     "name": "Hollow Keep",
+     "buildings": [
+      "019a7f00-0000-7000-8000-000000000028"
+     ],
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000028",
+     "type": "object",
+     "name": "Vault Ledger",
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000029",
+     "type": "relation",
+     "name": "Ada's ward",
+     "supertype": "Ward",
+     "actor": "019a7f00-0000-7000-8000-000000000024",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000026"
+     ],
+     "updated_at": "2026-10-06T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000026",
+    "019a7f00-0000-7000-8000-000000000028"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    },
+    "seat": {
+     "rung": "contributor",
+     "character": "019a7f00-0000-7000-8000-000000000027"
+    },
+    "guest": {
+     "rung": "guest",
+     "character": "019a7f00-0000-7000-8000-000000000027",
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000024",
+      "019a7f00-0000-7000-8000-000000000027",
+      "019a7f00-0000-7000-8000-000000000025",
+      "019a7f00-0000-7000-8000-000000000029"
+     ],
+     "known_of": []
+    },
+    "public": {
+     "rung": "public",
+     "character": null
+    },
+    "owner-as-guest": {
+     "rung": "owner",
+     "as": "guest",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "planted"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f004",
+   "name": "The Post",
+   "time_basic_unit": "day",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000030",
+     "type": "character",
+     "name": "Ada Venn",
+     "updated_at": "2026-09-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000031",
+     "type": "character",
+     "name": "Brin Hale",
+     "updated_at": "2026-09-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000032",
+     "type": "character",
+     "name": "Dov Marr",
+     "updated_at": "2026-09-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000033",
+     "type": "narrative",
+     "name": "On the lamps",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000032",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000030"
+     ],
+     "story": "The east lamp is out.",
+     "created_by": "019a7f00-0000-7000-8000-000000000042",
+     "created_at": "2026-10-20T12:00:00Z",
+     "updated_at": "2026-10-20T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000034",
+     "type": "narrative",
+     "name": "Notes to self",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000030",
+     "characters": [],
+     "story": "A line that claims Ada wrote it.",
+     "created_by": "019a7f00-0000-7000-8000-000000000042",
+     "created_at": "2026-10-22T12:00:00Z",
+     "updated_at": "2026-10-22T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000035",
+     "type": "narrative",
+     "name": "Night shift",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000031",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000030"
+     ],
+     "story": "Can you take Thursday?",
+     "created_by": "019a7f00-0000-7000-8000-000000000041",
+     "created_at": "2026-10-25T12:00:00Z",
+     "updated_at": "2026-10-25T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000036",
+     "type": "narrative",
+     "name": "Old news",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000032",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000030"
+     ],
+     "story": "From the summer.",
+     "created_by": "019a7f00-0000-7000-8000-000000000042",
+     "created_at": "2026-08-01T12:00:00Z",
+     "updated_at": "2026-08-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000037",
+     "type": "narrative",
+     "name": "My reply",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000030",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000032"
+     ],
+     "story": "Yes.",
+     "created_by": "019a7f00-0000-7000-8000-000000000040",
+     "created_at": "2026-10-21T12:00:00Z",
+     "updated_at": "2026-10-21T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000038",
+     "type": "narrative",
+     "name": "Sealed",
+     "supertype": "Message",
+     "narrator": null,
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000030"
+     ],
+     "story": "Kept back.",
+     "created_by": null,
+     "created_at": "2026-10-24T12:00:00Z",
+     "updated_at": "2026-10-24T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000039",
+     "type": "relation",
+     "name": "Read: Ada Venn",
+     "supertype": "Read",
+     "actor": "019a7f00-0000-7000-8000-000000000030",
+     "narratives": [
+      "019a7f00-0000-7000-8000-000000000033"
+     ],
+     "created_by": "019a7f00-0000-7000-8000-000000000040",
+     "created_at": "2026-10-21T12:00:00Z",
+     "updated_at": "2026-10-21T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000038"
+   ],
+   "members": [
+    {
+     "id": null,
+     "character": null
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000040",
+     "character": "019a7f00-0000-7000-8000-000000000030"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000041",
+     "character": "019a7f00-0000-7000-8000-000000000031"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000042",
+     "character": "019a7f00-0000-7000-8000-000000000032"
+    }
+   ],
+   "readers": {
+    "seat": {
+     "rung": "contributor",
+     "character": "019a7f00-0000-7000-8000-000000000030"
+    }
+   },
+   "profile": "lens",
+   "key": "post"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f005",
+   "name": "Dawn",
+   "time_basic_unit": "year",
+   "now": null,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000073",
+     "type": "event",
+     "name": "The Old Feast",
+     "start_date": 100,
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000074",
+     "type": "event",
+     "name": "The Last Feast",
+     "start_date": 900,
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000075",
+     "type": "event",
+     "name": "A Feast",
+     "start_date": null,
+     "updated_at": "2026-10-03T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "dawn"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f006",
+   "name": "The Stub Room",
+   "time_basic_unit": "day",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000100",
+     "type": "character",
+     "name": "Ash Vey",
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000101",
+     "type": "character",
+     "name": "Bel Orrin",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000102",
+     "type": "character",
+     "name": "Secret contact",
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000103",
+     "type": "construct",
+     "name": "Desk, child known of",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000105"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000104",
+     "type": "construct",
+     "name": "Desk, child whole",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000105"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000105",
+     "type": "construct",
+     "name": "Contacts",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000102"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000106",
+     "type": "narrative",
+     "name": "Known of",
+     "supertype": "Message",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000101"
+     ],
+     "story": "For Bel only.",
+     "created_at": "2026-10-20T12:00:00Z",
+     "updated_at": "2026-10-20T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000107",
+     "type": "narrative",
+     "name": "To everyone",
+     "supertype": "Message",
+     "characters": [],
+     "story": "The doors open at nine.",
+     "created_at": "2026-10-21T12:00:00Z",
+     "updated_at": "2026-10-21T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000131",
+     "type": "construct",
+     "name": "Mail of the room",
+     "supertype": "Lens",
+     "subtype": "",
+     "narratives": [
+      "019a7f00-0000-7000-8000-000000000107"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "mail": "unread_full_read_titles"
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000130",
+     "type": "construct",
+     "name": "Desk and its mail",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000100"
+     ],
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000131"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "guest": {
+     "rung": "guest",
+     "character": null,
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000100",
+      "019a7f00-0000-7000-8000-000000000103",
+      "019a7f00-0000-7000-8000-000000000107"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000105",
+      "019a7f00-0000-7000-8000-000000000102"
+     ]
+    },
+    "guest-whole-child": {
+     "rung": "guest",
+     "character": null,
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000100",
+      "019a7f00-0000-7000-8000-000000000104",
+      "019a7f00-0000-7000-8000-000000000105",
+      "019a7f00-0000-7000-8000-000000000107"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000102"
+     ]
+    },
+    "guest-mail": {
+     "rung": "guest",
+     "character": "019a7f00-0000-7000-8000-000000000100",
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000100",
+      "019a7f00-0000-7000-8000-000000000107",
+      "019a7f00-0000-7000-8000-000000000130",
+      "019a7f00-0000-7000-8000-000000000131"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000106"
+     ]
+    },
+    "owner-as-guest": {
+     "rung": "owner",
+     "as": "guest",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "stubs"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f007",
+   "name": "Tull's Reach",
+   "time_basic_unit": "year",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000110",
+     "type": "event",
+     "name": "The Late Treaty",
+     "start_date": 120,
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000111"
+     ],
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000111",
+     "type": "character",
+     "name": "Kell Dray",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000112",
+     "type": "character",
+     "name": "Ash Morrow",
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000113"
+     ],
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000113",
+     "type": "character",
+     "name": "Bram Tull",
+     "location": "019a7f00-0000-7000-8000-000000000114",
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000114",
+     "type": "location",
+     "name": "Tull's Yard",
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000115",
+     "type": "narrative",
+     "name": "A line in the room",
+     "supertype": "Message",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000113"
+     ],
+     "x_room_of": "019a7f00-0000-7000-8000-00000000f007",
+     "created_at": "2026-10-20T12:00:00Z",
+     "updated_at": "2026-10-20T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000116",
+     "type": "construct",
+     "name": "The yard",
+     "supertype": "Domain",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000113"
+     ],
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f007",
+     "description": "Where the carts stand.",
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000125",
+     "type": "character",
+     "name": "Cora Fenn",
+     "updated_at": "2026-10-08T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000126",
+     "type": "character",
+     "name": "Dace Holm",
+     "updated_at": "2026-10-09T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000127",
+     "type": "character",
+     "name": "Edda Lune",
+     "updated_at": "2026-10-10T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000119",
+     "type": "construct",
+     "name": "Yard hands",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000127",
+      "019a7f00-0000-7000-8000-000000000126",
+      "019a7f00-0000-7000-8000-000000000125"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "budget": 2
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000120",
+     "type": "construct",
+     "name": "Reach desk",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000119"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "budget": 10
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000121",
+     "type": "construct",
+     "name": "Hands by name",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000125"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "show": "name"
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000122",
+     "type": "construct",
+     "name": "Desk in full",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000121"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "show": "full"
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000123",
+     "type": "construct",
+     "name": "Hands in full",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000126"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "show": "full"
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000124",
+     "type": "construct",
+     "name": "Desk by name",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000123"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "show": "name"
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000129",
+     "type": "construct",
+     "name": "Hands with notes",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000125"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "notes": {
+       "019a7f00-0000-7000-8000-000000000125": "Keeps the ledger."
+      }
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000128",
+     "type": "construct",
+     "name": "Desk with no notes",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000129"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000133",
+     "type": "character",
+     "name": "Hale Orrin",
+     "updated_at": "2026-10-11T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000134",
+     "type": "construct",
+     "name": "Gate roll",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000133"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000135",
+     "type": "construct",
+     "name": "Gate watch",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000133"
+     ],
+     "x_lens": {
+      "depth": 1
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000136",
+     "type": "construct",
+     "name": "Gate desk",
+     "supertype": "Lens",
+     "subtype": "",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000135",
+      "019a7f00-0000-7000-8000-000000000134"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-07T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "reach"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f008",
+   "name": "Merrow Gate",
+   "time_basic_unit": "day",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000140",
+     "type": "character",
+     "name": "Tamsin Hale",
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000141",
+     "type": "character",
+     "name": "The heir",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000142",
+     "type": "object",
+     "name": "Sealed Ledger",
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000143",
+     "type": "location",
+     "name": "Merrow Quay",
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000144",
+     "type": "construct",
+     "name": "The night roll",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000140",
+      "019a7f00-0000-7000-8000-000000000141"
+     ],
+     "x_lens": {
+      "depth": 0,
+      "show": "name",
+      "notes": {
+       "019a7f00-0000-7000-8000-000000000140": "Tamsin keeps the gate.",
+       "019a7f00-0000-7000-8000-000000000141": "Why the roll is kept at all.",
+       "019a7f00-0000-7000-8000-000000000142": "Where the roll's names are written.",
+       "019a7f00-0000-7000-8000-000000000143": "The roll is read aloud on the quay."
+      }
+     },
+     "updated_at": "2026-10-05T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000141",
+    "019a7f00-0000-7000-8000-000000000142"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    },
+    "guest": {
+     "rung": "guest",
+     "character": null,
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000140",
+      "019a7f00-0000-7000-8000-000000000143",
+      "019a7f00-0000-7000-8000-000000000144"
+     ],
+     "known_of": []
+    },
+    "public": {
+     "rung": "public",
+     "character": null
+    }
+   },
+   "profile": "lens",
+   "key": "watch"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f009",
+   "name": "Ashfen",
+   "time_basic_unit": "year",
+   "now": 100,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000150",
+     "type": "character",
+     "name": "Wren",
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000152"
+     ],
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000152",
+     "type": "location",
+     "name": "Reed Bank",
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000153",
+     "type": "character",
+     "name": "Sedge",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000154",
+     "type": "pin",
+     "name": "Sedge's mark",
+     "element_type": "character",
+     "element_id": "019a7f00-0000-7000-8000-000000000153",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000155",
+     "type": "pin",
+     "name": "A stray mark",
+     "element_type": "wizard",
+     "element_id": "019a7f00-0000-7000-8000-000000000153",
+     "updated_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000156",
+     "type": "character",
+     "name": "Tansy",
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000157",
+     "type": "pin",
+     "name": "Tansy's mark",
+     "element_type": "Character",
+     "element_id": "019a7f00-0000-7000-8000-000000000156",
+     "updated_at": "2026-10-03T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000158",
+     "type": "character",
+     "name": "Moss",
+     "updated_at": "2026-10-04T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000159",
+     "type": "character",
+     "name": "Rush",
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000160",
+     "type": "construct",
+     "name": "Rush's lens",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000159"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000161",
+     "type": "character",
+     "name": "Fern",
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000162",
+     "type": "construct",
+     "name": "Fern's people",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000161"
+     ],
+     "x_lens": {
+      "types": [
+       "character"
+      ]
+     },
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000163",
+     "type": "construct",
+     "name": "Fern's things",
+     "supertype": "Lens",
+     "subtype": "",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000161"
+     ],
+     "x_lens": {
+      "depth": 0
+     },
+     "updated_at": "2026-10-06T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000164",
+     "type": "location",
+     "name": "Wharf",
+     "description": "Salt sheds.\rTar pits beyond.",
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000165",
+     "type": "object",
+     "name": "Lantern",
+     "updated_at": "2026-10-07T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000166",
+     "type": "character",
+     "name": "The stranger",
+     "description": "Seen at the ferry.",
+     "physicality": "Tall, grey-cloaked.",
+     "birth_date": 40,
+     "abilities": [
+      "019a7f00-0000-7000-8000-000000000167"
+     ],
+     "x_mood": "wary",
+     "updated_at": "2026-10-08T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000167",
+     "type": "ability",
+     "name": "Ferrying",
+     "updated_at": "2026-10-08T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000168",
+     "type": "character",
+     "name": "Alder",
+     "friends": [
+      "019a7f00-0000-7000-8000-000000000169",
+      "019a7f00-0000-7000-8000-000000000170"
+     ],
+     "updated_at": "2026-10-09T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000169",
+     "type": "character",
+     "name": "Birch"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000170",
+     "type": "character",
+     "name": "Cedar",
+     "updated_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000171",
+     "type": "character",
+     "name": "Hazel",
+     "updated_at": "2026-10-10T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000172",
+     "type": "character",
+     "name": "Ivo",
+     "updated_at": "2026-10-10T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000174",
+     "type": "narrative",
+     "name": "The tide tables",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000172",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000171"
+     ],
+     "story": "High water at nine.",
+     "created_at": "2026-10-26T09:00:00Z",
+     "updated_at": "2026-10-26T09:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000173",
+     "type": "narrative",
+     "name": "The ferry is late",
+     "supertype": "Message",
+     "narrator": "019a7f00-0000-7000-8000-000000000172",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000171"
+     ],
+     "story": "Wait at the wharf.",
+     "created_at": "2026-10-26T09:00:00Z",
+     "updated_at": "2026-10-26T09:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000175",
+     "type": "character",
+     "name": "Old Quill",
+     "birth_date": 7,
+     "updated_at": "2026-10-11T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": "019a7f00-0000-7000-8000-000000000171"
+    },
+    "guest": {
+     "rung": "guest",
+     "character": null,
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000167",
+      "019a7f00-0000-7000-8000-000000000171"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000166"
+     ]
+    }
+   },
+   "profile": "lens",
+   "key": "fen"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f101",
+   "name": "Grey Harbour",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000200",
+     "type": "law",
+     "name": "House Rules",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-10T12:00:00Z",
+     "description": "These are the rules of the harbour.\nRead ow://object/019a7f00-0000-7000-8000-000000000210 and ow://object/019a7f00-0000-7000-8000-000000000211 before you write; never open ow://object/019a7f00-0000-7000-8000-000000000212.",
+     "x_checks_rules": [
+      {
+       "rule": "every Character carries a reputation",
+       "where": {
+        "type": "character"
+       },
+       "require": {
+        "field": "reputation",
+        "present": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000201",
+     "type": "law",
+     "name": "House Rules, first draft",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-01T12:00:00Z",
+     "description": "The first draft.",
+     "x_checks_rules": []
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000202",
+     "type": "law",
+     "name": "The Harbour Charter",
+     "supertype": "Charter",
+     "created_at": "2026-10-20T12:00:00Z",
+     "description": "Granted by the old king: lore, with no mark."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000203",
+     "type": "construct",
+     "name": "Start here",
+     "supertype": "Guide",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-05T12:00:00Z",
+     "description": "Begin with the Archive, then the Docks.",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000205",
+      "019a7f00-0000-7000-8000-000000000204",
+      "019a7f00-0000-7000-8000-000000000205",
+      "019a7f00-0000-7000-8000-000000000208",
+      "019a7f00-0000-7000-8000-000000000207",
+      "019a7f00-0000-7000-8000-000000000209"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000204",
+     "type": "construct",
+     "name": "The Docks",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-06T12:00:00Z",
+     "description": "Where the ships come in.\rThe second line.",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000214"
+     ],
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000215"
+     ],
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000204"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000205",
+     "type": "construct",
+     "name": "the Archive",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-06T13:00:00Z",
+     "description": "  Ledgers and letters.  \nKept by the Board.",
+     "objects": [
+      "019a7f00-0000-7000-8000-000000000210",
+      "019a7f00-0000-7000-8000-000000000212"
+     ],
+     "institutions": [
+      "019a7f00-0000-7000-8000-000000000216"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000206",
+     "type": "construct",
+     "name": "ash row",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-07T12:00:00Z",
+     "characters": [
+      "019a7f00-0000-7000-8000-000000000214"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000207",
+     "type": "construct",
+     "name": "The Vault",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-07T13:00:00Z",
+     "objects": [
+      "019a7f00-0000-7000-8000-000000000212"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000208",
+     "type": "construct",
+     "name": "Harbour Lore",
+     "supertype": "Myth",
+     "created_at": "2026-10-07T14:00:00Z",
+     "description": "Tales of the drowned bell."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000209",
+     "type": "construct",
+     "name": "The Lighthouse",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-08T12:00:00Z",
+     "description": "The light on the point.",
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000215"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000210",
+     "type": "object",
+     "name": "Tide Tables",
+     "description": "When the water turns."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000211",
+     "type": "object",
+     "name": "Signal Codes",
+     "description": "Flags and lamps."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000212",
+     "type": "object",
+     "name": "Sealed Orders",
+     "description": "Opened only by the harbourmaster."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000213",
+     "type": "construct",
+     "name": "Zephyr Quay",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f101",
+     "created_at": "2026-10-08T13:00:00Z",
+     "description": "The far quay.",
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000215"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000214",
+     "type": "character",
+     "name": "Ada Venn"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000215",
+     "type": "location",
+     "name": "The Quay"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000216",
+     "type": "institution",
+     "name": "Harbour Board"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000207",
+    "019a7f00-0000-7000-8000-000000000212"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    },
+    "guest": {
+     "rung": "guest",
+     "character": "019a7f00-0000-7000-8000-000000000214",
+     "whole": [
+      "019a7f00-0000-7000-8000-000000000200",
+      "019a7f00-0000-7000-8000-000000000203",
+      "019a7f00-0000-7000-8000-000000000204",
+      "019a7f00-0000-7000-8000-000000000205",
+      "019a7f00-0000-7000-8000-000000000206",
+      "019a7f00-0000-7000-8000-000000000210",
+      "019a7f00-0000-7000-8000-000000000211",
+      "019a7f00-0000-7000-8000-000000000214"
+     ],
+     "known_of": [
+      "019a7f00-0000-7000-8000-000000000209"
+     ]
+    },
+    "public": {
+     "rung": "public",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "harbour"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f102",
+   "name": "Ties",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000221",
+     "type": "law",
+     "name": "Rules A",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f102",
+     "created_at": "2026-10-10T12:00:00Z",
+     "description": "The rules."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000220",
+     "type": "law",
+     "name": "Rules B",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f102",
+     "created_at": "2026-10-10T14:00:00+02:00",
+     "description": "The rules.",
+     "x_checks_rules": [
+      {
+       "rule": "every Character carries a reputation",
+       "where": {
+        "type": "character"
+       },
+       "require": {
+        "field": "reputation",
+        "present": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000223",
+     "type": "construct",
+     "name": "Guide, no date",
+     "supertype": "Guide",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f102",
+     "constructs": []
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000222",
+     "type": "construct",
+     "name": "Guide, dated",
+     "supertype": "Guide",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f102",
+     "created_at": "2020-01-01T00:00:00Z",
+     "constructs": []
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "ties"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f103",
+   "name": "The Old Kingdom",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000230",
+     "type": "law",
+     "name": "The Kingdom's Charter",
+     "supertype": "Charter",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000231",
+     "type": "construct",
+     "name": "A Guide to the Realm",
+     "supertype": "Guide",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000232",
+     "type": "construct",
+     "name": "The North",
+     "supertype": "Domain",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000233",
+     "type": "law",
+     "name": "Harbour Statute",
+     "supertype": "Statute",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f103",
+     "created_at": "2026-10-02T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000234",
+     "type": "construct",
+     "name": "Domain of Night",
+     "supertype": "Domains",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f103",
+     "created_at": "2026-10-02T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "lore"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f104",
+   "name": "A Copy",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000240",
+     "type": "law",
+     "name": "Copied Rules",
+     "supertype": " charter ",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f1ff",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000241",
+     "type": "law",
+     "name": "Rules with a blank mark",
+     "supertype": "Charter",
+     "x_charter_of": "  ",
+     "created_at": "2026-10-05T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000242",
+     "type": "construct",
+     "name": "Start",
+     "supertype": "GUIDE",
+     "x_charter_of": "\u001f",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000243",
+     "type": "construct",
+     "name": "A Domain with an empty mark",
+     "supertype": "Domain",
+     "x_charter_of": "",
+     "created_at": "2026-10-01T12:00:00Z"
+    }
+   ],
+   "hidden": [],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "copy"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f105",
+   "name": "Bare",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000250",
+     "type": "construct",
+     "name": "Guide",
+     "supertype": "Guide",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f105",
+     "created_at": "2026-10-01T12:00:00Z",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000253",
+      "019a7f00-0000-7000-8000-000000000252",
+      "019a7f00-0000-7000-8000-000000000251"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000251",
+     "type": "construct",
+     "name": "Zed",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f105",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000253",
+     "type": "construct",
+     "name": " North ",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f105",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000252",
+     "type": "construct",
+     "name": "north",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f105",
+     "created_at": "2026-10-01T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000250"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "bare"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f106",
+   "name": "The Open Square",
+   "open": true,
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000260",
+     "type": "law",
+     "name": "Open Rules",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f106",
+     "created_at": "2026-10-01T12:00:00Z",
+     "description": "Read ow://object/019a7f00-0000-7000-8000-000000000263; the box is ow://object/019a7f00-0000-7000-8000-000000000265."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000261",
+     "type": "construct",
+     "name": "Welcome",
+     "supertype": "Guide",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f106",
+     "created_at": "2026-10-01T12:00:00Z",
+     "constructs": [
+      "019a7f00-0000-7000-8000-000000000262"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000262",
+     "type": "construct",
+     "name": "The Square",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f106",
+     "created_at": "2026-10-01T12:00:00Z",
+     "description": "Where everyone meets.",
+     "objects": [
+      "019a7f00-0000-7000-8000-000000000265"
+     ],
+     "locations": [
+      "019a7f00-0000-7000-8000-000000000264"
+     ],
+     "narratives": [
+      "019a7f00-0000-7000-8000-000000000267"
+     ]
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000263",
+     "type": "object",
+     "name": "Map of the Square"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000264",
+     "type": "location",
+     "name": "Market Square"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000265",
+     "type": "object",
+     "name": "Locked Box"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000266",
+     "type": "construct",
+     "name": "Back Rooms",
+     "supertype": "Domain",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f106",
+     "created_at": "2026-10-01T12:00:00Z"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000267",
+     "type": "narrative",
+     "name": "A line in the room",
+     "supertype": "Message",
+     "characters": [],
+     "x_room_of": "019a7f00-0000-7000-8000-00000000f106",
+     "created_at": "2026-10-02T12:00:00Z"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000265",
+    "019a7f00-0000-7000-8000-000000000266"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "public": {
+     "rung": "public",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "open"
+  },
+  {
+   "id": "019a7f00-0000-7000-8000-00000000f107",
+   "name": "The Workshop",
+   "elements": [
+    {
+     "id": "019a7f00-0000-7000-8000-000000000270",
+     "type": "law",
+     "name": "Workshop Rules",
+     "supertype": "Charter",
+     "x_charter_of": "019a7f00-0000-7000-8000-00000000f107",
+     "created_at": "2026-10-01T12:00:00Z",
+     "description": "Tools: ow://object/019a7f00-0000-7000-8000-000000000271, ow://019a7f00-0000-7000-8000-00000000f107/object/019a7f00-0000-7000-8000-000000000272, https://www.onlyworlds.com/w/019a7f00-0000-7000-8000-00000000f107/object/019a7f00-0000-7000-8000-000000000273, 019a7f00-0000-7000-8000-000000000274. The keeper is ow://character/019a7f00-0000-7000-8000-000000000278; a map from elsewhere is ow://019a7f00-0000-7000-8000-00000000f1ff/object/019a7f00-0000-7000-8000-000000000279. Again ow://object/019a7f00-0000-7000-8000-000000000271; then 019A7F00-0000-7000-8000-000000000275, 019a7f00-0000-7000-8000-000000000276, 019a7f00-0000-7000-8000-000000000277."
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000271",
+     "type": "object",
+     "name": "Hammer"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000272",
+     "type": "object",
+     "name": "Tongs"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000273",
+     "type": "object",
+     "name": "Anvil"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000274",
+     "type": "object",
+     "name": "Bellows"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000275",
+     "type": "object",
+     "name": "Quench Tank"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000276",
+     "type": "object",
+     "name": "File"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000277",
+     "type": "object",
+     "name": "Rasp"
+    },
+    {
+     "id": "019a7f00-0000-7000-8000-000000000278",
+     "type": "character",
+     "name": "The Smith"
+    }
+   ],
+   "hidden": [
+    "019a7f00-0000-7000-8000-000000000272"
+   ],
+   "readers": {
+    "owner": {
+     "rung": "owner",
+     "character": null
+    },
+    "contributor": {
+     "rung": "contributor",
+     "character": null
+    }
+   },
+   "profile": "charter",
+   "key": "skills"
+  }
+ ]
+}

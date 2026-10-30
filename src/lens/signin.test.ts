@@ -94,6 +94,9 @@ describe('the round trip', () => {
     // The time view and its moment come back too; anything after the moment does not.
     for (const good of [`#/me/${W}/time`, `#/me/${W}/time?at=300`, `#/me/${W}/time?at=-4`]) expect(resumeHashOf(good)).toBe(good);
     for (const bad of [`#/me/${W}/time?at=007`, `#/me/${W}/time?at=3&x=1`, `#/me/${W}/time/e/${E}`]) expect(resumeHashOf(bad)).toBeNull();
+    // The messages and one conversation come back too.
+    for (const good of [`#/me/${W}/messages`, `#/me/${W}/messages/${E}`]) expect(resumeHashOf(good)).toBe(good);
+    for (const bad of [`#/me/${W}/messages/x`, `#/me/${W}/messages/${E}/e/${E}`, `#/me/${W}/messages?at=3`]) expect(resumeHashOf(bad)).toBeNull();
   });
 
   it('on Cancel, says so, sends nothing, and leaves no record, stamp or resume', async () => {

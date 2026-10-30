@@ -19,6 +19,10 @@ import { readTime, type TimeReading, type WorldTime } from './lens/time';
 import { elementView } from './ui/element-view';
 import { readDraught, type Draught } from './lens/draught';
 import { mountDraught, type DraughtHandle } from './ui/draught-view';
+import { isMessage, type OwMessageMember } from '@onlyworlds/sdk';
+import { holdsMessages, readMessages, threadOfId, type MessageReading, type Source } from './lens/messages';
+import { messagesList, messagesThread } from './ui/messages-view';
+import { openStandard, standardWorlds } from './lens/standard';
 
 export const MOPPETOPIA = '0695db52-5433-7332-8000-db7fe10da375';
 
@@ -41,6 +45,14 @@ interface Loaded {
    * (another world, sign-out, the sign-in ending), so a signed-in packet never outlives its sign-in.
    */
   draughts: Map<string, Draught>;
+  /** Every body read, for the readers that are not the graph's (the messages). */
+  bodies: Element[];
+  /** Where the bodies came from, and the members list when there is one to read. */
+  source: Source;
+  members: readonly OwMessageMember[] | null;
+  /** The messages reading, made on the first Messages page; whether there is one, on the first switcher. */
+  messages: MessageReading | null;
+  hasMessages?: boolean;
 }
 
 /** Packets kept per open world; the oldest goes first. */
@@ -216,6 +228,7 @@ function waysIn(line: string | null = null): void {
       h('button', { class: 'way', type: 'button', onclick: () => folderInput.click() }, 'Open a world folder'),
       h('p', { class: 'or' }, 'or look without an account'),
       h('a', { class: 'way', href: worldHash('public', MOPPETOPIA) }, 'Explore Moppetopia, a public world'),
+      h('a', { class: 'way', href: '#/std' }, 'Small worlds from the OnlyWorlds standard'),
       said,
       h('p', { class: 'only' }, 'Little Lens only reads. To change a world, open it in Atlas or Lantern.'),
       fileInput,
@@ -235,7 +248,7 @@ function signInWay(said: HTMLElement): HTMLElement | null {
       onclick: () => {
         const r = parseRoute(location.hash);
         // The list resumes as its world (the resume takes no `?view=`); a moment rides along.
-        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId, r.view === 'list' ? 'web' : r.view, 'at' in r ? r.at : null) : null;
+        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId, r.view === 'list' ? 'web' : r.view, 'at' in r ? r.at : null, r.view === 'messages' ? r.thread : null) : null;
         said.textContent = 'Going to OnlyWorlds…';
         beginOnlyWorldsSignIn(resume).catch((err: unknown) => (said.textContent = err instanceof Error ? err.message : 'Signing in did not start. Try again.'));
       },
@@ -299,7 +312,7 @@ function holdFile(w: FileWorld): void {
   const notes = leftOutNotes(g);
   if (w.unreadable > 0) notes.push(`${w.unreadable} ${w.unreadable === 1 ? 'file' : 'files'} could not be read.`);
   dropRead();
-  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes, draughts: new Map() };
+  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes, draughts: new Map(), bodies: w.elements, source: 'file', members: null, messages: null };
   filter = { type: null, q: '' };
   if (location.hash === '#/file') route();
   else location.hash = '#/file';
@@ -319,7 +332,14 @@ const CLOSED_TITLE = 'You cannot open this world';
 const CLOSED_LINE = 'It may be private, or the address may be wrong. Little Lens opens public worlds and world files.';
 const CLOSED_LINE_ME = 'Your account may not be in it, or the address may be wrong.';
 
-function closedDoor(reader: 'public' | 'me' = 'public'): void {
+function closedDoor(reader: 'public' | 'me' | 'standard' = 'public'): void {
+  if (reader === 'standard') {
+    screen(
+      h('header', { class: 'top' }, brandLink()),
+      h('main', { class: 'closed' }, h('h1', {}, CLOSED_TITLE), h('p', {}, 'Little Lens holds no small world at this address.'), h('a', { class: 'way', href: '#/std' }, 'Back to the small worlds')),
+    );
+    return;
+  }
   screen(
     h('header', { class: 'top' }, brandLink()),
     h(
@@ -378,7 +398,8 @@ async function openWorld(reader: 'public' | 'me', worldId: string): Promise<void
     if (!stillWanted(ctl, s, reader, worldId)) return;
     const g = buildGraph(els);
     const sub = s ? `signed in as ${s.username}` : session ? 'public world, read without your sign-in' : 'public world, signed out';
-    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g), draughts: new Map() };
+    // Signed in, no members list until keel serves it to the token: senders stay claims.
+    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g), draughts: new Map(), bodies: els, source: reader, members: null, messages: null };
     filter = { type: null, q: '' };
     loading = null;
     route();
@@ -422,13 +443,7 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
   const hrefOf = (id: string) => worldHash(l.reader, l.worldId, id);
 
   const search = h('input', { type: 'search', class: 'search', placeholder: 'search name and description', 'aria-label': 'Search name and description', value: filter.q });
-  const switcher = h(
-    'nav',
-    { class: 'switch', 'aria-label': 'View' },
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'web'), class: view === 'web' ? 'on' : '', 'aria-current': view === 'web' ? 'page' : null }, 'Web'),
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'list'), class: view === 'list' ? 'on' : '', 'aria-current': view === 'list' ? 'page' : null }, 'List'),
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'time') }, 'Time'),
-  );
+  const switcher = switcherFor(l, view);
   const pills = h('div', { class: 'pills', role: 'group', 'aria-label': 'Types' });
   const drawPills = () => {
     clear(pills);
@@ -496,16 +511,142 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
   else drawList();
 }
 
+/** The world's messages, read once from every body read. */
+function messagesOf(l: Loaded): MessageReading {
+  return (l.messages ??= readMessages(l.bodies, l.source, l.members));
+}
+
+/** Messages is a view only where the world holds one, shown or hidden. */
+function hasMessages(l: Loaded): boolean {
+  return (l.hasMessages ??= holdsMessages(l.bodies));
+}
+
+function switcherFor(l: Loaded, current: 'web' | 'list' | 'time' | 'messages'): HTMLElement {
+  const link = (v: 'web' | 'list' | 'time' | 'messages', label: string) =>
+    h('a', { href: worldHash(l.reader, l.worldId, null, v), class: current === v ? 'on' : '', 'aria-current': current === v ? 'page' : null }, label);
+  return h('nav', { class: 'switch', 'aria-label': 'View' }, link('web', 'Web'), link('list', 'List'), link('time', 'Time'), hasMessages(l) ? link('messages', 'Messages') : null);
+}
+
+/** What cannot be checked about these messages, said once at the head. */
+function checkLineOf(l: Loaded): string | null {
+  if (l.source === 'public') return 'Read as the public: senders cannot be checked, a message may have recipients the public cannot see, and read marks are not shown.';
+  if (l.source === 'me' && l.members === null) return 'Senders cannot be checked here yet, so each says who it claims to be from, and read marks are not shown.';
+  if (!messagesOf(l).marksCount) return 'Read marks cannot be checked here, so none is shown.';
+  return null;
+}
+
+function cannotOpenConversation(l: Loaded): void {
+  screen(
+    top(l.name, l.sub),
+    h('main', { class: 'closed' }, h('h1', {}, 'You cannot open this conversation'), h('p', {}, hasMessages(l) ? 'It may be hidden, or the address may be wrong.' : 'This world holds no messages Little Lens shows.'), hasMessages(l) ? h('a', { class: 'way', href: worldHash(l.reader, l.worldId, null, 'messages') }, 'Back to the messages') : h('a', { class: 'way', href: worldHash(l.reader, l.worldId) }, 'Back to the world')),
+  );
+}
+
+/** The conversations, or one of them by any of its messages' ids. */
+function messagesPage(l: Loaded, thread: string | null): void {
+  const r = messagesOf(l);
+  if (!hasMessages(l)) return cannotOpenConversation(l);
+  const t = thread === null ? null : threadOfId(r, thread);
+  if (thread !== null && !t) return cannotOpenConversation(l);
+  const props = {
+    reading: r,
+    // A room's card is no element of the web: its name is said, never linked.
+    elementHref: (id: string) => (l.graph.byId.has(id) ? worldHash(l.reader, l.worldId, id) : null),
+    threadHref: (root: string) => worldHash(l.reader, l.worldId, null, 'messages', null, root),
+    listHref: worldHash(l.reader, l.worldId, null, 'messages'),
+    checkLine: checkLineOf(l),
+  };
+  screen(
+    top(l.name, l.sub),
+    h('main', { class: 'world' }, h('div', { class: 'bar' }, h('h2', { class: 'ttitle' }, 'Messages'), switcherFor(l, 'messages')), t ? messagesThread(props, t) : messagesList(props)),
+  );
+  document.title = `${t ? 'A conversation' : 'Messages'} · ${l.name} · Little Lens`;
+}
+
+// -- The small worlds from the standard ------------------------------------
+
+/** The elements a small world opens with: its hidden ones are left out. */
+function shownCount(w: { elements: { id: string }[]; hidden?: string[] }): number {
+  const hidden = new Set(w.hidden ?? []);
+  return w.elements.filter((e) => !hidden.has(e.id)).length;
+}
+
+function standardList(): void {
+  const host = h('main', { class: 'closed std' }, h('p', { class: 'said', role: 'status' }, 'Opening the small worlds…'));
+  screen(h('header', { class: 'top' }, brandLink()), host);
+  standardWorlds()
+    .then((f) => {
+      if (parseRoute(location.hash).kind !== 'standard-list') return;
+      clear(host);
+      const ul = h('ul', { class: 'mine', 'aria-label': 'Small worlds' });
+      for (const w of f.worlds) {
+        ul.append(h('li', {}, h('a', { class: 'way', href: worldHash('standard', w.id) }, h('span', { class: 'mname' }, w.name), h('span', { class: 'mrole' }, `${w.profile} profile · ${shownCount(w)} ${shownCount(w) === 1 ? 'element' : 'elements'}`))));
+      }
+      host.append(
+        h('h1', {}, 'Small worlds from the OnlyWorlds standard'),
+        h('p', {}, `The worlds the standard's lens and charter profiles are tested on, release ${f.serial}. Each opens as its owner sees it.`),
+        ul,
+        h('a', { class: 'way', href: '#/' }, 'Back to the ways in'),
+      );
+    })
+    .catch(() => {
+      clear(host);
+      host.append(h('p', {}, 'The small worlds could not be opened. Reload the page and try again.'), h('a', { class: 'way', href: '#/' }, 'Back to the ways in'));
+    });
+}
+
+/** The small world being opened, so a second address change while it opens does not open it twice. */
+let openingStandard: string | null = null;
+
+/** A small world, opened from the bundled file: the same at every reload. */
+async function openStandardWorld(worldId: string): Promise<void> {
+  if (openingStandard === worldId) return;
+  openingStandard = worldId;
+  dropRead();
+  screen(h('header', { class: 'top' }, brandLink()), h('main', { class: 'closed' }, h('p', { class: 'said', role: 'status' }, 'Opening the world…')));
+  let opened: Awaited<ReturnType<typeof openStandard>>;
+  try {
+    opened = await openStandard(worldId);
+  } catch {
+    // The page's own chunk did not load (offline, or a newer release under an open tab): not "no such world".
+    if (openingStandard === worldId) openingStandard = null;
+    const r = parseRoute(location.hash);
+    if (r.kind !== 'world' || r.reader !== 'standard' || r.worldId !== worldId) return;
+    screen(
+      h('header', { class: 'top' }, brandLink()),
+      h('main', { class: 'closed' }, h('p', {}, 'The small worlds could not be opened. Check your connection, or reload the page.'), h('button', { class: 'way', type: 'button', onclick: () => route() }, 'Try again')),
+    );
+    return;
+  }
+  if (openingStandard === worldId) openingStandard = null;
+  const r = parseRoute(location.hash);
+  if (r.kind !== 'world' || r.reader !== 'standard' || r.worldId !== worldId) return;
+  if (!opened) return closedDoor('standard');
+  const g = buildGraph(opened.bodies);
+  loaded = {
+    reader: 'standard',
+    worldId,
+    name: opened.world.name,
+    sub: `a small world from the standard's ${opened.world.profile} profile, release ${opened.serial}`,
+    graph: g,
+    degree: degrees(g),
+    time: opened.time,
+    reading: null,
+    notes: leftOutNotes(g),
+    draughts: new Map(),
+    bodies: opened.bodies,
+    source: 'standard',
+    members: opened.members,
+    messages: null,
+  };
+  filter = { type: null, q: '' };
+  route();
+}
+
 /** The time view: the strip, the moment and the dated list, read from the web's own kept elements. */
 function timePage(l: Loaded, at: number | null): void {
   const reading = (l.reading ??= readTime(l.graph.nodes));
-  const switcher = h(
-    'nav',
-    { class: 'switch', 'aria-label': 'View' },
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'web') }, 'Web'),
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'list') }, 'List'),
-    h('a', { href: worldHash(l.reader, l.worldId, null, 'time'), class: 'on', 'aria-current': 'page' }, 'Time'),
-  );
+  const switcher = switcherFor(l, 'time');
   const body = h('section', { class: 'time', 'aria-label': 'Time' });
   screen(top(l.name, l.sub), h('main', { class: 'world' }, h('div', { class: 'bar' }, h('h2', { class: 'ttitle' }, 'Time'), switcher), ...l.notes.map((n) => h('p', { class: 'leftout' }, n)), body));
   timeView = {
@@ -530,12 +671,14 @@ function elementPage(l: Loaded, id: string): void {
     return;
   }
   // A Character's draught is keel's to serve: a world on OnlyWorlds offers it, a file never.
-  const draughtWay = el.type === 'character' && l.reader !== 'file' ? h('a', { class: 'way dway', href: worldHash(l.reader, l.worldId, id, 'draught') }, 'Its draught at a moment') : null;
+  const draughtWay = el.type === 'character' && (l.reader === 'public' || l.reader === 'me') ? h('a', { class: 'way dway', href: worldHash(l.reader, l.worldId, id, 'draught') }, 'Its draught at a moment') : null;
+  // A message shown here is in exactly one conversation.
+  const threadWay = isMessage(el) && threadOfId(messagesOf(l), id) ? h('a', { class: 'way dway', href: worldHash(l.reader, l.worldId, null, 'messages', null, id) }, 'Read it in its conversation') : null;
   screen(
     top(l.name, l.sub),
-    h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, l.worldId) }, `← ${l.name}`), draughtWay),
+    h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, l.worldId) }, `← ${l.name}`), draughtWay, threadWay),
     // A file's pictures are never fetched: what a file names, the file's author chose.
-    h('main', { class: 'element' }, elementView({ graph: l.graph, degree: l.degree, element: el, hrefOf: (i) => worldHash(l.reader, l.worldId, i), pictures: l.reader !== 'file' })),
+    h('main', { class: 'element' }, elementView({ graph: l.graph, degree: l.degree, element: el, hrefOf: (i) => worldHash(l.reader, l.worldId, i), pictures: l.reader === 'public' || l.reader === 'me' })),
   );
   document.title = `${el.name || 'Untitled'} · Little Lens`;
 }
@@ -548,14 +691,14 @@ function draughtKey(reader: string, worldId: string | null, id: string): string 
 function cannotReadDraught(l: Loaded, id: string): void {
   screen(
     top(l.name, l.sub),
-    h('main', { class: 'closed' }, h('h1', {}, "You cannot read this Character's draught"), h('p', {}, 'A draught is read for a Character this world shows you. It may be hidden, or the address may be wrong.'), h('a', { class: 'way', href: worldHash(l.reader, l.worldId, id) }, 'Back to the element')),
+    h('main', { class: 'closed' }, h('h1', {}, "You cannot read this Character's draught"), h('p', {}, l.reader === 'standard' ? 'A small world from the standard has no draughts: OnlyWorlds reads a draught, and these worlds live only in this page.' : 'A draught is read for a Character this world shows you. It may be hidden, or the address may be wrong.'), h('a', { class: 'way', href: worldHash(l.reader, l.worldId, id) }, 'Back to the element')),
   );
 }
 
 /** An element's draught at a moment: keel's packet, read keyless or on the session's token. */
 function draughtPage(l: Loaded, id: string, at: number | null): void {
   const el = l.graph.byId.get(id);
-  if (!el || el.type !== 'character' || l.reader === 'file' || !l.worldId) return cannotReadDraught(l, id);
+  if (!el || el.type !== 'character' || (l.reader !== 'public' && l.reader !== 'me') || !l.worldId) return cannotReadDraught(l, id);
   const worldId = l.worldId;
   const s = l.reader === 'me' ? session : null;
   // Kept by Character and moment: a world holds many Characters' draughts.
@@ -625,20 +768,30 @@ function route(): void {
     notice = null;
     return waysIn(line);
   }
-  if (r.kind === 'closed') return closedDoor(location.hash.startsWith('#/me/') ? 'me' : 'public');
+  if (r.kind === 'closed') return closedDoor(location.hash.startsWith('#/me/') ? 'me' : location.hash.startsWith('#/std/') ? 'standard' : 'public');
+  if (r.kind === 'standard-list') return standardList();
   if (r.kind === 'file') {
     if (!loaded || loaded.reader !== 'file') return waysIn('Open the file again: Little Lens keeps nothing once the page closes.');
     if (r.elementId) return elementPage(loaded, r.elementId);
+    if (r.view === 'messages') return messagesPage(loaded, r.thread);
     return r.view === 'time' ? timePage(loaded, r.at) : worldPage(loaded, r.view === 'list' ? 'list' : 'web');
+  }
+  if (r.reader === 'standard') {
+    if (loaded?.reader !== 'standard' || loaded.worldId !== r.worldId) {
+      void openStandardWorld(r.worldId);
+      return;
+    }
   }
   // A signed-in address never falls back to a public read of the same world.
   if (r.reader === 'me' && !session) return waysIn(canSignInWithOnlyWorlds() ? 'Sign in to open this world.' : 'This address opens a world signed in, on little-lens.onlyworlds.com.');
-  if (loaded?.reader !== r.reader || loaded.worldId !== r.worldId) {
+  else if (r.reader !== 'standard' && (loaded?.reader !== r.reader || loaded.worldId !== r.worldId)) {
     void openWorld(r.reader, r.worldId);
     return;
   }
+  if (!loaded) return;
   if (r.elementId && r.view === 'draught') draughtPage(loaded, r.elementId, r.at);
   else if (r.elementId) elementPage(loaded, r.elementId);
+  else if (r.view === 'messages') messagesPage(loaded, r.thread);
   else if (r.view === 'time') timePage(loaded, r.at);
   else worldPage(loaded, r.view === 'list' ? 'list' : 'web');
 }

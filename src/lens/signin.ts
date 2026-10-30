@@ -81,7 +81,7 @@ export function sweepStaleRecord(store: RecordStore | null = recordStore(), now:
 export function resumeHashOf(raw: unknown): string | null {
   const id = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
   const at = '(\\?at=(0|-?[1-9]\\d{0,9}))?';
-  return typeof raw === 'string' && new RegExp(`^#/me/${id}(/e/${id}(/draught${at})?|/time${at})?$`, 'i').test(raw) ? raw : null;
+  return typeof raw === 'string' && new RegExp(`^#/me/${id}(/e/${id}(/draught${at})?|/time${at}|/messages(/${id})?)?$`, 'i').test(raw) ? raw : null;
 }
 
 export const NEEDS_CONNECTION_LINE = 'Signing in needs a connection. Check yours and try again.';

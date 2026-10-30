@@ -47,3 +47,22 @@ describe('parseRoute', () => {
     expect(worldHash('me', W, E)).toBe(`#/me/${W}/e/${E}`);
   });
 });
+
+describe('messages and the small worlds', () => {
+  it('reads the messages and a conversation under every reader, both ways', () => {
+    for (const [prefix, reader] of [['w', 'public'], ['me', 'me'], ['std', 'standard']] as const) {
+      expect(parseRoute(`#/${prefix}/${W}/messages`)).toEqual({ kind: 'world', reader, worldId: W, elementId: null, view: 'messages', thread: null });
+      expect(parseRoute(`#/${prefix}/${W}/messages/${E.toUpperCase()}`)).toEqual({ kind: 'world', reader, worldId: W, elementId: null, view: 'messages', thread: E });
+      expect(worldHash(reader, W, null, 'messages', null, E)).toBe(`#/${prefix}/${W}/messages/${E}`);
+    }
+    expect(parseRoute(`#/w/${W}/messages/nope`)).toEqual({ kind: 'closed' });
+    expect(parseRoute('#/file/messages/a%2Fb')).toEqual({ kind: 'file', elementId: null, view: 'messages', thread: 'a/b' });
+    expect(worldHash('file', null, null, 'messages', null, 'a/b')).toBe('#/file/messages/a%2Fb');
+  });
+
+  it('lists the small worlds at #/std and never reads a draught for one', () => {
+    expect(parseRoute('#/std')).toEqual({ kind: 'standard-list' });
+    expect(parseRoute('#/std/nope')).toEqual({ kind: 'closed' });
+    expect(worldHash('standard', W, E, 'draught', 3)).toBe(`#/std/${W}/e/${E}`);
+  });
+});
