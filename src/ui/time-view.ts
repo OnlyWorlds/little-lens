@@ -21,6 +21,13 @@ export interface TimeViewOptions {
   hrefOf: (id: string) => string;
   /** The time view's address at a moment. */
   hashFor: (at: number | null) => string;
+  /**
+   * The strip alone (the draught's page): no list of dated elements and no count line, since that
+   * page's counts are keel's; the range line is the caller's.
+   */
+  stripOnly?: { range: string };
+  /** A moment the address settled on: a run's end, Back or Forward. */
+  onSettle?: (at: number | null) => void;
 }
 
 const PAD = 28;
@@ -36,7 +43,8 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
   const words = (step: number) => stepWords(step, reading.calendar, time.unit);
   const dated = reading.dated;
 
-  host.append(h('p', { class: 'trange' }, rangeLine(reading, words)));
+  const only = o.stripOnly ?? null;
+  host.append(h('p', { class: 'trange' }, only ? only.range : rangeLine(reading, words)));
   if (dated.length === 0) return { setAt() {}, destroy() {} };
 
   const lo = dated[0].date;
@@ -49,9 +57,12 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
     tabindex: '0',
     'aria-label': 'Moment',
   });
+  // Said only while a stack draws a number above it (Seethe's T1: a bare "+4" says nothing).
+  const stackNote = h('p', { class: 'tstack', hidden: true }, 'A number above a stack counts the dots it cannot show.');
   const said = h('p', { class: 'tmoment' });
   const list = h('ul', { class: 'tlist', 'aria-label': 'Dated elements, in date order' });
-  host.append(strip, said, list);
+  host.append(strip, stackNote, said);
+  if (!only) host.append(list);
 
   // The list is built a batch per frame, so a world of thousands never holds the page in one task;
   // each row is marked as it is made. A row says "after the moment" (the line above names it), so
@@ -123,6 +134,7 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
       label.textContent = tickWords(t, spacing, reading.calendar);
       s.append(label);
     });
+    stackNote.hidden = !columns.some((c) => c.items.length > STACK);
     for (const c of columns) {
       const cx = PAD + c.x + COL / 2;
       c.items.slice(0, STACK).forEach((d, k) => {
@@ -164,9 +176,14 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
     const now = moment ?? lo;
     strip.setAttribute('aria-valuenow', String(now));
     const here = columnAt(now);
-    const count = here && here.items.length > 1 && now >= lo && now <= hi ? `, ${here.items.length} elements here` : '';
+    const count = here && here.items.length > 1 && now >= lo && now <= hi ? `, ${here.items.length} ${only ? 'rows' : 'elements'} here` : '';
     strip.setAttribute('aria-valuetext', `${words(now)}${count}`);
     clear(said);
+    if (only) {
+      // The strip alone names only the moment it stands on: the counts are the caller's, read from keel.
+      said.append(moment === null ? 'Choose a moment on the strip.' : `The moment: ${words(moment)}${edgeWords(moment)}${at === null ? ", the world's now" : ''}.`);
+      return;
+    }
     const nowLine = time.now !== null ? `The world's now is ${words(time.now)}${edgeWords(time.now)}.` : null;
     if (moment === null) {
       said.append('This world has no now, so nothing is fenced: choose a moment on the strip.');
@@ -219,13 +236,15 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
   let live = true;
   function endRun(): void {
     if (runStart === null || !live || !strip.isConnected) return;
-    markRows();
+    if (!only) markRows();
     const end = location.hash;
-    if (end !== runStart) {
+    const moved = end !== runStart;
+    if (moved) {
       history.replaceState(history.state, '', runStart);
       history.pushState(null, '', end);
     }
     runStart = null;
+    if (moved) o.onSettle?.(at);
   }
 
   const xIn = (e: PointerEvent) => e.clientX - strip.getBoundingClientRect().left;
@@ -275,15 +294,15 @@ export function mountTime(host: HTMLElement, o: TimeViewOptions): TimeHandle {
     sayMoment();
   });
   resize.observe(strip);
-  render();
-  buildRows();
+  render(!only);
+  if (!only) buildRows();
 
   return {
     setAt(next) {
       runStart = null;
       if (next === at) return;
       at = next;
-      render();
+      render(!only);
     },
     destroy() {
       // A run cut short by the view going (Back mid-drag) ends with nothing: the address is

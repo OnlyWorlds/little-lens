@@ -59,7 +59,7 @@ function budgetOf(res: Response): Budget {
   return { remaining: n('RateLimit-Remaining'), reset: n('RateLimit-Reset') };
 }
 
-async function getJson(url: string, fetchImpl: Fetch, signal: AbortSignal | undefined, budget: ((b: Budget) => void) | undefined, token: string | null): Promise<unknown> {
+export async function getJson(url: string, fetchImpl: Fetch, signal: AbortSignal | undefined, budget: ((b: Budget) => void) | undefined, token: string | null): Promise<unknown> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), REQUEST_LIMIT_MS);
   const onAbort = () => ctl.abort();
@@ -77,7 +77,8 @@ async function getJson(url: string, fetchImpl: Fetch, signal: AbortSignal | unde
     // account cannot read is the 404 below.
     if (res.status === 401 && token) throw new ReadError({ kind: 'ended' });
     // 401 is keel's answer while its public door is shut: from outside, a closed world like any other.
-    if (res.status === 404 || res.status === 401 || res.status === 403) throw new ReadError({ kind: 'closed' });
+    // 410 is a deleted element, for a reader keel shows tombstones: gone is closed, never a retry.
+    if (res.status === 404 || res.status === 410 || res.status === 401 || res.status === 403) throw new ReadError({ kind: 'closed' });
     if (res.status === 429 || res.status === 503) {
       const ra = Number(res.headers.get('Retry-After'));
       throw new ReadError({ kind: 'slow-down', retryAfter: Number.isFinite(ra) && ra > 0 ? ra : null });

@@ -17,6 +17,8 @@ import { mountWeb, type WebHandle } from './ui/web';
 import { mountTime, type TimeHandle } from './ui/time-view';
 import { readTime, type TimeReading, type WorldTime } from './lens/time';
 import { elementView } from './ui/element-view';
+import { readDraught, type Draught } from './lens/draught';
+import { mountDraught, type DraughtHandle } from './ui/draught-view';
 
 export const MOPPETOPIA = '0695db52-5433-7332-8000-db7fe10da375';
 
@@ -34,15 +36,28 @@ interface Loaded {
   reading: TimeReading | null;
   /** Lines under the counts: what was left out and why, files that would not read. */
   notes: string[];
+  /**
+   * Draughts read in this world, by Character and moment, in memory only: they go with the world
+   * (another world, sign-out, the sign-in ending), so a signed-in packet never outlives its sign-in.
+   */
+  draughts: Map<string, Draught>;
 }
 
+/** Packets kept per open world; the oldest goes first. */
+const DRAUGHTS_KEPT = 64;
+
 const app = document.getElementById('app')!;
+// Every page sets its own scroll: a redraw in place (a moment) keeps it, any other page starts at
+// the top. The browser's own restore would move a page that redrew in place.
+history.scrollRestoration = 'manual';
 let loaded: Loaded | null = null;
 /** The one read in flight; any new read aborts it. */
 let loading: { reader: 'public' | 'me'; worldId: string; ctl: AbortController } | null = null;
 let web: WebHandle | null = null;
 /** The time view on screen, and the world it stands for: a change of moment alone redraws it in place. */
 let timeView: { handle: TimeHandle; key: string } | null = null;
+/** The draught on screen, and the Character it stands for, the same way. */
+let draughtView: { handle: DraughtHandle; key: string } | null = null;
 /** The world web's filter: one kind or all, and the search text. */
 let filter: { type: ElementType | null; q: string } = { type: null, q: '' };
 
@@ -82,8 +97,19 @@ window.addEventListener('pageshow', (e) => {
   }
 });
 
+/**
+ * A draught on the sign-in stops reading: a read still running when the token goes would answer
+ * 401 and say the sign-in ended over the line that says why it did.
+ */
+function dropSignedInDraught(): void {
+  if (!draughtView?.key.startsWith('me:')) return;
+  draughtView.handle.destroy();
+  draughtView = null;
+}
+
 /** Forget the sign-in and everything read on it, and go to the ways in with a line. */
 function endSession(line: string): void {
+  dropSignedInDraught();
   if (loading?.reader === 'me') {
     loading.ctl.abort();
     loading = null;
@@ -112,6 +138,7 @@ async function signOut(): Promise<void> {
   const s = session;
   if (!s) return;
   // A read in flight goes first, so its answer never paints over what follows.
+  dropSignedInDraught();
   loading?.ctl.abort();
   loading = null;
   worldsRead?.abort();
@@ -135,6 +162,8 @@ function screen(...children: (Node | null)[]): void {
   web = null;
   timeView?.handle.destroy();
   timeView = null;
+  draughtView?.handle.destroy();
+  draughtView = null;
   clear(app);
   app.append(...children.filter((c): c is Node => c !== null));
 }
@@ -205,7 +234,8 @@ function signInWay(said: HTMLElement): HTMLElement | null {
       type: 'button',
       onclick: () => {
         const r = parseRoute(location.hash);
-        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId, r.view === 'time' ? 'time' : 'web', r.view === 'time' ? r.at : null) : null;
+        // The list resumes as its world (the resume takes no `?view=`); a moment rides along.
+        const resume = r.kind === 'world' && r.reader === 'me' ? worldHash('me', r.worldId, r.elementId, r.view === 'list' ? 'web' : r.view, 'at' in r ? r.at : null) : null;
         said.textContent = 'Going to OnlyWorlds…';
         beginOnlyWorldsSignIn(resume).catch((err: unknown) => (said.textContent = err instanceof Error ? err.message : 'Signing in did not start. Try again.'));
       },
@@ -269,7 +299,7 @@ function holdFile(w: FileWorld): void {
   const notes = leftOutNotes(g);
   if (w.unreadable > 0) notes.push(`${w.unreadable} ${w.unreadable === 1 ? 'file' : 'files'} could not be read.`);
   dropRead();
-  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes };
+  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes, draughts: new Map() };
   filter = { type: null, q: '' };
   if (location.hash === '#/file') route();
   else location.hash = '#/file';
@@ -348,7 +378,7 @@ async function openWorld(reader: 'public' | 'me', worldId: string): Promise<void
     if (!stillWanted(ctl, s, reader, worldId)) return;
     const g = buildGraph(els);
     const sub = s ? `signed in as ${s.username}` : session ? 'public world, read without your sign-in' : 'public world, signed out';
-    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g) };
+    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g), draughts: new Map() };
     filter = { type: null, q: '' };
     loading = null;
     route();
@@ -499,13 +529,88 @@ function elementPage(l: Loaded, id: string): void {
     );
     return;
   }
+  // A Character's draught is keel's to serve: a world on OnlyWorlds offers it, a file never.
+  const draughtWay = el.type === 'character' && l.reader !== 'file' ? h('a', { class: 'way dway', href: worldHash(l.reader, l.worldId, id, 'draught') }, 'Its draught at a moment') : null;
   screen(
     top(l.name, l.sub),
-    h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, l.worldId) }, `← ${l.name}`)),
+    h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, l.worldId) }, `← ${l.name}`), draughtWay),
     // A file's pictures are never fetched: what a file names, the file's author chose.
     h('main', { class: 'element' }, elementView({ graph: l.graph, degree: l.degree, element: el, hrefOf: (i) => worldHash(l.reader, l.worldId, i), pictures: l.reader !== 'file' })),
   );
   document.title = `${el.name || 'Untitled'} · Little Lens`;
+}
+
+/** Which Character's draught a view stands for: the reader, the world and the id. */
+function draughtKey(reader: string, worldId: string | null, id: string): string {
+  return `${reader}:${worldId ?? ''}:${id}`;
+}
+
+function cannotReadDraught(l: Loaded, id: string): void {
+  screen(
+    top(l.name, l.sub),
+    h('main', { class: 'closed' }, h('h1', {}, "You cannot read this Character's draught"), h('p', {}, 'A draught is read for a Character this world shows you. It may be hidden, or the address may be wrong.'), h('a', { class: 'way', href: worldHash(l.reader, l.worldId, id) }, 'Back to the element')),
+  );
+}
+
+/** An element's draught at a moment: keel's packet, read keyless or on the session's token. */
+function draughtPage(l: Loaded, id: string, at: number | null): void {
+  const el = l.graph.byId.get(id);
+  if (!el || el.type !== 'character' || l.reader === 'file' || !l.worldId) return cannotReadDraught(l, id);
+  const worldId = l.worldId;
+  const s = l.reader === 'me' ? session : null;
+  // Kept by Character and moment: a world holds many Characters' draughts.
+  const keyOf = (asOf: number) => `${id}:${asOf}`;
+  const host = h('main', { class: 'draught', 'aria-label': 'Draught' });
+  screen(top(l.name, l.sub), h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, worldId, id) }, `← ${el.name || 'Untitled'}`)), host);
+  document.title = `${el.name || 'Untitled'}, its draught · Little Lens`;
+  const reading = (l.reading ??= readTime(l.graph.nodes));
+  draughtView = {
+    key: draughtKey(l.reader, worldId, id),
+    handle: mountDraught(host, {
+      name: el.name ?? '',
+      time: l.time,
+      calendar: reading.calendar,
+      at,
+      signedIn: l.reader === 'me',
+      cached: (asOf) => {
+        // A hit moves to the newest slot, so what is used stays longest.
+        const hit = l.draughts.get(keyOf(asOf));
+        if (hit) {
+          l.draughts.delete(keyOf(asOf));
+          l.draughts.set(keyOf(asOf), hit);
+        }
+        return hit;
+      },
+      read: async (asOf, signal) => {
+        // A signed-in read stands on the sign-in it began with, and is kept only while both stand.
+        if (l.reader === 'me' && (!s || session !== s)) throw new ReadError({ kind: 'ended' });
+        const d = await readDraught(worldId, id, asOf, fetch, signal, s?.token ?? null);
+        if (loaded === l && (l.reader !== 'me' || session === s)) {
+          l.draughts.set(keyOf(asOf), d);
+          while (l.draughts.size > DRAUGHTS_KEPT) l.draughts.delete(l.draughts.keys().next().value!);
+        }
+        return d;
+      },
+      hrefOf: (i) => (l.graph.byId.has(i) ? worldHash(l.reader, worldId, i) : null),
+      hashFor: (a) => worldHash(l.reader, worldId, id, 'draught', a),
+      onFailure: (err) => {
+        if (err instanceof ReadError && err.failure.kind === 'ended') {
+          endSession(ENDED_LINE);
+          return null;
+        }
+        if (err instanceof ReadError && err.failure.kind === 'closed') {
+          cannotReadDraught(l, id);
+          return null;
+        }
+        if (err instanceof ReadError && err.failure.kind === 'slow-down') {
+          const sec = err.failure.retryAfter;
+          return `OnlyWorlds is asking Little Lens to slow down. Try again in ${sec ? `${sec} seconds` : 'a minute'}.`;
+        }
+        if (err instanceof ReadError && err.failure.kind === 'server') return 'OnlyWorlds answered with an error. Try again in a moment.';
+        return 'Little Lens could not reach OnlyWorlds. Check your connection and try again.';
+      },
+    }),
+  };
 }
 
 // -- The router ------------------------------------------------------------
@@ -524,7 +629,7 @@ function route(): void {
   if (r.kind === 'file') {
     if (!loaded || loaded.reader !== 'file') return waysIn('Open the file again: Little Lens keeps nothing once the page closes.');
     if (r.elementId) return elementPage(loaded, r.elementId);
-    return r.view === 'time' ? timePage(loaded, r.at) : worldPage(loaded, r.view);
+    return r.view === 'time' ? timePage(loaded, r.at) : worldPage(loaded, r.view === 'list' ? 'list' : 'web');
   }
   // A signed-in address never falls back to a public read of the same world.
   if (r.reader === 'me' && !session) return waysIn(canSignInWithOnlyWorlds() ? 'Sign in to open this world.' : 'This address opens a world signed in, on little-lens.onlyworlds.com.');
@@ -532,9 +637,10 @@ function route(): void {
     void openWorld(r.reader, r.worldId);
     return;
   }
-  if (r.elementId) elementPage(loaded, r.elementId);
+  if (r.elementId && r.view === 'draught') draughtPage(loaded, r.elementId, r.at);
+  else if (r.elementId) elementPage(loaded, r.elementId);
   else if (r.view === 'time') timePage(loaded, r.at);
-  else worldPage(loaded, r.view);
+  else worldPage(loaded, r.view === 'list' ? 'list' : 'web');
 }
 
 window.addEventListener('hashchange', () => {
@@ -543,6 +649,10 @@ window.addEventListener('hashchange', () => {
   if (timeView && loaded && !exchanging && (r.kind === 'world' || r.kind === 'file') && r.view === 'time' && !r.elementId) {
     const key = r.kind === 'file' ? 'file:' : `${r.reader}:${r.worldId}`;
     if (key === timeView.key && key === timeKey(loaded)) return timeView.handle.setAt(r.at);
+  }
+  // The same between moments of the draught on screen: the strip moves and the moment is read.
+  if (draughtView && loaded && !exchanging && r.kind === 'world' && r.view === 'draught' && r.elementId && loaded.reader === r.reader && loaded.worldId === r.worldId) {
+    if (draughtView.key === draughtKey(r.reader, r.worldId, r.elementId)) return draughtView.handle.setAt(r.at);
   }
   route();
   window.scrollTo(0, 0);

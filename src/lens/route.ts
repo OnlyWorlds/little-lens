@@ -9,10 +9,10 @@ import { parseAt } from './time';
 /** Who a world is read as: keyless, as the signed-in account, or from a file held in this tab. */
 export type Reader = 'public' | 'me' | 'file';
 
-export type View = 'web' | 'list' | 'time';
+export type View = 'web' | 'list' | 'time' | 'draught';
 
-/** The time view carries its moment; the others carry none. */
-type ViewPart = { view: 'web' | 'list' } | { view: 'time'; at: number | null };
+/** The time view and an element's draught carry their moment; the others carry none. */
+type ViewPart = { view: 'web' | 'list' } | { view: 'time' | 'draught'; at: number | null };
 
 export type Route =
   | { kind: 'home' }
@@ -39,11 +39,13 @@ export function parseRoute(hash: string): Route {
     const reader = parts[0] === 'me' ? 'me' : 'public';
     const worldId = parts[1];
     const isTime = parts.length === 3 && parts[2] === 'time';
-    if (parts.length === 2 || isTime || (parts.length === 4 && parts[2] === 'e')) {
-      const elementId = parts.length === 4 ? parts[3] : null;
+    // An element's draught: the only element address that carries a moment.
+    const isDraught = parts.length === 5 && parts[2] === 'e' && parts[4] === 'draught';
+    if (parts.length === 2 || isTime || (parts.length === 4 && parts[2] === 'e') || isDraught) {
+      const elementId = parts.length >= 4 ? parts[3] : null;
       if (!isId(worldId) || (elementId !== null && !isId(elementId))) return { kind: 'closed' };
-      // `at` on an element is reserved for the draught's view: an element route carries no moment.
-      return { kind: 'world', reader, worldId: worldId.toLowerCase(), elementId: elementId?.toLowerCase() ?? null, ...(isTime ? time : plain) };
+      const view: ViewPart = isTime ? time : isDraught ? { view: 'draught', at: parseAt(params.get('at')) } : plain;
+      return { kind: 'world', reader, worldId: worldId.toLowerCase(), elementId: elementId?.toLowerCase() ?? null, ...view };
     }
   }
   if (parts[0] === 'file') {
@@ -66,6 +68,8 @@ export function parseRoute(hash: string): Route {
 
 export function worldHash(reader: Reader, worldId: string | null, elementId: string | null = null, view: View = 'web', at: number | null = null): string {
   const base = reader === 'file' || !worldId ? '#/file' : `#/${reader === 'me' ? 'me' : 'w'}/${worldId}`;
+  // A file has no draught (keel reads it), so its element address is the element's.
+  if (elementId && view === 'draught' && base !== '#/file') return `${base}/e/${encodeURIComponent(elementId)}/draught${at !== null ? `?at=${at}` : ''}`;
   if (elementId) return `${base}/e/${encodeURIComponent(elementId)}`;
   if (view === 'time') return `${base}/time${at !== null ? `?at=${at}` : ''}`;
   return `${base}${view === 'list' ? '?view=list' : ''}`;

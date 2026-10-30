@@ -206,7 +206,7 @@ async function leftRevoke(tag, page, keel, token, how) {
   check(tag, hrefs.length === 3 && hrefs.every((h) => h.startsWith(`#/me/${MINE}/e/`)), 'every link a signed-in world draws stays under #/me/');
   await page.click('.cards a:has-text("Ada Vane")');
   await page.waitForSelector('.eview');
-  check(tag, (await page.locator('.crumbs a').getAttribute('href')) === `#/me/${MINE}`, 'the crumb goes back under #/me/');
+  check(tag, (await page.locator('.crumbs a:not(.dway)').getAttribute('href')) === `#/me/${MINE}`, 'the crumb goes back under #/me/');
   await page.screenshot({ path: `walk/out-signin-${which}-world.png` });
 
   // A world whose body carries no counts reads every type the graph keeps.

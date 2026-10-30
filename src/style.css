@@ -78,6 +78,7 @@ button{font:inherit;color:inherit}
 .tnow{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:3 3}
 .tnowlabel{fill:var(--accent);font-size:11px}
 .tat{stroke:#d6a548;stroke-width:2}
+.tstack{margin:6px 0 0;color:var(--muted);font-size:13px}
 .tmoment{margin:10px 0 12px;color:var(--muted);font-size:14px}
 .tmoment b{color:var(--text)}
 .tlist{list-style:none;margin:0;padding:0;max-height:60vh;overflow:auto;border-top:1px solid var(--line)}
@@ -86,6 +87,43 @@ button{font:inherit;color:inherit}
 .twhen{color:var(--muted);text-align:right}
 .tafter{color:#d6a548;font-weight:600}
 .trow.after .chip{opacity:.7}
+
+/* The draught at a moment */
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.dway{width:auto;min-height:36px;padding:4px 14px;font-weight:600;font-size:14px}
+.draught{padding:12px 16px 32px;max-width:1440px;margin:0 auto}
+.dname{display:flex;align-items:center;gap:10px;margin:4px 0 4px;font-size:24px;overflow-wrap:anywhere;color:var(--text)}
+.dname .ticon{color:#7fa8ec}
+.dlead{margin:0 0 8px;color:var(--muted);font-size:14px}
+.dstrip{margin:8px 0 12px}
+.dstrip.pending{min-height:200px}
+.said:focus{outline:none}
+.dways{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.dways .pill{min-height:36px;font-size:14px}
+.dways .pill:disabled{cursor:default;opacity:.6}
+.dcutnote{flex-basis:100%;margin:0}
+.dnow{display:inline-flex;align-items:center;min-height:36px;margin:0 0 8px;font-size:14px}
+.dreader{margin:4px 0 0;color:#d6a548;font-size:13px}
+.dreader:empty{display:none}
+.dpanel{padding:14px 16px}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dcap{margin:0;font-size:17px}
+.dcopy{width:auto;min-height:40px}
+.dcopied{min-height:0;margin:6px 0 0;color:var(--muted);font-size:13px}
+.dcopied:empty{display:none}
+.dbox{display:block;width:100%;margin:8px 0 0;padding:10px;background:#05080c;color:var(--text);border:1px solid var(--line);border-radius:8px;font:13px/1.45 ui-monospace,Consolas,monospace}
+.dbox[hidden]{display:none}
+.dsec{margin:16px 0 4px;font-size:15px}
+.dhint{color:var(--muted);font-weight:400;font-size:13px}
+.drows{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.drow{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
+.drow .ticon{color:var(--ink)}
+.dn{font-weight:600;color:var(--text);text-decoration:none}
+a.dn:hover{text-decoration:underline}
+.dkind{color:var(--muted);font-size:13px}
+.dtag{border:1px dashed var(--line);border-radius:4px;padding:0 6px;color:var(--muted);font-size:12px}
+.dund{color:#d6a548;border-color:#6b5a32}
+.dvia{margin-left:auto;color:var(--muted);font-size:13px;text-align:right}
 
 /* A closed door, a wait, a failure */
 .closed{max-width:520px;margin:0 auto;padding:72px 16px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
@@ -127,6 +165,8 @@ button{font:inherit;color:inherit}
   .trow{flex-wrap:wrap}
   .tkind{display:none}
   .twhen{margin-left:auto}
+  /* A phone scrolls the page, never a list inside it (Seethe's T3). */
+  .tlist{max-height:none;overflow:visible}
 }
 @media (max-width:760px){
   .eview{grid-template-columns:minmax(0,1fr)}
