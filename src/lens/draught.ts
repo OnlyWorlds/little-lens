@@ -14,8 +14,8 @@ export const WHOLE = 2147483647;
 export const DRAUGHT_BUDGET = 1000;
 /**
  * What is asked: every section but `recent` (with no `since` keel never reads the feed, so an
- * empty `recent` would say nothing changed), and `roster`, which keel drops for the public reader:
- * its absence from the echo is how a page tells a public reading from a seat's.
+ * empty `recent` would say nothing changed), and `roster` (the Members in the copy), which keel
+ * leaves out for the public reader.
  */
 export const DRAUGHT_COMPONENTS = ['self', 'role', 'work', 'style', 'events', 'knowledge', 'names', 'sheet', 'roster'] as const;
 
@@ -108,7 +108,10 @@ export function parseDraught(body: unknown, worldId: string, characterId: string
   }
   const cut: Record<string, number> = {};
   if (isObj(body.cut)) for (const [k, n] of Object.entries(body.cut)) if (typeof n === 'number' && n > 0) cut[k] = n;
-  return { packet: body, asOf: intOrNull(body.as_of), now: intOrNull(body.now), rows, self: her, cut, empty, publicReader: !served.has('roster'), selfHidden: body.character === null };
+  // keel names the rung the packet was built through; an older keel with no `reader` is told by
+  // the roster it leaves out for the public.
+  const publicReader = typeof body.reader === 'string' ? body.reader === 'public' : !served.has('roster');
+  return { packet: body, asOf: intOrNull(body.as_of), now: intOrNull(body.now), rows, self: her, cut, empty, publicReader, selfHidden: body.character === null };
 }
 
 /** What keel's budget left out of a packet, in rows. */

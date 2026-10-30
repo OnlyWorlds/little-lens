@@ -54,7 +54,10 @@ describe('the draught packet', () => {
     expect(() => parseDraught([], W, C)).toThrow(ReadError);
   });
 
-  it('tells a public reading by the roster missing from the echo, and a hidden self by its null', () => {
+  it('tells a public reading by keel\'s reader, by the missing roster only when reader is absent, and a hidden self by its null', () => {
+    expect(parseDraught(packet(300, {}, { reader: 'public' }), W, C).publicReader).toBe(true);
+    // reader wins over the echo: an owner's packet that named no roster is still the owner's.
+    expect(parseDraught(packet(300, {}, { reader: 'owner' }), W, C).publicReader).toBe(false);
     expect(parseDraught(packet(300, {}), W, C).publicReader).toBe(true);
     const seat = packet(300, {}, { policy: { components: ['self', 'names', 'roster'] }, roster: [] });
     expect(parseDraught(seat, W, C).publicReader).toBe(false);
@@ -138,5 +141,12 @@ describe('the copy', () => {
     const text = draughtText(d.packet as never);
     expect(text).toBe(draughtText(p as never));
     expect(text).toContain('dated up to Year 300');
+    expect(text).toContain("Read as the Character's own view.");
+  });
+
+  it('names the public reader on a public packet, never her own view', () => {
+    const text = draughtText(parseDraught(packet(300, {}, { reader: 'public' }), W, C).packet as never);
+    expect(text).toContain('Read as the public reader.');
+    expect(text).not.toContain("the Character's own view");
   });
 });

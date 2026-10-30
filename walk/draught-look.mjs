@@ -101,6 +101,8 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
     // The moment in the world's own words, as the caption says it.
     const capWords = cap.slice('Dated up to '.length, cap.lastIndexOf(':'));
     const okText = copiedLine.includes(`Admiral Fluffington, dated up to ${capWords}`) && (pasted === null || pasted.includes('Admiral Fluffington'));
+    // Signed out, the packet is the public reader's, and the pasted text says so (keel's reader).
+    if (pasted !== null) check(`${label}: the pasted text names the public reader, never her own view`, pasted.includes('Read as the public reader.') && !pasted.includes("the Character's own view"));
     check(`${label}: the copy is the draught at 300`, okText, copiedLine.slice(0, 120));
 
     // Back returns to the now's address, and the caption follows the packet.
