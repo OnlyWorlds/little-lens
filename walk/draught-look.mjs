@@ -65,9 +65,14 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
     check(`${label}: a Character's page offers its draught`, (await way.count()) === 1);
     await way.click();
     await page.waitForSelector('.dcap');
-    await page.waitForFunction(() => document.querySelector('.dways .pill:nth-child(2)') && !document.querySelector('.dways .pill:nth-child(2)').disabled);
+    // At the now the after way counts keel's difference once the whole read lands (on Moppetopia 0: disabled, said).
+    await page.waitForFunction(() => /· \d+$/.test(document.querySelector('.dways .pill:nth-child(2)')?.textContent ?? ''));
     const capNow = await page.textContent('.dcap');
     check(`${label}: at the world's now, the caption is keel's count`, capNow.includes(`: ${all.length} rows`), capNow);
+    const afterNow = all.length - keysOf(await draught(now)).length;
+    const pillNow = await page.locator('.dways .pill:nth-child(2)');
+    const pillText = await pillNow.textContent();
+    check(`${label}: at the now, dated after counts ${afterNow}${afterNow === 0 ? ', disabled and said' : ''}`, pillText.endsWith(`· ${afterNow}`) && (afterNow > 0 || ((await pillNow.isDisabled()) && (await page.locator('.dcutnote').count()) === 1)), pillText);
     await page.screenshot({ path: `walk/out-draught-${name}-${label}-1-now.png`, fullPage: true });
 
     // A moment in the address: year 300.

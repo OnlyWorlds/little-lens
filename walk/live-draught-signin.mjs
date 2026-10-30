@@ -46,8 +46,8 @@ const cleanup = async () => {
     const owner = new OwV2Client({ apiKey: made.key.key, apiPin: pin, fetch: limited(20000) });
     for (const el of [...made.elements].reverse()) await owner.delete(el.type, el.id).catch((e) => console.log(`[${tag}] delete ${el.type}: ${String(e?.status ?? e)}`));
     for (const el of made.elements) console.log(`[${tag}] cleanup: ${el.type} reads back ${await status(`${API}/${el.type}/${el.id}`, { 'API-Key': made.key.key, 'API-Pin': pin })}`);
-    await acct('DELETE', `/account/worlds/${made.worldId}/keys/${made.key.id}`);
-    console.log(`[${tag}] cleanup: the walk's world key taken back by id`);
+    const revoked = await acct('DELETE', `/account/worlds/${made.worldId}/keys/${made.key.id}`);
+    console.log(`[${tag}] cleanup: the walk's world key taken back by id (${revoked.status}); it now reads ${await status(`${API}/world/`, { 'API-Key': made.key.key, 'API-Pin': pin })}`);
   }
   for (const id of made.tokens) await acct('DELETE', `/account/tokens/${id}`).catch(() => {});
   console.log(`[${tag}] cleanup: ${made.tokens.length} sign-in token(s) taken back by id`);
