@@ -328,7 +328,7 @@ function ownerOf(r: MessageReading, m: Element): unknown {
 
 /** The Character's read mark, the SDK's answer, asked once per reading. */
 function markOf(r: MessageReading, c: string): Element | null {
-  if (!r.markOf.has(c)) r.markOf.set(c, readMarkOf(r.marks, c, r.members) as Element | null);
+  if (!r.markOf.has(c)) r.markOf.set(c, readMarkOf(r.marks, c, r.members, { keyless: r.keyless }) as Element | null);
   return r.markOf.get(c)!;
 }
 

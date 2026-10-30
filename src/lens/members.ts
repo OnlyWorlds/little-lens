@@ -5,10 +5,11 @@
  * Nothing here ends a sign-in or closes a world: any failure is no list.
  */
 
-import { isMessage, type OwAccountWorld, type OwMessageMember } from '@onlyworlds/sdk';
+import { isMessage, OwV2Client, type OwAccountWorld, type OwMessageMember } from '@onlyworlds/sdk';
 import type { Element } from './graph';
 import { isReadRelation } from './messages';
-import { API_BASE, getJson, ReadError, type Budget } from './world-read';
+import { CLIENT_NAME } from './signin';
+import { API_BASE, budgetOf, ReadError, REQUEST_LIMIT_MS, type Budget } from './world-read';
 
 /** The row keys the SDK's readers read; every other key of a row (a username, a role, a lens) is dropped. */
 function keep(row: Record<string, unknown>): OwMessageMember {
@@ -44,9 +45,10 @@ export function completeMembers(body: unknown, bodies: Iterable<Element>): OwMes
 }
 
 /**
- * `GET /members?world=<id>` on the token, after waiting out a budget the last read spent, read as
- * a complete list or null. Every failure is null, a 401 included: the sign-in is judged by the next
- * read that needs it. An abort is the caller's, and rethrown as one.
+ * The SDK's `members()` on the token and the world (`GET /members?world=<id>`), after waiting out a
+ * budget the last read spent, read as a complete list or null. Every failure is null, a 401
+ * included: the sign-in is judged by the next read that needs it. An abort is the caller's, and
+ * rethrown as one.
  */
 export async function readMembers(
   worldId: string,
@@ -56,11 +58,39 @@ export async function readMembers(
 ): Promise<OwMessageMember[] | null> {
   try {
     await paceFor(opts.budget, opts, opts.signal);
-    const body = await getJson(`${API_BASE}/members/?world=${encodeURIComponent(worldId)}`, opts.fetchImpl ?? fetch, opts.signal, opts.onBudget, token);
-    return completeMembers(body, bodies);
+    // keel serves the list unpaged; the SDK hands back its rows alone, so a sign of another page is
+    // read here, beside it: a paged answer is a partial list, and a partial list is none.
+    let paged = false;
+    const rows = await withLimit(opts.signal, (signal) => {
+      const limited: typeof fetch = async (input, init) => {
+        const res = await (opts.fetchImpl ?? fetch)(input, { ...init, credentials: 'omit', signal });
+        opts.onBudget?.(budgetOf(res));
+        if (res.ok) {
+          const peek = (await res.clone().json().catch(() => null)) as { has_more?: unknown; next_cursor?: unknown } | null;
+          paged = peek?.has_more === true || typeof peek?.next_cursor === 'string';
+        }
+        return res;
+      };
+      return new OwV2Client({ baseUrl: API_BASE, apiKey: token, world: worldId, client: CLIENT_NAME, fetch: limited }).members();
+    });
+    return completeMembers(paged ? { data: rows, has_more: true } : { data: rows }, bodies);
   } catch (e) {
     if (opts.signal?.aborted) throw e instanceof ReadError ? e : new ReadError({ kind: 'network' });
     return null;
+  }
+}
+
+/** One call under its own time limit, cut too when the caller's signal aborts. */
+async function withLimit<T>(outer: AbortSignal | undefined, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), REQUEST_LIMIT_MS);
+  const onAbort = () => ctl.abort();
+  outer?.addEventListener('abort', onAbort);
+  try {
+    return await run(ctl.signal);
+  } finally {
+    clearTimeout(timer);
+    outer?.removeEventListener('abort', onAbort);
   }
 }
 

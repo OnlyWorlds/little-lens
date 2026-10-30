@@ -50,7 +50,7 @@ export interface Budget {
   reset: number | null;
 }
 
-function budgetOf(res: Response): Budget {
+export function budgetOf(res: Response): Budget {
   const n = (h: string) => {
     const v = res.headers.get(h);
     const x = v === null ? NaN : Number(v);

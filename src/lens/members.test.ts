@@ -64,12 +64,12 @@ describe('M3: the read never ends a sign-in or closes a world', () => {
   const statuses = [401, 403, 404, 410, 422, 429, 500, 503];
   for (const s of statuses) {
     it(`a ${s} is no list`, async () => {
-      expect(await readMembers('w', 't', BODIES, { fetchImpl: answer(s, { error: {} }) as typeof fetch })).toBeNull();
+      expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: answer(s, { error: {} }) as typeof fetch })).toBeNull();
     });
   }
   it('a body that is not JSON, and a network error, are no list', async () => {
-    expect(await readMembers('w', 't', BODIES, { fetchImpl: (async () => new Response('<html>', { status: 200 })) as typeof fetch })).toBeNull();
-    expect(await readMembers('w', 't', BODIES, { fetchImpl: (async () => { throw new TypeError('offline'); }) as typeof fetch })).toBeNull();
+    expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: (async () => new Response('<html>', { status: 200 })) as typeof fetch })).toBeNull();
+    expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: (async () => { throw new TypeError('offline'); }) as typeof fetch })).toBeNull();
   });
   it('a 200 list is read on the token, with world=', async () => {
     let seen: { url: string; auth: string | null } | null = null;
@@ -77,18 +77,23 @@ describe('M3: the read never ends a sign-in or closes a world', () => {
       seen = { url, auth: new Headers(init.headers).get('Authorization') };
       return new Response(JSON.stringify({ data: ROWS }), { status: 200 });
     }) as unknown as typeof fetch;
-    expect(await readMembers('w 1', 'tok', BODIES, { fetchImpl: f })).toHaveLength(3);
-    expect(seen).toEqual({ url: 'https://www.onlyworlds.com/api/v2/members/?world=w%201', auth: 'Bearer tok' });
+    expect(await readMembers('w 1', 'ow_a_tok', BODIES, { fetchImpl: f })).toHaveLength(3);
+    expect(seen).toEqual({ url: 'https://www.onlyworlds.com/api/v2/members/?world=w%201', auth: 'Bearer ow_a_tok' });
   });
   it('an abort is the caller\'s and is thrown', async () => {
     const ctl = new AbortController();
     ctl.abort();
     const f = (async () => { throw new DOMException('aborted', 'AbortError'); }) as typeof fetch;
-    await expect(readMembers('w', 't', BODIES, { fetchImpl: f, signal: ctl.signal })).rejects.toBeInstanceOf(ReadError);
+    await expect(readMembers('w', 'ow_a_t', BODIES, { fetchImpl: f, signal: ctl.signal })).rejects.toBeInstanceOf(ReadError);
+  });
+  it('a paged answer, read through the SDK, is no list', async () => {
+    expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: answer(200, { data: ROWS, has_more: true }) as typeof fetch })).toBeNull();
+    expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: answer(200, { data: ROWS, next_cursor: 'c' }) as typeof fetch })).toBeNull();
+    expect(await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: answer(200, { data: ROWS }) as typeof fetch })).toHaveLength(3);
   });
   it('a spent budget is waited out first', async () => {
     const waits: number[] = [];
-    const out = await readMembers('w', 't', BODIES, { fetchImpl: answer(200, { data: ROWS }) as typeof fetch, budget: { remaining: 0, reset: 3 }, onWait: (s) => waits.push(s), sleep: async (ms) => void waits.push(ms) });
+    const out = await readMembers('w', 'ow_a_t', BODIES, { fetchImpl: answer(200, { data: ROWS }) as typeof fetch, budget: { remaining: 0, reset: 3 }, onWait: (s) => waits.push(s), sleep: async (ms) => void waits.push(ms) });
     expect(waits).toEqual([3, 3250]);
     expect(out).toHaveLength(3);
   });
