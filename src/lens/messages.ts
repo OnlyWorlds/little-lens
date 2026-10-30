@@ -26,6 +26,14 @@ export interface MessageReading {
   keyless: boolean;
   /** Whether a read mark can count here at all. */
   marksCount: boolean;
+  /** The reader is served every read mark (a file, a small world, a signed-in owner or co-builder), so a "not yet" can be said. */
+  everyMark: boolean;
+  /** With a members list, the Characters some row plays: only their marks can ever count. */
+  played: Set<string> | null;
+  /** With a members list, some message claims a sender and was written by a hand the list shows playing no Character, so it can only claim. */
+  unplayedHand: boolean;
+  /** Each Character's read mark as the SDK reads it, found once per reading. */
+  markOf: Map<string, Element | null>;
   /** A Read mark was left out (hidden or proposed): "not yet" is said of no one, so the silence names nobody. */
   marksLeftOut: boolean;
   /** Shown Characters' names (room cards included, hidden and proposed never), stripped. */
@@ -48,7 +56,7 @@ export interface Thread {
 
 const READ = simpleCaseFold('Read');
 
-function isReadRelation(el: Element): boolean {
+export function isReadRelation(el: Element): boolean {
   return el.type === 'relation' && typeof el.supertype === 'string' && simpleCaseFold(el.supertype.trim()) === READ;
 }
 
@@ -103,7 +111,7 @@ function sdkOrder(messages: Element[]): { rank: Map<string, number>; readable: S
   return { rank, readable };
 }
 
-export function readMessages(bodies: Iterable<Element>, source: Source, members: readonly OwMessageMember[] | null): MessageReading {
+export function readMessages(bodies: Iterable<Element>, source: Source, members: readonly OwMessageMember[] | null, everyMark: boolean): MessageReading {
   const messages: Element[] = [];
   const notes: Element[] = [];
   const marks: Element[] = [];
@@ -137,6 +145,10 @@ export function readMessages(bodies: Iterable<Element>, source: Source, members:
   // could never be wrong, and none is said.
   const marksCount = keyless ? false : source === 'me' ? members !== null : members !== null || !hands;
   const order = sdkOrder(messages);
+  const played = members === null ? null : new Set(members.map((m) => m.character).filter((c): c is string => typeof c === 'string'));
+  // The SDK's own answer: a message that names a sender, written by a hand whose row plays no
+  // Character the reader can see (a hidden one reads as unseen, never this).
+  const unplayedHand = members !== null && messages.some((m) => 'created_by' in m && (({ status, claimed }) => status === 'unverifiable' && claimed !== null)(senderStatus(m, members)));
   return {
     messages,
     proposed: messages.filter(isProposedMessage).length,
@@ -146,6 +158,10 @@ export function readMessages(bodies: Iterable<Element>, source: Source, members:
     members,
     keyless,
     marksCount,
+    everyMark,
+    played,
+    unplayedHand,
+    markOf: new Map(),
     marksLeftOut,
     names,
     threads: threadsOf(messages, notes, order),
@@ -301,32 +317,40 @@ export function toLine(r: MessageReading, m: Element): string {
   return `To ${listWords(unseen ? [...names, 'someone you cannot see'] : names)}`;
 }
 
-/** Is the message the Character's own: proved where the body carries hands, its narrator where it carries none. */
-function isOwn(r: MessageReading, m: Element, c: string): boolean {
+/** Whose own the message is: the proved sender where the body carries hands, its narrator where it carries none. */
+function ownerOf(r: MessageReading, m: Element): unknown {
   if ('created_by' in m) {
     const s = senderStatus(m, r.members);
-    return s.status === 'verified' && s.claimed === c;
+    return s.status === 'verified' ? s.claimed : null;
   }
-  return m.narrator === c;
+  return m.narrator;
+}
+
+/** The Character's read mark, the SDK's answer, asked once per reading. */
+function markOf(r: MessageReading, c: string): Element | null {
+  if (!r.markOf.has(c)) r.markOf.set(c, readMarkOf(r.marks, c, r.members) as Element | null);
+  return r.markOf.get(c)!;
 }
 
 /**
  * Who has read it, or null: nothing where no mark can count, on a proposed message, or when no
  * shown Character's mark names it. Only shown Characters are listed; a proved own message is
- * never the sender's to read. Where a mark was left out, only who has read it is said.
+ * never the sender's to read. "Not yet" is said only where the reader is served every mark, none
+ * was left out, and, with a members list, of a Character some row plays (no other's mark could count).
  */
 export function readLine(r: MessageReading, m: Element): string | null {
   if (!r.marksCount || isProposedMessage(m)) return null;
   const hasRead = (c: string) => {
-    const mark = readMarkOf(r.marks, c, r.members) as Element | null;
+    const mark = markOf(r, c);
     return !!mark && Array.isArray(mark.narratives) && (mark.narratives as unknown[]).includes(m.id);
   };
   const opts = { keyless: r.keyless };
   const recipients = recipientsOf(m);
-  const readers = (recipients.length === 0 ? (isToEveryone(m, opts) ? [...r.names.keys()] : []) : recipients).filter((c, i, a) => a.indexOf(c) === i && r.names.has(c) && !isOwn(r, m, c));
+  const own = ownerOf(r, m);
+  const readers = (recipients.length === 0 ? (isToEveryone(m, opts) ? [...r.names.keys()] : []) : recipients).filter((c, i, a) => a.indexOf(c) === i && r.names.has(c) && c !== own);
   const read = readers.filter(hasRead).map((c) => nameIn(r, c));
   // To everyone, those not yet are not known here: only who has.
-  const notYet = recipients.length === 0 || r.marksLeftOut ? [] : readers.filter((c) => !hasRead(c)).map((c) => nameIn(r, c));
+  const notYet = recipients.length === 0 || r.marksLeftOut || !r.everyMark ? [] : readers.filter((c) => (r.played === null || r.played.has(c)) && !hasRead(c)).map((c) => nameIn(r, c));
   const parts = [];
   if (read.length) parts.push(`Read by ${listWords(read)}`);
   if (notYet.length) parts.push(`${read.length ? 'not' : 'Not'} yet by ${listWords(notYet)}`);

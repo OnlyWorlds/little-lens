@@ -12,6 +12,7 @@ import { ReadError, readWorldElements, readWorldMeta, type Budget } from './lens
 import { readWorldFileBytes, readWorldFolder, type FileWorld, type PickedFile } from './lens/file-read';
 import { beginOnlyWorldsSignIn, canSignInWithOnlyWorlds, isSignInCallback, signInCallbackLine, startSignInCallback, sweepStaleRecord, type SignInOutcome } from './lens/signin';
 import { listMyWorlds, revokeToken, type SignedIn } from './lens/account';
+import { paceFor, readMembers, servesEveryMark } from './lens/members';
 import { clear, h, inkOf, owMark, pluralWord, typeIcon } from './ui/dom';
 import { mountWeb, type WebHandle } from './ui/web';
 import { mountTime, type TimeHandle } from './ui/time-view';
@@ -50,6 +51,8 @@ interface Loaded {
   /** Where the bodies came from, and the members list when there is one to read. */
   source: Source;
   members: readonly OwMessageMember[] | null;
+  /** The reader is served every read mark, so "not yet" can be said (signed in: the owner or a co-builder). */
+  everyMark: boolean;
   /** The messages reading, made on the first Messages page; whether there is one, on the first switcher. */
   messages: MessageReading | null;
   hasMessages?: boolean;
@@ -312,7 +315,7 @@ function holdFile(w: FileWorld): void {
   const notes = leftOutNotes(g);
   if (w.unreadable > 0) notes.push(`${w.unreadable} ${w.unreadable === 1 ? 'file' : 'files'} could not be read.`);
   dropRead();
-  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes, draughts: new Map(), bodies: w.elements, source: 'file', members: null, messages: null };
+  loaded = { reader: 'file', worldId: null, name: w.name, sub: 'opened from a file', graph: g, degree: degrees(g), time: w.time, reading: null, notes, draughts: new Map(), bodies: w.elements, source: 'file', members: null, everyMark: true, messages: null };
   filter = { type: null, q: '' };
   if (location.hash === '#/file') route();
   else location.hash = '#/file';
@@ -391,15 +394,32 @@ async function openWorld(reader: 'public' | 'me', worldId: string): Promise<void
         budget,
         onProgress: (d, t) => (progress.textContent = `Reading ${meta.name}: ${d} of ${t} types`),
         onWait: (sec) => (progress.textContent = `OnlyWorlds asks Little Lens to pace its reading. Continuing in ${sec} seconds…`),
+        onBudget: (b) => (budget = b),
       },
       ctl.signal,
       token,
     );
+    // Signed in, a world that holds a message reads who is in it, before anything is drawn, so no
+    // view caches a reading without the list. Neither read below ever signs out or closes the world.
+    let members: OwMessageMember[] | null = null;
+    let everyMark = false;
+    if (s && holdsMessages(els)) {
+      if (!stillWanted(ctl, s, reader, worldId)) return;
+      const pace = {
+        onWait: (sec: number) => (progress.textContent = `OnlyWorlds asks Little Lens to pace its reading. Continuing in ${sec} seconds…`),
+        onRead: () => (progress.textContent = `Reading who is in ${meta.name}…`),
+      };
+      members = await readMembers(worldId, s.token, els, { ...pace, signal: ctl.signal, budget, onBudget: (b) => (budget = b) });
+      // The rung, read fresh with each list: a role changed since the picker read it would be stale.
+      if (members !== null) {
+        await paceFor(budget, pace, ctl.signal);
+        everyMark = servesEveryMark((await listMyWorlds(s, { signal: ctl.signal }).catch(() => null))?.find((w) => w.id === worldId));
+      }
+    }
     if (!stillWanted(ctl, s, reader, worldId)) return;
     const g = buildGraph(els);
     const sub = s ? `signed in as ${s.username}` : session ? 'public world, read without your sign-in' : 'public world, signed out';
-    // Signed in, no members list until keel serves it to the token: senders stay claims.
-    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g), draughts: new Map(), bodies: els, source: reader, members: null, messages: null };
+    loaded = { reader, worldId, name: meta.name, sub, graph: g, degree: degrees(g), time: meta.time, reading: null, notes: leftOutNotes(g), draughts: new Map(), bodies: els, source: reader, members, everyMark, messages: null };
     filter = { type: null, q: '' };
     loading = null;
     route();
@@ -513,7 +533,7 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
 
 /** The world's messages, read once from every body read. */
 function messagesOf(l: Loaded): MessageReading {
-  return (l.messages ??= readMessages(l.bodies, l.source, l.members));
+  return (l.messages ??= readMessages(l.bodies, l.source, l.members, l.everyMark));
 }
 
 /** Messages is a view only where the world holds one, shown or hidden. */
@@ -530,9 +550,14 @@ function switcherFor(l: Loaded, current: 'web' | 'list' | 'time' | 'messages'): 
 /** What cannot be checked about these messages, said once at the head. */
 function checkLineOf(l: Loaded): string | null {
   if (l.source === 'public') return 'Read as the public: senders cannot be checked, a message may have recipients the public cannot see, and read marks are not shown.';
-  if (l.source === 'me' && l.members === null) return 'Senders cannot be checked here yet, so each says who it claims to be from, and read marks are not shown.';
-  if (!messagesOf(l).marksCount) return 'Read marks cannot be checked here, so none is shown.';
-  return null;
+  if (l.source === 'me' && l.members === null) return 'Little Lens could not read who is in this world, so senders cannot be proved and read marks are not shown.';
+  const r = messagesOf(l);
+  if (!r.marksCount) return 'Read marks cannot be checked here, so none is shown.';
+  if (l.source !== 'me') return null;
+  const lines = [];
+  if (r.unplayedHand) lines.push(`A message written with a key whose holder plays no Character${r.everyMark ? '' : ' you can see'} says only who it claims to be from.`);
+  if (!r.everyMark) lines.push('Read marks you cannot see are not counted, so only who has read a message is shown.');
+  return lines.length ? lines.join(' ') : null;
 }
 
 function cannotOpenConversation(l: Loaded): void {
@@ -637,6 +662,7 @@ async function openStandardWorld(worldId: string): Promise<void> {
     bodies: opened.bodies,
     source: 'standard',
     members: opened.members,
+    everyMark: true,
     messages: null,
   };
   filter = { type: null, q: '' };

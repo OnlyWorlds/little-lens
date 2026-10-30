@@ -1,14 +1,17 @@
 // Messages, signed in, read live on a host against real keel. crew-walk-b owns a kept, empty test
-// world; this walk makes two Characters, a message from the first to the second, a reply, and a Read
-// relation naming the first message (through a world key it mints), signs in to Little Lens by Sign
-// in with OnlyWorlds, opens the world's Messages from the view switcher as a person would, reads the
-// conversation, follows the reply's element page back into it, and signs out. Because senders cannot
-// be checked in a signed-in read yet, every sender must read as a claim and no read mark may show.
-// Every element, key and token it makes is recorded by id and taken back at the end, a throw
-// included; credentials, keys and tokens are never printed. Claim the account in its room first.
+// world; this walk makes two Characters, sets the owner to play the first (the world's
+// `owner_character`, its old value recorded first), makes a message from the first to the second,
+// a reply in the second's name written with the owner's key, and the owner's Read relation naming
+// the reply (through a world key it mints), signs in to Little Lens by Sign in with OnlyWorlds, opens
+// the world's Messages from the view switcher as a person would, reads the conversation, follows the
+// reply's element page back into it, and signs out. With keel's members list: the first
+// message is proved, the reply is a claim written with Ada's key, Ada has read the reply, and no
+// "not yet" is said of Mara, whom nobody plays. Cleanup puts `owner_character` back and reads it
+// back, then takes back every element, key and token by recorded id, a throw included; credentials,
+// keys and tokens are never printed. Claim the account and the world in its room first.
 //   CREW_WALK_ACCOUNTS=<file> WORLD="<a world the account owns>" node walk/live-messages-signin.mjs [chromium|firefox] [--expect-old] [--phone]
-// `--expect-old` is the control on a build without Messages: the walk must fail at the Messages link
-// (FAIL lines, exit 1) and still take everything back.
+// `--expect-old` is the control on a build that reads no members list: the walk must fail at the
+// proved sender (FAIL lines, exit 1) and still take everything back.
 import fs from 'node:fs';
 import { chromium, firefox } from '@playwright/test';
 import { OwV2Client } from '@onlyworlds/sdk';
@@ -50,6 +53,13 @@ const cleanup = async () => {
   let left = 0;
   if (made.key) {
     const owner = new OwV2Client({ apiKey: made.key.key, apiPin: pin, fetch: limited(20000) });
+    // A played Character cannot be deleted: the owner's Character goes back first, and is read back.
+    if (made.ownerCharacter !== undefined) {
+      await owner.patchWorld({ owner_character: made.ownerCharacter }).catch((e) => console.log(`[${tag}] owner_character restore: ${String(e?.status ?? e)}`));
+      const now = await owner.getWorld().then((w) => w.owner_character ?? null, () => 'unread');
+      if (now !== made.ownerCharacter) left++;
+      console.log(`[${tag}] cleanup: owner_character ${now === made.ownerCharacter ? 'back as it was' : 'NOT BACK'}`);
+    }
     for (const el of [...made.elements].reverse()) await owner.delete(el.type, el.id).catch((e) => console.log(`[${tag}] delete ${el.type}: ${String(e?.status ?? e)}`));
     for (const el of made.elements) {
       const s = await status(`${API}/${el.type}/${el.id}`, { 'API-Key': made.key.key, 'API-Pin': pin }).catch(() => 0);
@@ -99,10 +109,14 @@ const make = async (type, body) => {
 };
 const ada = await make('character', { name: 'Lens walk Ada' });
 const mara = await make('character', { name: 'Lens walk Mara' });
+// The owner plays Ada while the walk runs: its old Character is recorded before the change is sent.
+made.ownerCharacter = (await owner.getWorld()).owner_character ?? null;
+await owner.patchWorld({ owner_character: ada.id });
+check(((await owner.getWorld()).owner_character ?? null) === ada.id, 'the owner plays Lens walk Ada');
 const first = await make('narrative', { name: 'Lens walk question', supertype: 'Message', narrator: ada.id, characters: [mara.id], story: 'Are the lamps lit on the east road?' });
 const reply = await make('narrative', { name: 'Re: Lens walk question', supertype: 'Message', narrator: mara.id, characters: [ada.id], parent_narrative: first.id, story: 'Lit at dusk, as always.' });
-await make('relation', { name: 'Read: Lens walk Mara', supertype: 'Read', actor: mara.id, narratives: [first.id] });
-console.log(`[${tag}] made 2 Characters, 2 messages and a Read relation, recorded by id`);
+await make('relation', { name: 'Read: Lens walk Ada', supertype: 'Read', actor: ada.id, narratives: [reply.id] });
+console.log(`[${tag}] made 2 Characters, 2 messages and the owner's Read relation, recorded by id`);
 
 browser = await (engineName === 'firefox' ? firefox : chromium).launch();
 const ctx = await browser.newContext({ viewport: phone ? { width: 390, height: 844 } : { width: 1366, height: 900 }, hasTouch: phone });
@@ -142,24 +156,19 @@ await page.locator('nav.switch').waitFor({ timeout: 30000 }).catch(() => {});
 const tab = page.locator('nav.switch').getByRole('link', { name: 'Messages', exact: true });
 const hasTab = (await tab.count()) === 1;
 check(hasTab, 'the view switcher has Messages');
-if (!hasTab) {
-  if (expectOld) console.log(`[${tag}] control: this build has no Messages, so the walk stops here`);
-  await finish();
-}
+if (!hasTab) await finish();
 await tab.click();
 await page.waitForSelector('section.messages');
 check(page.url().includes(`#/me/${made.worldId}/messages`), `at #/me/<world id>/messages (${page.url().replace(LENS, '')})`);
 
-// 3. The list: its head, its check line, and no read mark anywhere.
+// 3. The list: its head, and no check line (the owner, a list, every hand playing a Character).
 const head = (await page.locator('.mhead .mcount').first().textContent()) ?? '';
 check(head === '2 messages in 1 conversation', `the head counts the two in one conversation (${head})`);
-const checkLine = (await page.locator('.mhead .mcheck').first().textContent().catch(() => '')) ?? '';
-check(checkLine === 'Senders cannot be checked here yet, so each says who it claims to be from, and read marks are not shown.', `the check line says senders cannot be checked (${checkLine.slice(0, 60)})`);
-let text = await bodyText();
-check(!text.includes('Read by') && !text.includes('Not yet by'), 'the list shows no read mark');
+const checkLine = await page.locator('.mhead .mcheck').count();
+check(checkLine === 0, `no check line (${checkLine ? await page.locator('.mhead .mcheck').first().textContent() : ''})`);
 await page.screenshot({ path: `walk/out-${tag}-list.png`, fullPage: true });
 
-// 4. The conversation: both messages in created order, claimed senders, named recipients.
+// 4. The conversation: both messages in created order, the first proved, the reply a claim, Ada's read.
 await page.locator('a.thread').first().click();
 await page.waitForSelector('.mthread');
 const msgs = await page.evaluate(() =>
@@ -173,12 +182,14 @@ const msgs = await page.evaluate(() =>
   })),
 );
 check(msgs.length === 2 && msgs[0].subject === 'Lens walk question' && msgs[1].subject === 'Re: Lens walk question', `both messages, in created order (${msgs.map((m) => m.subject).join(' | ')})`);
-check(msgs.length === 2 && msgs.every((m) => m.from?.startsWith('Claims to be from ') && !m.fromBold), `each From line is a claim, none a bold proved name (${msgs.map((m) => m.from).join(' | ')})`);
-check(msgs.length === 2 && msgs[0].from === 'Claims to be from Lens walk Ada' && msgs[1].from === 'Claims to be from Lens walk Mara', 'the claims name Ada, then Mara');
+check(msgs.length === 2 && msgs[0].from === 'From Lens walk Ada' && msgs[0].fromBold, `the first is proved from Ada, in bold (${msgs[0]?.from})`);
+check(msgs.length === 2 && msgs[1].from === 'Claims to be from Lens walk Mara, written with the key of Lens walk Ada' && !msgs[1].fromBold, `the reply claims Mara, written with Ada's key (${msgs[1]?.from})`);
 check(msgs.length === 2 && msgs[0].to === 'To Lens walk Mara' && msgs[1].to === 'To Lens walk Ada', `the To lines name Mara, then Ada (${msgs.map((m) => m.to).join(' | ')})`);
 check(msgs.length === 2 && msgs[0].body === 'Are the lamps lit on the east road?' && msgs[1].body === 'Lit at dusk, as always.', 'each message shows its story');
-text = await bodyText();
-check(!text.includes('Read by') && !text.includes('Not yet by') && msgs.every((m) => m.read === null), 'the conversation shows no "Read by" and no "Not yet by"');
+check(msgs.length === 2 && msgs[1].read === 'Read by Lens walk Ada', `Ada has read the reply (${msgs[1]?.read})`);
+check(msgs.length === 2 && msgs[0].read === null, `no read line on the first: nobody plays Mara, so no "not yet" (${msgs[0]?.read})`);
+const text = await bodyText();
+check(!text.includes('Not yet by'), 'no "Not yet by" anywhere');
 await page.screenshot({ path: `walk/out-${tag}-conversation.png`, fullPage: true });
 
 // 5. The reply's element page offers its conversation, and the way lands on it.

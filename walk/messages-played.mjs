@@ -15,7 +15,7 @@
 //   4 a phone (390): no sideways scroll, each conversation row at least 44 px tall
 // A case that cannot finish (a missing way in, a missing page) fails by name and the walk goes on.
 import { chromium, firefox } from '@playwright/test';
-import { writeWorldFile } from '@onlyworlds/sdk';
+import { ELEMENT_TYPES, writeWorldFile } from '@onlyworlds/sdk';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -198,7 +198,9 @@ async function playWww(ctx, log) {
       const types = Object.fromEntries(Object.entries(els).map(([t, rows]) => [t, rows.length]));
       return send(200, { id: world, name: world === PUB ? 'Played public messages' : 'Played public quiet', description: '', image_url: '', counts: { total: Object.values(types).reduce((a, b) => a + b, 0), types } });
     }
+    // A path it does not know answers 404, never an empty list (a members read must not pass for one).
     const type = u.pathname.split('/')[3];
+    if (u.pathname !== `/api/v2/${type}/` || !ELEMENT_TYPES.includes(type)) return send(404, { error: { code: 'not_found' } });
     return send(200, { data: els[type] ?? [], has_more: false, next_cursor: null });
   });
 }
@@ -408,6 +410,13 @@ await runCase(3, 'public world', async () => {
   await page.goto(`${base}/#/w/${PUB_EMPTY}/messages`);
   await page.waitForSelector('main.closed h1');
   check('its /messages address says "You cannot open this conversation"', (await textOf(page, 'main.closed h1')) === 'You cannot open this conversation', await textOf(page, 'main.closed h1'));
+  check('the public worlds asked for no members list', !seen.some((p) => p.startsWith('/api/v2/members')), seen.filter((p) => p.startsWith('/api/v2/members')).join(' '));
+  // The played keel answers a path it does not know 404, never an empty list.
+  const probe = await page.evaluate(async (w) => {
+    const st = async (path) => (await fetch(`https://www.onlyworlds.com/api/v2${path}`, { credentials: 'omit' })).status;
+    return { members: await st(`/members/?world=${w}`), unknown: await st(`/nothing-here/?world=${w}`), nested: await st(`/character/x/?world=${w}`), known: await st(`/character/?world=${w}`) };
+  }, PUB);
+  check('the played keel answers an unknown path 404 and a type 200', probe.members === 404 && probe.unknown === 404 && probe.nested === 404 && probe.known === 200, JSON.stringify(probe));
   check('no page errors', errors.length === 0, errors.join(' | '));
   await ctx.close();
 });

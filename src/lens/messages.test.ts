@@ -18,7 +18,7 @@ const mark = (id: string, actor: string, narratives: string[], extra: Record<str
 
 describe("the standard's The Post, read by the profile", () => {
   const { w, bodies } = opened('post');
-  const r = readMessages(bodies, 'standard', w.members ?? null);
+  const r = readMessages(bodies, 'standard', w.members ?? null, true);
   const byName = (n: string) => r.messages.find((m) => m.name === n)!;
 
   it('leaves the hidden message out, counted and never named, by any line or address', () => {
@@ -55,7 +55,7 @@ describe("the standard's The Post, read by the profile", () => {
     const forged = byName('Notes to self');
     const m = w.elements.find((e) => e.type === 'relation')!;
     const withMark = bodies.map((e) => (e.id === m.id ? { ...e, narratives: [...(m.narratives as string[]), forged.id] } : e));
-    const r2 = readMessages(withMark, 'standard', w.members ?? null);
+    const r2 = readMessages(withMark, 'standard', w.members ?? null, true);
     expect(readLine(r2, r2.messages.find((x) => x.id === forged.id)!)).toContain('Ada Venn');
   });
 });
@@ -63,7 +63,7 @@ describe("the standard's The Post, read by the profile", () => {
 describe('From nobody, shown (The Stub Room)', () => {
   it('a message with no narrator is from nobody', () => {
     const { w, bodies } = opened('stubs');
-    const r = readMessages(bodies, 'standard', w.members ?? null);
+    const r = readMessages(bodies, 'standard', w.members ?? null, true);
     expect(r.messages.length).toBeGreaterThan(0);
     expect(r.messages.some((m) => fromLine(r, m).text === 'From nobody')).toBe(true);
   });
@@ -74,30 +74,30 @@ describe('what can be checked', () => {
   const m = msg('m', { narrator: 'b', characters: ['a'] });
 
   it('reads no mark keyless, and says no one is "everyone" keyless', () => {
-    const r = readMessages([ada, m, mark('k', 'a', ['m']), msg('e')], 'public', null);
+    const r = readMessages([ada, m, mark('k', 'a', ['m']), msg('e')], 'public', null, true);
     expect(r.marksCount).toBe(false);
     expect(readLine(r, m)).toBeNull();
     expect(toLine(r, r.messages[1])).toMatch(/^No recipients named/);
-    expect(toLine(readMessages([msg('e')], 'file', null), msg('e'))).toBe('To everyone');
+    expect(toLine(readMessages([msg('e')], 'file', null, true), msg('e'))).toBe('To everyone');
   });
 
   it('G10: a mark carrying hands with no members list counts nowhere, and says no "not yet"', () => {
-    const r = readMessages([ada, m, mark('k', 'a', ['x'], { created_by: null })], 'file', null);
+    const r = readMessages([ada, m, mark('k', 'a', ['x'], { created_by: null })], 'file', null, true);
     expect(r.marksCount).toBe(false);
     expect(readLine(r, m)).toBeNull();
-    expect(readMessages([ada, m, mark('k', 'a', ['m'])], 'file', null).marksCount).toBe(true);
-    expect(readMessages([ada, m, mark('k', 'a', ['x'], { created_by: null })], 'me', null).marksCount).toBe(false);
+    expect(readMessages([ada, m, mark('k', 'a', ['m'])], 'file', null, true).marksCount).toBe(true);
+    expect(readMessages([ada, m, mark('k', 'a', ['x'], { created_by: null })], 'me', null, true).marksCount).toBe(false);
   });
 
   it('G6: a recipient not shown here is never in a read line', () => {
-    const r = readMessages([ada, msg('m2', { characters: ['a', 'h'] }), mark('k', 'h', ['m2'])], 'file', null);
+    const r = readMessages([ada, msg('m2', { characters: ['a', 'h'] }), mark('k', 'h', ['m2'])], 'file', null, true);
     expect(readLine(r, r.messages[0])).toBe('Not yet by Ada');
     expect(toLine(r, r.messages[0])).toBe('To Ada and someone not shown here');
   });
 
   it('G7 and G8: a proposed mark counts for nothing; a proposed message has no read line, no bold, and is counted apart', () => {
     const p = msg('p', { narrator: 'a', characters: ['b'], x_review_proposed: { by: 'x' } });
-    const r = readMessages([ada, char('b', 'Bo'), m, p, mark('k', 'a', ['m'], { x_review_proposed: { by: 'x' } }), mark('j', 'b', ['p'])], 'file', null);
+    const r = readMessages([ada, char('b', 'Bo'), m, p, mark('k', 'a', ['m'], { x_review_proposed: { by: 'x' } }), mark('j', 'b', ['p'])], 'file', null, true);
     // A mark was left out, so no one is said not to have read it.
     expect(readLine(r, m)).toBeNull();
     expect(r.proposed).toBe(1);
@@ -107,13 +107,13 @@ describe('what can be checked', () => {
 
   it('G13: a room card names the sender; a hidden or proposed Character never does', () => {
     const card = char('c', 'Card', { x_room_of: 'w', supertype: 'Member' });
-    const r = readMessages([card, char('h', 'Secret', { hidden: true }), char('q', 'Maybe', { x_review_proposed: { by: 'x' } }), msg('m', { narrator: 'c', characters: ['h', 'q'] })], 'file', null);
+    const r = readMessages([card, char('h', 'Secret', { hidden: true }), char('q', 'Maybe', { x_review_proposed: { by: 'x' } }), msg('m', { narrator: 'c', characters: ['h', 'q'] })], 'file', null, true);
     expect(fromLine(r, r.messages[0]).text).toBe('Claims to be from Card');
     expect(toLine(r, r.messages[0])).toBe('To someone not shown here');
   });
 
   it('G12: names and text lose bidirectional and control characters', () => {
-    const r = readMessages([char('a', '‮Mara\u0085'), msg('m', { narrator: 'a' })], 'file', null);
+    const r = readMessages([char('a', '‮Mara\u0085'), msg('m', { narrator: 'a' })], 'file', null, true);
     expect(fromLine(r, r.messages[0]).text).toBe('Claims to be from Mara');
     expect(plainText('a‮b⁦c\u0007d\te\nf\u0000\u009B؜')).toBe('abcd\te\nf');
   });
@@ -125,8 +125,8 @@ describe('threads', () => {
   it('G4: a loop is one thread, rooted the same whatever order it was read in', () => {
     const a = msg('a', { parent_narrative: 'b', created_at: '2026-01-02T00:00:00Z' });
     const b = msg('b', { parent_narrative: 'a', created_at: '2026-01-01T00:00:00Z' });
-    const one = readMessages([a, b], 'file', null);
-    const two = readMessages([b, a], 'file', null);
+    const one = readMessages([a, b], 'file', null, true);
+    const two = readMessages([b, a], 'file', null, true);
     expect(one.threads).toHaveLength(1);
     expect(one.threads[0].rootId).toBe(two.threads[0].rootId);
     expect(ids(one)[0].sort()).toEqual(['a', 'b']);
@@ -135,12 +135,12 @@ describe('threads', () => {
   it('G4: a chain walks through a Note, and another Narrative is never listed', () => {
     const note = { id: 'n', type: 'narrative', supertype: 'Note', parent_narrative: 'a', created_at: '2026-01-02T00:00:00Z' } as unknown as Element;
     const lore = { id: 'l', type: 'narrative', supertype: 'History', parent_narrative: 'a', created_at: '2026-01-02T00:00:00Z' } as unknown as Element;
-    const r = readMessages([msg('a'), note, lore, msg('c', { parent_narrative: 'n', created_at: '2026-01-03T00:00:00Z' })], 'file', null);
+    const r = readMessages([msg('a'), note, lore, msg('c', { parent_narrative: 'n', created_at: '2026-01-03T00:00:00Z' })], 'file', null, true);
     expect(ids(r)).toEqual([['a', 'c']]);
   });
 
   it('G5: a hidden parent opens nothing, and its reply says it answers something outside', () => {
-    const r = readMessages([msg('h', { hidden: true }), msg('c', { parent_narrative: 'h', created_at: '2026-01-02T00:00:00Z' })], 'file', null);
+    const r = readMessages([msg('h', { hidden: true }), msg('c', { parent_narrative: 'h', created_at: '2026-01-02T00:00:00Z' })], 'file', null, true);
     expect(r.threads).toHaveLength(1);
     expect(r.threads[0]).toMatchObject({ rootId: 'c', answersOutside: true });
     expect(threadOfId(r, 'h')).toBeNull();
@@ -149,7 +149,7 @@ describe('threads', () => {
   it("G3: conversations are ordered by the SDK's instant; times it cannot read go last and show no date", () => {
     const times: Record<string, string> = { r1: '2026-10-05T00:00:00Z', r2: '2026-10-06', r3: '2026-10-04T00:00:00', r4: 'October 9, 2026', r5: '2026-10-05T03:00:00+05:00' };
     const ms = Object.entries(times).map(([id, at]) => msg(id, { created_at: at }));
-    const r = readMessages(ms, 'file', null);
+    const r = readMessages(ms, 'file', null, true);
     // The oracle is the SDK alone: its order of the same bodies, with a marker of no time first
     // among the unreadables, so what comes before the marker is what it reads.
     const sdk = threadOf([msg('*', { created_at: null }), msg('|', { parent_narrative: '*', created_at: null }), ...ms.map((m) => ({ ...m, parent_narrative: '*' }))], '*').map((m) => m.id).filter((id) => id !== '*');
@@ -162,23 +162,23 @@ describe('threads', () => {
     }
     // An offset-less time is UTC, as the SDK reads it, and a lower-case t and z read too.
     expect(whenOf(r, r.messages.find((m) => m.id === 'r3')!)).toBe(Date.UTC(2026, 9, 4));
-    const lower = readMessages([msg('l', { created_at: '2026-10-04t00:00:00z' })], 'file', null);
+    const lower = readMessages([msg('l', { created_at: '2026-10-04t00:00:00z' })], 'file', null, true);
     if (lower.readable.has('l')) expect(whenOf(lower, lower.messages[0])).toBe(Date.UTC(2026, 9, 4));
   });
 
   it('C7: a time at the very end is still readable, and no id can stand in for the order\'s own markers', () => {
-    const late = readMessages([msg('a', { created_at: '2026-01-01T00:00:00Z' }), msg('z', { created_at: '9999-12-31T23:59:59.9995Z' })], 'file', null);
+    const late = readMessages([msg('a', { created_at: '2026-01-01T00:00:00Z' }), msg('z', { created_at: '9999-12-31T23:59:59.9995Z' })], 'file', null, true);
     expect(late.readable.has('z')).toBe(true);
     expect(late.threads[0].rootId).toBe('z');
     for (const id of ['end', 'root', 'mend']) {
-      const r = readMessages([msg(id, { created_at: '2026-01-02T00:00:00Z' }), msg('b', { created_at: '2026-01-01T00:00:00Z' })], 'file', null);
+      const r = readMessages([msg(id, { created_at: '2026-01-02T00:00:00Z' }), msg('b', { created_at: '2026-01-01T00:00:00Z' })], 'file', null, true);
       expect([...r.readable].sort()).toEqual(['b', id].sort());
       expect(r.threads.map((t) => t.rootId)).toEqual([id, 'b']);
     }
   });
 
   it('C3: a reply into a loop, older than the loop, joins the loop\'s conversation', () => {
-    const r = readMessages([msg('A', { parent_narrative: 'B', created_at: '2026-01-02T00:00:00Z' }), msg('B', { parent_narrative: 'A', created_at: '2026-01-03T00:00:00Z' }), msg('C', { parent_narrative: 'A', created_at: '2026-01-01T00:00:00Z' })], 'file', null);
+    const r = readMessages([msg('A', { parent_narrative: 'B', created_at: '2026-01-02T00:00:00Z' }), msg('B', { parent_narrative: 'A', created_at: '2026-01-03T00:00:00Z' }), msg('C', { parent_narrative: 'A', created_at: '2026-01-01T00:00:00Z' })], 'file', null, true);
     expect(ids(r)).toEqual([['C', 'A', 'B']]);
     // Rooted at the loop's earliest message, whatever the order read.
     expect(r.threads[0].rootId).toBe('A');
@@ -196,7 +196,7 @@ describe('threads', () => {
         const at = rnd() < 0.15 ? 'later' : `2026-01-${String(1 + Math.floor(rnd() * 5)).padStart(2, '0')}T00:00:00Z`;
         bodies.push(rnd() < 0.2 ? ({ id: `e${i}`, type: 'narrative', supertype: 'Note', parent_narrative: parent, created_at: at } as unknown as Element) : msg(`e${i}`, { parent_narrative: parent, created_at: at }));
       }
-      const r = readMessages(bodies, 'file', null);
+      const r = readMessages(bodies, 'file', null, true);
       const shown = new Set(r.messages.map((m) => m.id));
       const listed = r.threads.flatMap((t) => t.messages.map((m) => m.id));
       expect(listed.sort()).toEqual([...shown].sort());
@@ -205,14 +205,14 @@ describe('threads', () => {
   });
 
   it('C9: a repeated id is one message, the first', () => {
-    const r = readMessages([msg('a', { name: 'first' }), msg('a', { name: 'second' })], 'file', null);
+    const r = readMessages([msg('a', { name: 'first' }), msg('a', { name: 'second' })], 'file', null, true);
     expect(r.messages.map((m) => m.name)).toEqual(['first']);
   });
 
   it('C2: five thousand conversations read in well under a second', () => {
     const many = Array.from({ length: 5000 }, (_, i) => msg(`m${String(i).padStart(5, '0')}`, { created_at: `2026-01-01T00:00:${String(i % 60).padStart(2, '0')}Z` }));
     const t0 = performance.now();
-    const r = readMessages(many, 'file', null);
+    const r = readMessages(many, 'file', null, true);
     expect(r.threads).toHaveLength(5000);
     expect(performance.now() - t0).toBeLessThan(1000);
   });
@@ -222,18 +222,18 @@ describe('C1: no "not yet" where no mark can count', () => {
   const ada = char('a', 'Ada');
   it('signed in without a members list, with no marks at all', () => {
     // Signed in, the source alone decides, even for a body that carries no hands.
-    const r = readMessages([ada, msg('m', { characters: ['a'] })], 'me', null);
+    const r = readMessages([ada, msg('m', { characters: ['a'] })], 'me', null, true);
     expect(r.marksCount).toBe(false);
     expect(readLine(r, r.messages[0])).toBeNull();
   });
   it('a small world or file whose bodies carry hands and no members list', () => {
     for (const source of ['standard', 'file'] as const) {
-      const r = readMessages([ada, msg('m', { narrator: 'a', characters: ['a', 'b'], created_by: 'x' })], source, null);
+      const r = readMessages([ada, msg('m', { narrator: 'a', characters: ['a', 'b'], created_by: 'x' })], source, null, true);
       expect(readLine(r, r.messages[0])).toBeNull();
     }
   });
   it('a recipient named twice is said once', () => {
-    const r = readMessages([ada, msg('m', { characters: ['a', 'a'] })], 'file', null);
+    const r = readMessages([ada, msg('m', { characters: ['a', 'a'] })], 'file', null, true);
     expect(toLine(r, r.messages[0])).toBe('To Ada');
   });
 });

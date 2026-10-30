@@ -136,6 +136,8 @@ export interface ReadHooks {
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
   /** The budget the world's own read left, so the first list can pace too. */
   budget?: Budget;
+  /** Each answer's budget, so a read after the lists can pace too. */
+  onBudget?: (b: Budget) => void;
 }
 
 const sleepFor = (ms: number, signal?: AbortSignal) =>
@@ -165,7 +167,10 @@ export async function readWorldElements(world: WorldMeta, fetchImpl: Fetch = fet
       }
       const q = new URLSearchParams({ world: world.id, limit: String(PAGE_LIMIT) });
       if (cursor) q.set('cursor', cursor);
-      const body = (await getJson(`${API_BASE}/${type}/?${q}`, fetchImpl, signal, (b) => (budget = b), token)) as { data?: unknown; has_more?: unknown; next_cursor?: unknown };
+      const body = (await getJson(`${API_BASE}/${type}/?${q}`, fetchImpl, signal, (b) => {
+        budget = b;
+        hooks.onBudget?.(b);
+      }, token)) as { data?: unknown; has_more?: unknown; next_cursor?: unknown };
       left = Math.max(left - 1, 0);
       const rows = Array.isArray(body?.data) ? body.data : [];
       for (const r of rows) {

@@ -1,11 +1,12 @@
 // Sign in with OnlyWorlds, played: Playwright serves https://little-lens.onlyworlds.com from a build under
 // its own _headers and _redirects and plays keel (the authorize and consent pages, the token exchange,
-// the account's worlds, a world read on the token, the public reader, the token's revoke), with real
-// presses. keel's consent rule is modelled: a tool's consent ends with its last live token unless the
+// the account's worlds, a world read on the token, the world's members list, the public reader, the
+// token's revoke), with real presses. keel's consent rule is modelled: a tool's consent ends with its last live token unless the
 // registry keeps it (the default plays keel's main as it is, without that flag; KEEP_CONSENT=1 plays it with). What it cannot see: the
-// host's own rules, and real keel (the live walk).
+// host's own rules, and real keel (the live walk). A path the played keel does not know answers 404, never an empty list.
 //   npm run build && node walk/signin-played.mjs [chromium|firefox]      DIST=<dir> for a control
 import { chromium, firefox } from '@playwright/test';
+import { ELEMENT_TYPES } from '@onlyworlds/sdk';
 import { createHash } from 'node:crypto';
 import { hostFor } from './host.mjs';
 
@@ -37,6 +38,42 @@ const ELEMENTS = {
 };
 const PUBLIC_VIEW = { [SHARED]: { character: [{ id: id(21), name: 'Public Pell' }] } };
 
+// A world with messages, owned (and public), and the same letters in a world the account is a contributor in.
+const LETTERS = '55555555-5555-7555-8555-555555555555';
+const CONTRIB = '66666666-6666-7666-8666-666666666666';
+const ADA = id(51);
+const MARA = id(52);
+const BO = id(53);
+const FIRST = id(61);
+const REPLY = id(62);
+const LETTERS_WORLDS = [
+  ...WORLDS,
+  { id: LETTERS, name: 'Letters Kept', role: 'owner', public_read: true, keys: [] },
+  { id: CONTRIB, name: 'Letters Shared', role: 'collaborator', member_role: 'contributor', public_read: false, keys: [] },
+];
+// The owner wrote the first (`created_by` null), member m1, who plays Mara, the reply and the Read mark.
+const letters = (hands) => {
+  const h = (by) => (hands ? { created_by: by } : {});
+  return {
+    character: [{ id: ADA, name: 'Ada Quill' }, { id: MARA, name: 'Mara Fenn' }, { id: BO, name: 'Bo Reed' }],
+    narrative: [
+      { id: FIRST, supertype: 'Message', name: 'The harbour fees', narrator: ADA, characters: [MARA, BO], story: 'The fees go up at the turn of the tide.', created_at: '2026-10-01T09:00:00Z', ...h(null) },
+      { id: REPLY, supertype: 'Message', name: 'Re: The harbour fees', parent_narrative: FIRST, narrator: MARA, characters: [ADA], story: 'Then we sail before it.', created_at: '2026-10-02T09:00:00Z', ...h('m1') },
+    ],
+    relation: [{ id: id(71), supertype: 'Read', name: 'Read: Mara', actor: MARA, narratives: [FIRST], ...h('m1') }],
+  };
+};
+ELEMENTS[LETTERS] = letters(true);
+ELEMENTS[CONTRIB] = letters(true);
+PUBLIC_VIEW[LETTERS] = letters(false);
+// keel's members list as it serves it: the owner's row first, then one per membership.
+const ROSTER = [
+  { id: null, kind: 'owner', role: 'owner', character: ADA, status: 'active', lenses: [], lenses_from: null },
+  { id: 'm1', kind: 'member', role: 'contributor', character: MARA, status: 'active', lenses: [], lenses_from: null },
+];
+const NO_LIST = 'Little Lens could not read who is in this world, so senders cannot be proved and read marks are not shown.';
+const NOT_EVERY_MARK = 'Read marks you cannot see are not counted, so only who has read a message is shown.';
+
 let failures = 0;
 let checks = 0;
 const check = (tag, ok, what) => {
@@ -46,13 +83,13 @@ const check = (tag, ok, what) => {
 };
 
 const watchdog = setTimeout(() => {
-  console.error('signin-played: watchdog, 240 s');
+  console.error('signin-played: watchdog, 420 s');
   process.exit(2);
-}, 240_000);
+}, 420_000);
 
 const browser = await engine.launch();
 
-async function session(tag, viewport = { width: 1280, height: 860 }) {
+async function session(tag, viewport = { width: 1280, height: 860 }, worlds = WORLDS) {
   const ctx = await browser.newContext({ viewport });
   const page = await ctx.newPage();
   const errors = [];
@@ -60,7 +97,9 @@ async function session(tag, viewport = { width: 1280, height: 860 }) {
   page.on('console', (m) => {
     if (/Content Security Policy|Content-Security-Policy/i.test(m.text())) errors.push(m.text());
   });
-  const keel = { tokens: new Map(), minted: 0, consent: false, consentShown: 0, calls: [], challenge: '', code: '', cancelNext: false, busyExchange: false };
+  // `members`: how `/members` answers ('full', a status, 'null', 'array', 'has_more', 'no-owner', 'unplayed');
+  // `holdMembers`: the next one waits until `release()`; `spent`: every answer says the budget is spent for 2 s.
+  const keel = { tokens: new Map(), minted: 0, consent: false, consentShown: 0, calls: [], challenge: '', code: '', cancelNext: false, busyExchange: false, worlds, account: { id: 'acc-1', username: 'wren' }, members: 'full', holdMembers: false, release: null, spent: false };
   const live = () => [...keel.tokens.values()].filter((t) => !t.revoked);
   await ctx.route('https://www.onlyworlds.com/**', async (r) => {
     const req = r.request();
@@ -68,9 +107,10 @@ async function session(tag, viewport = { width: 1280, height: 860 }) {
     const m = req.method();
     const hdr = req.headers();
     const bearer = (hdr['authorization'] ?? '').replace(/^Bearer /, '') || null;
-    keel.calls.push({ m, path: u.pathname, q: u.search, bearer, apiKey: hdr['api-key'] ?? null });
+    keel.calls.push({ m, path: u.pathname, q: u.search, bearer, apiKey: hdr['api-key'] ?? null, at: Date.now() });
+    const spent = keel.spent && m === 'GET' ? { 'RateLimit-Remaining': '0', 'RateLimit-Reset': '2' } : {};
     const json = (status, body, extra = {}) =>
-      r.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': PROD, 'access-control-allow-headers': '*', 'access-control-allow-methods': '*', 'access-control-expose-headers': 'Retry-After, RateLimit-Remaining, RateLimit-Reset', ...extra }, body: body === null ? '' : JSON.stringify(body) });
+      r.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': PROD, 'access-control-allow-headers': '*', 'access-control-allow-methods': '*', 'access-control-expose-headers': 'Retry-After, RateLimit-Remaining, RateLimit-Reset', ...spent, ...extra }, body: body === null ? '' : JSON.stringify(body) });
     if (m === 'OPTIONS') return json(204, null);
     if (u.pathname === '/signin/authorize') {
       keel.challenge = u.searchParams.get('code_challenge');
@@ -96,7 +136,7 @@ async function session(tag, viewport = { width: 1280, height: 860 }) {
       const n = ++keel.minted;
       const token = `ow_a_${String(n).repeat(40)}`;
       keel.tokens.set(token, { id: `tok-${n}`, revoked: false });
-      return json(200, { token, token_id: `tok-${n}`, token_type: 'bearer', account: { id: 'acc-1', username: 'wren' } });
+      return json(200, { token, token_id: `tok-${n}`, token_type: 'bearer', account: { ...keel.account } });
     }
     const p = u.pathname.replace('/api/v2', '');
     const t = bearer ? keel.tokens.get(bearer) : null;
@@ -108,18 +148,42 @@ async function session(tag, viewport = { width: 1280, height: 860 }) {
       if (live().length === 0 && !KEEP_CONSENT) keel.consent = false;
       return json(204, null);
     }
-    if (p === '/account/worlds') return t ? json(200, { data: WORLDS }) : json(401, { error: { code: 'authentication_failed' } });
+    if (p === '/account/worlds') return t ? json(200, { data: keel.worlds }) : json(401, { error: { code: 'authentication_failed' } });
     const world = u.searchParams.get('world');
-    const member = t && WORLDS.some((w) => w.id === world);
+    const isMembers = p === '/members/' || p === '/members';
+    if (isMembers && !world) return json(422, { error: { code: 'validation_error', param: 'world' } });
+    const member = t && keel.worlds.some((w) => w.id === world);
     const view = member ? ELEMENTS[world] : PUBLIC_VIEW[world];
     if (!view) return json(404, { error: { code: 'not_found' } });
     if (p === '/world/') {
-      const name = member ? WORLDS.find((w) => w.id === world).name : 'Alpha Shared';
+      const name = keel.worlds.find((w) => w.id === world)?.name ?? 'Untitled';
       const body = { id: world, name, description: '', image_url: '' };
       if (world !== BARE) body.counts = { total: 0, types: Object.fromEntries(Object.entries(view).map(([k, v]) => [k, v.length])) };
       return json(200, body);
     }
+    // The members list: only on a token with a grant in the world (keel's 404 otherwise).
+    if (isMembers) {
+      if (!member) return json(404, { error: { code: 'not_found' } });
+      if (keel.holdMembers) {
+        keel.holdMembers = false;
+        await new Promise((res) => (keel.release = res));
+      }
+      const mode = keel.members;
+      const raw = (text) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': PROD }, body: text });
+      try {
+        if (typeof mode === 'number') return await json(mode, { error: { code: 'played' } }, mode === 429 || mode === 503 ? { 'Retry-After': '30' } : {});
+        if (mode === 'null') return await raw('null');
+        if (mode === 'array') return await raw(JSON.stringify(ROSTER));
+        if (mode === 'has_more') return await json(200, { data: ROSTER, has_more: true, next_cursor: 'c2' });
+        if (mode === 'no-owner') return await json(200, { data: ROSTER.filter((row) => row.id !== null) });
+        if (mode === 'unplayed') return await json(200, { data: ROSTER.map((row) => (row.id === 'm1' ? { ...row, character: null } : row)) });
+        return await json(200, { data: ROSTER });
+      } catch {
+        return; // the page aborted it: a late answer to nobody
+      }
+    }
     const type = p.split('/')[1];
+    if (p !== `/${type}/` || !ELEMENT_TYPES.includes(type)) return json(404, { error: { code: 'not_found' } });
     return json(200, { data: view[type] ?? [], has_more: false, next_cursor: null });
   });
   // Each write the page sends, method, address and keepalive (never a header), kept across an unload.
@@ -362,7 +426,245 @@ async function leftRevoke(tag, page, keel, token, how) {
   await ctx.close();
 }
 
-// 4. Another origin never offers it.
+// 4. Messages, signed in: the members list read before anything is drawn, proved senders and counted
+// marks with a whole list; any failure is no list; a rung not served every mark says only "Read by";
+// a list held past Sign out, another world or another account draws nothing; a public world and a
+// world with no message ask for none.
+{
+  const tag = `${which} members`;
+  const { ctx, page, keel, errors } = await session(tag, undefined, LETTERS_WORLDS);
+  const membersCalls = (w) => keel.calls.filter((c) => c.path.startsWith('/api/v2/members') && c.q.includes(`world=${w}`));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const drawn = (name) => page.waitForFunction((n) => document.querySelector('.wname')?.textContent === n && !!document.querySelector('.tally'), name, { timeout: 15_000 });
+  // Another world first, so the next open of a world reads it again.
+  const away = async () => {
+    await page.goto(`${PROD}/#/me/${MINE}`);
+    await drawn('Saltmere Coast');
+  };
+  /** A world's one conversation as drawn, from the web view's Messages tab by real clicks. */
+  const conversation = async (worldId, name) => {
+    await page.goto(`${PROD}/#/me/${worldId}`);
+    await drawn(name);
+    await page.locator('nav.switch').getByRole('link', { name: 'Messages', exact: true }).click();
+    await page.waitForSelector('ul.threads');
+    const listCheck = await page.evaluate(() => document.querySelector('.mhead .mcheck')?.textContent ?? null);
+    await page.locator('a.thread').first().click();
+    await page.waitForSelector('.mthread');
+    return {
+      listCheck,
+      ...(await page.evaluate(() => ({
+        check: document.querySelector('.mhead .mcheck')?.textContent ?? null,
+        text: document.body.textContent,
+        msgs: [...document.querySelectorAll('.mthread > .msg')].map((li) => ({
+          subject: li.querySelector('.msubject')?.textContent ?? null,
+          from: li.querySelector('.mfrom')?.textContent ?? null,
+          bold: !!li.querySelector('.mfrom b'),
+          read: li.querySelector('.mread')?.textContent ?? null,
+        })),
+      }))),
+    };
+  };
+  const ownerReads = (sub, v) => {
+    const [a, b] = v.msgs;
+    check(tag, v.msgs.length === 2 && a.subject === 'The harbour fees' && b.subject === 'Re: The harbour fees', `${sub}: the conversation holds the message and its reply, in order (${v.msgs.map((m) => m.subject).join(' | ')})`);
+    check(tag, a?.from === 'From Ada Quill' && a.bold, `${sub}: the owner's message is "From Ada Quill", in bold (${a?.from}, bold ${a?.bold})`);
+    check(tag, b?.from === 'From Mara Fenn' && b.bold, `${sub}: m1's reply is "From Mara Fenn", in bold (${b?.from}, bold ${b?.bold})`);
+    check(tag, a?.read === 'Read by Mara Fenn', `${sub}: the first says "Read by Mara Fenn" and no "not yet" for Bo, whom nobody plays (${a?.read})`);
+    check(tag, b?.read === 'Not yet by Ada Quill', `${sub}: the reply's "not yet" names Ada, whom the owner's row plays (${b?.read})`);
+    check(tag, v.check === null && v.listCheck === null, `${sub}: no check line (${v.listCheck} / ${v.check})`);
+  };
+
+  await page.goto(`${PROD}/`);
+  await signIn(page, keel);
+  await page.locator('ul.mine').waitFor({ timeout: 15_000 });
+  const token1 = [...keel.tokens.keys()][0];
+
+  // 1. A whole list: senders proved, marks counted, one /members on the token before anything is drawn.
+  {
+    const before = keel.calls.length;
+    const v = await conversation(LETTERS, 'Letters Kept');
+    ownerReads('a whole list', v);
+    const reads = keel.calls.slice(before);
+    const asked = reads.filter((c) => c.path.startsWith('/api/v2/members'));
+    check(tag, asked.length === 1 && asked[0].q === `?world=${LETTERS}` && asked[0].bearer === token1 && !asked[0].apiKey, `one GET /members/?world=<id> on the token (${asked.map((c) => c.path + c.q).join(' ')})`);
+    const paths = reads.map((c) => c.path);
+    check(tag, paths.join(' ') === '/api/v2/world/ /api/v2/character/ /api/v2/narrative/ /api/v2/relation/ /api/v2/members/ /api/v2/account/worlds', `the world, its three types, the list, then the rung read fresh (one worlds read): ${paths.join(' ')}`);
+    const rung = reads.find((c) => c.path === '/api/v2/account/worlds');
+    check(tag, rung?.bearer === token1, 'the rung is read on the same token');
+  }
+
+  // 1b. The budget spent: the list and the rung each wait out keel's window, under the pacing line.
+  {
+    await away();
+    keel.spent = true;
+    const before = keel.calls.length;
+    await page.goto(`${PROD}/#/me/${LETTERS}`);
+    const paced = await page
+      .waitForFunction(() => document.querySelector('main .said')?.textContent === 'OnlyWorlds asks Little Lens to pace its reading. Continuing in 2 seconds…', null, { timeout: 8000 })
+      .then(() => true, () => false);
+    await drawn('Letters Kept');
+    keel.spent = false;
+    const reads = keel.calls.slice(before);
+    const at = (path) => reads.find((c) => c.path === path)?.at;
+    const gap1 = at('/api/v2/members/') - at('/api/v2/relation/');
+    const gap2 = at('/api/v2/account/worlds') - at('/api/v2/members/');
+    check(tag, paced, 'a spent budget: the pacing line shows before the list');
+    check(tag, gap1 >= 2000 && gap2 >= 2000, `a spent budget: /members waits out the window after the last type, and the rung after /members (${gap1} ms, ${gap2} ms)`);
+  }
+
+  // 1c. A hand that plays no Character: its message only claims, its mark does not count, and the head says why.
+  {
+    keel.members = 'unplayed';
+    await away();
+    const v = await conversation(LETTERS, 'Letters Kept');
+    const [a, b] = v.msgs;
+    const UNPLAYED = 'A message written with a key whose holder plays no Character says only who it claims to be from.';
+    check(tag, a?.from === 'From Ada Quill' && a.bold && b?.from === 'Claims to be from Mara Fenn' && !b.bold, `unplayed hand: the owner's message proved, m1's reply a claim (${a?.from} | ${b?.from})`);
+    check(tag, a?.read === null && b?.read === 'Not yet by Ada Quill', `unplayed hand: m1's mark does not count, and Mara, whom nobody plays now, gets no "not yet" (${a?.read} | ${b?.read})`);
+    check(tag, v.check === UNPLAYED && v.listCheck === UNPLAYED, `unplayed hand: the head says so (${v.check})`);
+    await away();
+    const c = await conversation(CONTRIB, 'Letters Shared');
+    const both = 'A message written with a key whose holder plays no Character you can see says only who it claims to be from. ' + NOT_EVERY_MARK;
+    check(tag, c.check === both && c.listCheck === both, `unplayed hand, as a contributor: both lines, "you can see" in the first (${c.check})`);
+    keel.members = 'full';
+  }
+
+  // 2. Every failure is no list: every sender a claim, no read line, the one check line.
+  for (const mode of [401, 403, 404, 410, 422, 429, 503, 'null', 'array', 'has_more', 'no-owner']) {
+    keel.members = mode;
+    await away();
+    const n = membersCalls(LETTERS).length;
+    const before = keel.calls.length;
+    let v;
+    try {
+      v = await conversation(LETTERS, 'Letters Kept');
+    } catch (e) {
+      check(tag, false, `/members ${mode}: the world opens and its conversation draws (${String(e?.message ?? e).split('\n')[0]})`);
+      continue;
+    }
+    check(tag, membersCalls(LETTERS).length === n + 1, `/members ${mode}: the world drew, and /members was asked once (${membersCalls(LETTERS).length - n})`);
+    check(tag, !keel.calls.slice(before).some((c) => c.path === '/api/v2/account/worlds'), `/members ${mode}: no rung read follows a failed list`);
+    check(tag, v.msgs.length === 2 && v.msgs.every((m) => m.from.startsWith('Claims to be from ') && !m.bold), `/members ${mode}: every sender a claim, none bold (${v.msgs.map((m) => m.from).join(' | ')})`);
+    check(tag, v.msgs.every((m) => m.read === null) && !v.text.includes('Read by') && !/not yet/i.test(v.text), `/members ${mode}: no read line (${v.msgs.map((m) => m.read).join(' | ')})`);
+    check(tag, v.check === NO_LIST && v.listCheck === NO_LIST, `/members ${mode}: the check line says the list could not be read (${v.check})`);
+    if (mode === 401) {
+      await page.goto(`${PROD}/#/`);
+      await page.waitForSelector('.ways', { timeout: 15_000 });
+      check(tag, ((await page.textContent('.who')) ?? '').startsWith('Signed in as wren') && (await page.getByRole('button', { name: 'Sign in with OnlyWorlds' }).count()) === 0, `/members 401: still signed in after (${await page.textContent('.ways .said')})`);
+    }
+  }
+  keel.members = 'full';
+
+  // 3. A contributor is not served every mark: only "Read by", never "not yet".
+  {
+    await away();
+    const before = keel.calls.length;
+    const v = await conversation(CONTRIB, 'Letters Shared');
+    const [a, b] = v.msgs;
+    check(tag, a?.from === 'From Ada Quill' && a.bold && b?.from === 'From Mara Fenn' && b.bold, `contributor: the senders are still proved (${a?.from} | ${b?.from})`);
+    check(tag, a?.read === 'Read by Mara Fenn' && b?.read === null && !/not yet/i.test(v.text), `contributor: only "Read by", never "not yet" (${a?.read} | ${b?.read})`);
+    check(tag, v.check === NOT_EVERY_MARK && v.listCheck === NOT_EVERY_MARK, `contributor: the check line says unseen marks are not counted (${v.check})`);
+    check(tag, keel.calls.slice(before).filter((c) => c.path === '/api/v2/account/worlds').length === 1, 'contributor: the rung read fresh, once, on the open');
+  }
+
+  // 4. A held list lands for nobody: after Sign out, after another world, after another account.
+  {
+    await away();
+    keel.holdMembers = true;
+    keel.release = null;
+    const n = membersCalls(LETTERS).length;
+    await page.goto(`${PROD}/#/me/${LETTERS}`);
+    check(tag, await waitFor(() => keel.release !== null, 10_000), 'held: the read reached /members');
+    const said = await page.locator('main .said').first().textContent({ timeout: 2000 }).catch(() => null);
+    check(tag, said === 'Reading who is in Letters Kept…', `held: the progress line says who is being read (${said})`);
+    check(tag, (await page.locator('.tally').count()) === 0, 'held: nothing of the world is drawn while its list is read');
+    await page.goto(`${PROD}/#/`);
+    await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.waitForSelector('.ways .said:has-text("Signed out")', { timeout: 15_000 });
+    keel.release?.();
+    keel.holdMembers = false;
+    await sleep(800);
+    const after = await page.evaluate(() => ({ hash: location.hash, tally: !!document.querySelector('.tally'), text: document.body.textContent }));
+    check(tag, after.hash === '#/' && !after.tally && !after.text.includes('Ada Quill') && !after.text.includes('Letters Kept'), `released after Sign out: nothing of the world drawn (${after.hash}, tally ${after.tally})`);
+    await signIn(page, keel);
+    await page.locator('ul.mine').waitFor({ timeout: 15_000 });
+    ownerReads('after Sign out, signed in again', await conversation(LETTERS, 'Letters Kept'));
+    check(tag, membersCalls(LETTERS).length === n + 2, `after Sign out: the next open asked /members again (${membersCalls(LETTERS).length - n} in all)`);
+  }
+  {
+    await away();
+    keel.holdMembers = true;
+    keel.release = null;
+    const n = membersCalls(LETTERS).length;
+    await page.goto(`${PROD}/#/me/${LETTERS}`);
+    check(tag, await waitFor(() => keel.release !== null, 10_000), 'held again: the read reached /members');
+    await page.goto(`${PROD}/#/me/${BARE}`);
+    await drawn('beta');
+    keel.release?.();
+    keel.holdMembers = false;
+    await sleep(800);
+    const after = await page.evaluate(() => ({ hash: location.hash, name: document.querySelector('.wname')?.textContent, text: document.body.textContent }));
+    check(tag, after.name === 'beta' && after.hash === `#/me/${BARE}` && !after.text.includes('Ada Quill'), `released after another world opened: that world stays, nothing of the first (${after.name}, ${after.hash})`);
+    ownerReads('after another world', await conversation(LETTERS, 'Letters Kept'));
+    check(tag, membersCalls(LETTERS).length === n + 2, `after another world: the next open asked /members again (${membersCalls(LETTERS).length - n} in all)`);
+  }
+  {
+    await away();
+    keel.holdMembers = true;
+    keel.release = null;
+    const n = membersCalls(LETTERS).length;
+    await page.goto(`${PROD}/#/me/${LETTERS}`);
+    check(tag, await waitFor(() => keel.release !== null, 10_000), 'held a third time: the read reached /members');
+    const heldBy = membersCalls(LETTERS).at(-1)?.bearer;
+    await page.goto(`${PROD}/#/`);
+    await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.waitForSelector('.ways .said:has-text("Signed out")', { timeout: 15_000 });
+    keel.account = { id: 'acc-2', username: 'kit' };
+    await signIn(page, keel);
+    await page.locator('ul.mine').waitFor({ timeout: 15_000 });
+    const kit = [...keel.tokens.keys()].at(-1);
+    keel.release?.();
+    keel.holdMembers = false;
+    await sleep(800);
+    const after = await page.evaluate(() => ({ hash: location.hash, who: document.querySelector('.who')?.textContent ?? '', tally: !!document.querySelector('.tally'), text: document.body.textContent }));
+    check(tag, after.hash === '#/' && after.who.startsWith('Signed in as kit') && !after.tally && !after.text.includes('Ada Quill'), `released after another account signed in: kit's ways in, nothing of the first world (${after.who})`);
+    ownerReads('the second account', await conversation(LETTERS, 'Letters Kept'));
+    const last = membersCalls(LETTERS).at(-1);
+    check(tag, membersCalls(LETTERS).length === n + 2 && last?.bearer === kit && heldBy !== kit, `after another account: the next open asked /members again, on the new token (${membersCalls(LETTERS).length - n} in all)`);
+  }
+
+  // 5. Signed in, a public world with messages and a world with no message ask for no list.
+  {
+    await away();
+    let before = keel.calls.length;
+    await page.goto(`${PROD}/#/w/${LETTERS}`);
+    await page.waitForSelector('.wsub:has-text("public world")', { timeout: 15_000 });
+    await page.locator('nav.switch').getByRole('link', { name: 'Messages', exact: true }).click();
+    await page.waitForSelector('ul.threads');
+    let reads = keel.calls.slice(before);
+    check(tag, reads.length === 4 && !reads.some((c) => c.path.startsWith('/api/v2/members')) && reads.every((c) => c.bearer === null), `signed in, the public world with messages: 4 reads, no /members, no token (${reads.map((c) => c.path).join(' ')})`);
+    before = keel.calls.length;
+    await page.goto(`${PROD}/#/me/${BARE}`);
+    await drawn('beta');
+    await away();
+    reads = keel.calls.slice(before).filter((c) => c.q.includes(`world=${MINE}`));
+    check(tag, reads.map((c) => c.path).join(' ') === '/api/v2/world/ /api/v2/character/ /api/v2/location/', `signed in, a world with no message: its world and two types, no /members (${reads.map((c) => c.path).join(' ')})`);
+    check(tag, !keel.calls.slice(before).some((c) => c.path.startsWith('/api/v2/members')), 'and no /members for the countless world either');
+  }
+
+  // 6. The played keel answers what it does not know 404, never an empty list.
+  {
+    const probe = await page.evaluate(async (w) => {
+      const st = async (path) => (await fetch(`https://www.onlyworlds.com/api/v2${path}`, { credentials: 'omit' })).status;
+      return { unknown: await st(`/nothing-here/?world=${w}`), nested: await st(`/character/x/?world=${w}`), members: await st(`/members/?world=${w}`), noWorld: await st('/members/'), known: await st(`/character/?world=${w}`) };
+    }, LETTERS);
+    check(tag, probe.unknown === 404 && probe.nested === 404 && probe.members === 404 && probe.noWorld === 422 && probe.known === 200, `the played keel: an unknown path 404, /members without a grant 404, without world= 422, a type 200 (${JSON.stringify(probe)})`);
+  }
+  check(tag, errors.length === 0, `no page error, no policy violation (${errors.slice(0, 2).join(' | ')})`);
+  await ctx.close();
+}
+
+// 5. Another origin never offers it.
 {
   const tag = `${which} origin`;
   const ctx = await browser.newContext();
