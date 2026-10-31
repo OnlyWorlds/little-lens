@@ -172,7 +172,8 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
   check(`${label} shut door looks closed`, (await page.textContent('main.closed')) === privateText);
 
   // The way in from another tool: #/open/<world>[/element/<id>], replaced by the world's own address.
-  await page.goto(`${base}/#/`);
+  // A fresh document (the query changes), so no world is held from earlier in the walk and the read is the door's.
+  await page.goto(`${base}/?door#/`);
   await page.waitForSelector('main.ways');
   const beforeDoor = ow.length;
   await page.goto(`${base}/#/open/${W}`);
