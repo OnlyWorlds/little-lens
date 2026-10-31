@@ -8,7 +8,7 @@ import './style.css';
 import { ELEMENT_TYPES, OwApiError, simpleCaseFold, type ElementType, type OwAccountWorld } from '@onlyworlds/sdk';
 import { buildGraph, degrees, isKnownOfStub, type Element, type WorldGraph } from './lens/graph';
 import { parseRoute, worldHash, type Reader, type Route } from './lens/route';
-import { ReadError, readWorldElements, readWorldMeta, type Budget } from './lens/world-read';
+import { ReadError, readWorldElements, readWorldMeta, type Budget, type WorldMeta } from './lens/world-read';
 import { readWorldFileBytes, readWorldFolder, type FileWorld, type PickedFile } from './lens/file-read';
 import { beginOnlyWorldsSignIn, canSignInWithOnlyWorlds, isSignInCallback, signInCallbackLine, startSignInCallback, sweepStaleRecord, type SignInOutcome } from './lens/signin';
 import { listMyWorlds, revokeToken, type SignedIn } from './lens/account';
@@ -78,6 +78,9 @@ let filter: { type: ElementType | null; q: string } = { type: null, q: '' };
 
 /** The sign-in: one token in this page's memory, never stored. */
 let session: SignedIn | null = null;
+/** The open door's keyless world answer, taken once by the public read that follows it. */
+let probed: { worldId: string; meta: WorldMeta; budget: Budget | undefined; at: number } | null = null;
+const PROBE_FRESH_MS = 30_000;
 /** The picker's list for this sign-in, read once per sign-in. */
 let worlds: OwAccountWorld[] | null = null;
 let worldsRead: AbortController | null = null;
@@ -380,7 +383,10 @@ async function openDoor(worldId: string, elementId: string | null): Promise<void
   if (s && worlds?.some((w) => w.id === worldId)) return go('me');
   let reader: 'public' | 'me';
   try {
-    await readWorldMeta(worldId, fetch);
+    let budget: Budget | undefined;
+    const meta = await readWorldMeta(worldId, fetch, undefined, (b) => (budget = b));
+    // The public read that follows takes this answer, so a world opened by the door asks keel once.
+    probed = { worldId, meta, budget, at: Date.now() };
     reader = 'public';
   } catch (e) {
     if (location.hash !== door) return;
@@ -431,8 +437,11 @@ async function openWorld(reader: 'public' | 'me', worldId: string): Promise<void
   const progress = h('p', { class: 'said', role: 'status' }, 'Reading the world…');
   screen(h('header', { class: 'top' }, brandLink()), h('main', { class: 'closed' }, progress));
   try {
-    let budget: Budget | undefined;
-    const meta = await readWorldMeta(worldId, fetch, ctl.signal, (b) => (budget = b), token);
+    // The door's keyless answer for this world, when it is the one just asked (public only, half a minute).
+    const pre = reader === 'public' && probed?.worldId === worldId && Date.now() - probed.at < PROBE_FRESH_MS ? probed : null;
+    probed = null;
+    let budget: Budget | undefined = pre?.budget;
+    const meta = pre?.meta ?? (await readWorldMeta(worldId, fetch, ctl.signal, (b) => (budget = b), token));
     progress.textContent = `Reading ${meta.name}…`;
     const els = await readWorldElements(
       meta,

@@ -174,9 +174,12 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
   // The way in from another tool: #/open/<world>[/element/<id>], replaced by the world's own address.
   await page.goto(`${base}/#/`);
   await page.waitForSelector('main.ways');
+  const beforeDoor = ow.length;
   await page.goto(`${base}/#/open/${W}`);
   await page.waitForSelector('canvas.webcanvas', { timeout: 20_000 });
   check(`${label} open door: a public world opens public`, new URL(page.url()).hash === `#/w/${W}`, page.url());
+  const worldReads = ow.slice(beforeDoor).filter((p) => p.startsWith('/api/v2/world/')).length;
+  check(`${label} open door: the world is asked of keel once`, worldReads === 1, `${worldReads}: ${ow.slice(beforeDoor).join(' ')}`);
   await page.goBack();
   await page.waitForTimeout(300);
   check(`${label} open door: Back skips the door`, new URL(page.url()).hash === '#/', page.url());
