@@ -680,6 +680,34 @@ async function leftRevoke(tag, page, keel, token, how) {
   await ctx.close();
 }
 
+// 6. The way in from another tool (#/open/), signed out then in: a member's element on a public world
+// offers Sign in and comes back to it as theirs; a private world asks for the sign-in and resumes;
+// signed in, a world on the list opens as the account's, never public.
+{
+  const tag = `${which} open door`;
+  const { ctx, page, keel, errors } = await session(tag);
+  await page.goto(`${PROD}/#/open/${SHARED}/element/${id(22)}`);
+  await page.waitForSelector('main.closed h1', { timeout: 15_000 });
+  check(tag, page.url() === `${PROD}/#/w/${SHARED}/e/${id(22)}` && (await page.textContent('main.closed h1')) === 'You cannot open this element', `signed out, a members-only element of a public world is the closed element (${page.url()})`);
+  check(tag, (await page.getByRole('button', { name: 'Sign in with OnlyWorlds' }).count()) === 1, 'and offers Sign in with OnlyWorlds');
+  await signIn(page, keel);
+  await page.waitForSelector('.eview', { timeout: 15_000 });
+  check(tag, page.url() === `${PROD}/#/me/${SHARED}/e/${id(22)}` && (await page.textContent('main h1')).trim() === 'Members Mira', `the sign-in comes back to the element, as the account (${page.url()})`);
+  await page.goto(`${PROD}/#/open/${SHARED}`);
+  await page.waitForSelector('.tally', { timeout: 15_000 });
+  check(tag, page.url() === `${PROD}/#/me/${SHARED}`, `signed in, a world on the list opens as the account's, not public (${page.url()})`);
+  await ctx.close();
+  const second = await session(`${tag} private`);
+  await second.page.goto(`${PROD}/#/open/${MINE}`);
+  await second.page.waitForSelector('.ways .said', { timeout: 15_000 });
+  check(tag, second.page.url() === `${PROD}/#/me/${MINE}` && (await second.page.textContent('.ways .said')) === 'Sign in to open this world.', `signed out, a private world asks for the sign-in (${second.page.url()})`);
+  await signIn(second.page, second.keel);
+  await second.page.waitForSelector('.tally', { timeout: 15_000 });
+  check(tag, second.page.url() === `${PROD}/#/me/${MINE}`, `and the sign-in resumes to it (${second.page.url()})`);
+  check(tag, errors.length === 0 && second.errors.length === 0, `no page error (${[...errors, ...second.errors].slice(0, 2).join(' | ')})`);
+  await second.ctx.close();
+}
+
 await browser.close();
 clearTimeout(watchdog);
 console.log(`signin-played ${which}${KEEP_CONSENT ? '' : ' (no consent flag)'}: ${checks - failures} of ${checks} checks`);

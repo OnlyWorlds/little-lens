@@ -21,6 +21,9 @@ export type Route =
   | { kind: 'standard-list' }
   | ({ kind: 'world'; reader: 'public' | 'me' | 'standard'; worldId: string; elementId: string | null } & ViewPart)
   | ({ kind: 'file'; elementId: string | null } & ViewPart)
+  /** The way in from another tool (the tools list's open address, Atlas's spelling): a world by id, read
+   * public or signed in as the world allows, then replaced by that world's own address. */
+  | { kind: 'open'; worldId: string; elementId: string | null }
   /** An address with an id that is no id: drawn as the closed door, with no request. */
   | { kind: 'closed' };
 
@@ -41,6 +44,11 @@ export function parseRoute(hash: string): Route {
   const time: ViewPart = { view: 'time', at: parseAt(params.get('at')) };
   if (parts.length === 0) return { kind: 'home' };
   if (parts[0] === 'std' && parts.length === 1) return { kind: 'standard-list' };
+  if (parts[0] === 'open' && (parts.length === 2 || (parts.length === 4 && parts[2] === 'element'))) {
+    const elementId = parts.length === 4 ? parts[3] : null;
+    if (!isId(parts[1]) || (elementId !== null && !isId(elementId))) return { kind: 'closed' };
+    return { kind: 'open', worldId: parts[1].toLowerCase(), elementId: elementId?.toLowerCase() ?? null };
+  }
   const reader = READERS[parts[0]];
   if (reader) {
     const worldId = parts[1];

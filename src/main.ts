@@ -355,16 +355,63 @@ function closedDoor(reader: 'public' | 'me' | 'standard' = 'public'): void {
   );
 }
 
+/**
+ * The way in from another tool (`#/open/<world>[/element/<id>]`): a world on this sign-in's list opens
+ * signed in (the list read first when this sign-in has not read it); any other is asked of keel without
+ * a key, and opens public if keel serves it so. keel answers a world that is not public 404 (401 while
+ * its public door is shut): that opens as a signed-in address (signed out, the ways in saying "Sign in to
+ * open this world.", with the return kept). Anything else (a 403 from the edge, a slow-down, a fault) stays
+ * on the door with Try again, never read as private. The door's own address is replaced, so Back never
+ * lands on it again; an answer that arrives after the person moved on is nobody's.
+ */
+async function openDoor(worldId: string, elementId: string | null): Promise<void> {
+  const door = location.hash;
+  const go = (reader: 'public' | 'me') => {
+    history.replaceState(null, '', `/${worldHash(reader, worldId, elementId)}`);
+    route();
+  };
+  screen(h('header', { class: 'top' }, brandLink()), h('main', { class: 'closed' }, h('p', { class: 'said', role: 'status' }, 'Opening the world…')));
+  const s = session;
+  if (s && worlds === null) {
+    const list = await listMyWorlds(s).catch(() => null);
+    if (location.hash !== door || session !== s) return;
+    if (list && worlds === null) worlds = list;
+  }
+  if (s && worlds?.some((w) => w.id === worldId)) return go('me');
+  let reader: 'public' | 'me';
+  try {
+    await readWorldMeta(worldId, fetch);
+    reader = 'public';
+  } catch (e) {
+    if (location.hash !== door) return;
+    const status = e instanceof ReadError && e.failure.kind === 'closed' ? e.failure.status : undefined;
+    if (status === 404 || status === 401) reader = 'me';
+    // Deleted: the public closed door says it as any world that is gone.
+    else if (status === 410) reader = 'public';
+    else
+      return screen(
+        h('header', { class: 'top' }, brandLink()),
+        h('main', { class: 'closed' }, h('p', {}, failLine(e)), h('button', { class: 'way', type: 'button', onclick: () => void openDoor(worldId, elementId) }, 'Try again')),
+      );
+  }
+  if (location.hash !== door) return;
+  go(reader);
+}
+
+/** What a read that failed for a reason other than the door says, with Try again beside it. */
+function failLine(err: unknown): string {
+  if (err instanceof ReadError && err.failure.kind === 'slow-down') {
+    const s = err.failure.retryAfter;
+    return `OnlyWorlds is asking Little Lens to slow down. Try again in ${s ? `${s} seconds` : 'a minute'}.`;
+  }
+  if (err instanceof ReadError && (err.failure.kind === 'server' || err.failure.kind === 'closed')) return 'OnlyWorlds answered with an error. Try again in a moment.';
+  return 'Little Lens could not reach OnlyWorlds. Check your connection and try again.';
+}
+
 function failed(reader: 'public' | 'me', worldId: string, err: unknown): void {
   if (err instanceof ReadError && err.failure.kind === 'ended') return endSession(ENDED_LINE);
   if (err instanceof ReadError && err.failure.kind === 'closed') return closedDoor(reader);
-  let line = 'Little Lens could not reach OnlyWorlds. Check your connection and try again.';
-  if (err instanceof ReadError && err.failure.kind === 'slow-down') {
-    const s = err.failure.retryAfter;
-    line = `OnlyWorlds is asking Little Lens to slow down. Try again in ${s ? `${s} seconds` : 'a minute'}.`;
-  } else if (err instanceof ReadError && err.failure.kind === 'server') {
-    line = 'OnlyWorlds answered with an error. Try again in a moment.';
-  }
+  const line = failLine(err);
   screen(
     h('header', { class: 'top' }, brandLink()),
     h('main', { class: 'closed' }, h('p', {}, line), h('button', { class: 'way', type: 'button', onclick: () => openWorld(reader, worldId) }, 'Try again')),
@@ -689,10 +736,31 @@ function timeKey(l: Loaded): string {
 function elementPage(l: Loaded, id: string): void {
   const el = l.graph.byId.get(id);
   if (!el) {
-    // An element this world does not show here: the same door as a world that is closed.
+    // An element this world does not show here: the same door as a world that is closed. On a public
+    // world read signed out, a member may hold it: Sign in comes back to it as their own world.
+    const said = h('p', { class: 'said', role: 'status' });
+    const signIn =
+      l.reader === 'public' && !session && canSignInWithOnlyWorlds() && l.worldId
+        ? h('button', {
+            class: 'way primary',
+            type: 'button',
+            onclick: () => {
+              said.textContent = 'Going to OnlyWorlds…';
+              beginOnlyWorldsSignIn(worldHash('me', l.worldId, id)).catch((err: unknown) => (said.textContent = err instanceof Error ? err.message : 'Signing in did not start. Try again.'));
+            },
+          }, 'Sign in with OnlyWorlds')
+        : null;
     screen(
       top(l.name, l.sub),
-      h('main', { class: 'closed' }, h('h1', {}, 'You cannot open this element'), h('p', {}, 'It may be private, left out of this view, or the address may be wrong.'), h('a', { class: 'way', href: worldHash(l.reader, l.worldId) }, 'Back to the world')),
+      h(
+        'main',
+        { class: 'closed' },
+        h('h1', {}, 'You cannot open this element'),
+        h('p', {}, signIn ? 'It may be private, left out of this view, or the address may be wrong. If this world is yours or shared with you, sign in to look as yourself.' : 'It may be private, left out of this view, or the address may be wrong.'),
+        signIn,
+        h('a', { class: 'way', href: worldHash(l.reader, l.worldId) }, 'Back to the world'),
+        said,
+      ),
     );
     return;
   }
@@ -794,6 +862,7 @@ function route(): void {
     notice = null;
     return waysIn(line);
   }
+  if (r.kind === 'open') return void openDoor(r.worldId, r.elementId);
   if (r.kind === 'closed') return closedDoor(location.hash.startsWith('#/me/') ? 'me' : location.hash.startsWith('#/std/') ? 'standard' : 'public');
   if (r.kind === 'standard-list') return standardList();
   if (r.kind === 'file') {

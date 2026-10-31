@@ -23,6 +23,15 @@ describe('parseRoute', () => {
     expect(parseRoute('#/signing-in')).toEqual({ kind: 'home' });
   });
 
+  it("reads the way in from another tool, Atlas's spelling, ids or the closed door", () => {
+    expect(parseRoute(`#/open/${W}`)).toEqual({ kind: 'open', worldId: W, elementId: null });
+    expect(parseRoute(`#/open/${W.toUpperCase()}/element/${E.toUpperCase()}`)).toEqual({ kind: 'open', worldId: W, elementId: E });
+    expect(parseRoute('#/open/moppetopia')).toEqual({ kind: 'closed' });
+    expect(parseRoute(`#/open/${W}/element/nope`)).toEqual({ kind: 'closed' });
+    expect(parseRoute(`#/open/${W}/e/${E}`)).toEqual({ kind: 'home' });
+    expect(parseRoute('#/open')).toEqual({ kind: 'home' });
+  });
+
   it('sends an id that is no id to the closed door, never to a request', () => {
     expect(parseRoute('#/w/moppetopia')).toEqual({ kind: 'closed' });
     expect(parseRoute(`#/w/${W}/e/../x`)).toEqual({ kind: 'home' });

@@ -19,6 +19,7 @@ const PRIVATE = '22222222-2222-7222-8222-222222222222';
 const SLOW = '33333333-3333-7333-8333-333333333333';
 const SHUT = '44444444-4444-7444-8444-444444444444';
 const BUSY = '55555555-5555-7555-8555-555555555555';
+const EDGE = '66666666-6666-7666-8666-666666666666';
 const id = (n) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 
 // The played world: 5 characters, a location, a relation, a pin; one character hidden on the
@@ -98,6 +99,7 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
     const send = (status, body, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', ...headers }, body: JSON.stringify(body) });
     if (world === SLOW) return send(429, { error: { type: 'rate_limited' } }, { 'Retry-After': '42', 'access-control-expose-headers': 'Retry-After' });
     if (world === BUSY) return send(503, { error: { type: 'api_error' } }, { 'Retry-After': '9', 'access-control-expose-headers': 'Retry-After' });
+    if (world === EDGE) return send(403, { error: { code: 'edge_refused' } });
     if (world === SHUT) return send(401, { error: { code: 'authentication_failed' } });
     if (world !== W) return send(404, { error: { code: 'not_found' } });
     if (u.pathname === '/api/v2/world/') return send(200, { id: W, name: 'Saltmere Coast', description: '', image_url: '', counts: { total: 8, types: counts } });
@@ -168,6 +170,36 @@ for (const [label, viewport] of [['desk', { width: 1440, height: 900 }], ['390',
   await page.goto(`${base}/#/w/${SHUT}`);
   await page.waitForSelector('main.closed h1');
   check(`${label} shut door looks closed`, (await page.textContent('main.closed')) === privateText);
+
+  // The way in from another tool: #/open/<world>[/element/<id>], replaced by the world's own address.
+  await page.goto(`${base}/#/`);
+  await page.waitForSelector('main.ways');
+  await page.goto(`${base}/#/open/${W}`);
+  await page.waitForSelector('canvas.webcanvas', { timeout: 20_000 });
+  check(`${label} open door: a public world opens public`, new URL(page.url()).hash === `#/w/${W}`, page.url());
+  await page.goBack();
+  await page.waitForTimeout(300);
+  check(`${label} open door: Back skips the door`, new URL(page.url()).hash === '#/', page.url());
+  await page.goto(`${base}/#/open/${W}/element/${id(1).toUpperCase()}`);
+  await page.waitForSelector('.eview', { timeout: 20_000 });
+  check(`${label} open door: an element opens on its page`, new URL(page.url()).hash === `#/w/${W}/e/${id(1)}` && (await page.textContent('main h1')).trim() === 'Ada Vane', `${page.url()} ${await page.textContent('main h1')}`);
+  await page.goto(`${base}/#/open/${PRIVATE}`);
+  await page.waitForSelector('main.ways', { timeout: 20_000 });
+  const privText = await page.textContent('main.ways');
+  check(`${label} open door: a world not public asks for the sign-in`, new URL(page.url()).hash === `#/me/${PRIVATE}` && /Sign in to open this world\.|This address opens a world signed in/.test(privText), `${page.url()} ${privText.slice(0, 160)}`);
+  await page.goto(`${base}/#/open/${SLOW}`);
+  await page.waitForSelector('main.closed button', { timeout: 20_000 });
+  check(`${label} open door: slow down kept on the door`, new URL(page.url()).hash === `#/open/${SLOW}` && (await page.textContent('main.closed p')) === 'OnlyWorlds is asking Little Lens to slow down. Try again in 42 seconds.', `${page.url()} ${await page.textContent('main.closed p')}`);
+  await page.goto(`${base}/#/open/${SHUT}`);
+  await page.waitForSelector('main.ways', { timeout: 20_000 });
+  check(`${label} open door: keel's shut public door reads as not public`, new URL(page.url()).hash === `#/me/${SHUT}`, page.url());
+  await page.goto(`${base}/#/open/${EDGE}`);
+  await page.waitForSelector('main.closed button', { timeout: 20_000 });
+  check(`${label} open door: a 403 from the edge stays on the door, never the sign-in ask`, new URL(page.url()).hash === `#/open/${EDGE}` && (await page.textContent('main.closed p')) === 'OnlyWorlds answered with an error. Try again in a moment.', `${page.url()} ${await page.textContent('main.closed p')}`);
+  const beforeOpen = ow.length;
+  await page.goto(`${base}/#/open/not-an-id`);
+  await page.waitForSelector('main.closed h1');
+  check(`${label} open door: a malformed id is the closed door, no request`, (await page.textContent('main.closed')) === privateText && ow.length === beforeOpen, `${ow.slice(beforeOpen).join(' ')}`);
 
   // A world file: the marks left out and counted.
   await page.goto(`${base}/#/`);
