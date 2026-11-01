@@ -8,8 +8,8 @@
  * folder, no `.env`, and the world's `api` block is dropped as the file reader drops it.
  */
 
-import { OwWorldFileError, SPATIAL_TYPES, readWorldFile } from '@onlyworlds/sdk';
-import { isElementType, type Element } from './graph';
+import { OwWorldFileError, readWorldFile } from '@onlyworlds/sdk';
+import { isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldFile, type WorldTime } from './time';
 
 export interface FileWorld {
@@ -32,13 +32,13 @@ export const TOO_BIG = 'That world is too big for Little Lens to open in a brows
 export const MAX_FILE_BYTES = 512 * 1024 ** 2;
 
 const ELEMENT_PATH = /^elements\/([a-z]+)\/[^/]+\.json$/;
-const SPATIAL = new Set<string>(SPATIAL_TYPES);
+
 const dec = new TextDecoder();
 
 /** The element files the graph reads: a kept type's own folder, no dot-prefixed name. */
 export function keptElementType(rel: string): string | null {
   const m = rel.match(ELEMENT_PATH);
-  if (!m || !isElementType(m[1]) || SPATIAL.has(m[1])) return null;
+  if (!m || !isElementType(m[1]) || !isGraphType(m[1])) return null;
   if (rel.split('/').some((seg) => seg.startsWith('.'))) return null;
   return m[1];
 }

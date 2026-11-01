@@ -55,9 +55,10 @@ describe('T2, the web\'s own kept elements', () => {
       el(5, 'zone', { start_date: 4 }),
     ]);
     const r = readTime(g.nodes);
-    expect(r.dated.map((d) => d.date)).toEqual([1]);
+    // A Zone is a node of the web since the reader drew it (serial 92), so Time reads its date too.
+    expect(r.dated.map((d) => d.date)).toEqual([1, 4]);
     expect(r.stubs).toBe(1);
-    expect(r.whole).toBe(1);
+    expect(r.whole).toBe(2);
     expect(r.undatedOfDatedKind).toBe(0);
   });
 });

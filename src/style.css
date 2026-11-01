@@ -51,6 +51,8 @@ button{font:inherit;color:inherit}
 .lens{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 10px}
 .lens select{background:transparent;color:var(--text);border:0;font:inherit;font-weight:600}
 .leftout{color:var(--muted)}
+.aids{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.aids a{color:var(--text);display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
 .wbody{position:relative;border:1px solid var(--line);border-radius:10px;background:#05080c;min-height:200px}
 .webcanvas{display:block}
 .webtip{position:absolute;pointer-events:none;padding:2px 8px;border-radius:6px;background:var(--surf2);border:1px solid var(--line);font-size:13px;white-space:nowrap}

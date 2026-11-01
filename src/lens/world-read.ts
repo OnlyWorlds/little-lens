@@ -7,8 +7,7 @@
  * at all is one answer: closed. Signed in, a 401 is the sign-in ending, never a closed world.
  */
 
-import { ELEMENT_TYPES, SPATIAL_TYPES } from '@onlyworlds/sdk';
-import { isElementType, type Element } from './graph';
+import { GRAPH_TYPES, isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldBody, type WorldTime } from './time';
 
 export const API_BASE = 'https://www.onlyworlds.com/api/v2';
@@ -117,9 +116,8 @@ export async function readWorldMeta(worldId: string, fetchImpl: Fetch = fetch, s
  * counts (an older server) reads every type the graph keeps, each until its list ends.
  */
 export function typesToRead(counts: Record<string, number> | null): string[] {
-  const spatial = new Set<string>(SPATIAL_TYPES);
-  if (counts === null) return ELEMENT_TYPES.filter((t) => !spatial.has(t)).sort();
-  return Object.keys(counts).filter((t) => counts[t] > 0 && isElementType(t) && !spatial.has(t)).sort();
+  if (counts === null) return [...GRAPH_TYPES].sort();
+  return Object.keys(counts).filter((t) => counts[t] > 0 && isElementType(t) && isGraphType(t)).sort();
 }
 
 /** What reading a world costs in requests, from its counts: one per thousand of each kept type. */

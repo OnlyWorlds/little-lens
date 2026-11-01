@@ -1,12 +1,17 @@
 /**
- * A world as a graph, by the graph sheet's rules (points 4 to 11): elements are nodes, the
- * schema's link fields are edges, one edge per element, field and target, everything ordered by
- * id and then field so the same set always gives the same picture. A Relation is a node like any
- * other. Map, Pin, Marker and Zone stay out, and so do hidden, proposed and room elements: the
- * world's line says how many were left out and why.
+ * A world as a graph, read through the SDK's `worldGraph` (the lens profile's graph section): its
+ * nodes and edges are the reader's, never this page's own. So a Zone is a node, the declared `x_` links
+ * (`x_lens_leads_to`, `x_spine_depends_on`) are edges, a target listed twice is two edges, and the
+ * reading aids (the charter, its guide, its domains) stay off the web and the list, as a lore view
+ * leaves them, while their own pages still open. Map, Pin and Marker stay out.
+ *
+ * The page keeps two rules of its own, applied before the reader: hidden, proposed and room
+ * elements leave by the page's readings below (the room one the stricter of the SDK's and keel's),
+ * each counted once, so the world's line says how many were left out and why. The reader is the
+ * owner's: what the page holds is what it was served, and nothing more is cut by rung.
  */
 
-import { ELEMENT_TYPES, FIELD_SCHEMA, ROOM_PAIRS, SPATIAL_TYPES, handsOnAsProposed, isRoomElement, simpleCaseFold, type ElementType } from '@onlyworlds/sdk';
+import { ELEMENT_TYPES, FIELD_SCHEMA, ROOM_PAIRS, handsOnAsProposed, isCharterElement, isRoomElement, readingAidOf, simpleCaseFold, worldGraph, type ElementType } from '@onlyworlds/sdk';
 
 export type Element = { id: string; type: ElementType; name?: string; [field: string]: unknown };
 
@@ -14,27 +19,48 @@ export interface Edge {
   source: string;
   field: string;
   target: string;
+  /** The target's place in its field's list (0 for a single link), as the reader answers it. */
+  index: number;
 }
 
 export interface LeftOut {
   hidden: number;
   proposed: number;
   room: number;
+  /** The charter, its guide and its domains: off the web and the list, each on its own page. */
+  readingAid: number;
 }
 
 export interface WorldGraph {
-  /** Kept elements, by id. */
+  /** The reader's nodes, in its order (by id). */
   nodes: Element[];
+  /** Every element a page can open: the nodes and the reading aids. */
   byId: Map<string, Element>;
-  /** One per (source, field, target), both ends kept, by source id, field, target id. */
+  /** The reading aids, off the web and the list: the charter, then the guide, then the domains, each by name. */
+  aids: Element[];
+  /** The reader's edges: by source id, field, then the target's place in the field. */
   edges: Edge[];
-  /** Links a kept element holds to ids outside the kept set, by source id. */
+  /** Ids an element's schema link fields hold that no page here opens (hidden, out, or not in the world), each id once per field, by source id. */
   outside: Map<string, number>;
   leftOut: LeftOut;
 }
 
 const KNOWN = new Set<string>(ELEMENT_TYPES);
-const OUT_OF_GRAPH = new Set<string>(SPATIAL_TYPES);
+
+/**
+ * The types the reader draws, asked of the reader itself: one bare element of each type, kept or
+ * not. So the readers that fetch a world (keel's lists, a file's folders) skip exactly the map space
+ * the graph would cut, and follow the profile when it moves (a Zone became a node in serial 92).
+ */
+export const GRAPH_TYPES: readonly ElementType[] = ELEMENT_TYPES.filter(
+  (t) => worldGraph({ elements: [{ id: '00000000-0000-7000-8000-000000000001', type: t, name: 'probe' }] }, { rung: 'owner' }).nodes.length === 1,
+);
+const DRAWN = new Set<string>(GRAPH_TYPES);
+
+/** Whether the graph draws this type (every type but the map space). */
+export function isGraphType(t: string): boolean {
+  return DRAWN.has(t);
+}
 
 export function isElementType(t: unknown): t is ElementType {
   return typeof t === 'string' && KNOWN.has(t);
@@ -91,33 +117,36 @@ export function idsIn(value: unknown, multi: boolean): string[] {
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 export function buildGraph(elements: Iterable<Element>): WorldGraph {
-  const leftOut: LeftOut = { hidden: 0, proposed: 0, room: 0 };
-  const byId = new Map<string, Element>();
+  const leftOut: LeftOut = { hidden: 0, proposed: 0, room: 0, readingAid: 0 };
+  const kept = new Map<string, Element>();
   for (const el of elements) {
-    if (!el || typeof el.id !== 'string' || !isElementType(el.type) || OUT_OF_GRAPH.has(el.type)) continue;
+    if (!el || typeof el.id !== 'string' || !isElementType(el.type)) continue;
     // One reason each, in this order, so the counts add up to what is gone.
     if (isHidden(el)) leftOut.hidden++;
     // Any value in the proposed mark leaves it out, a doubtful one too (the SDK's reader for handing a world on).
     else if (handsOnAsProposed(el)) leftOut.proposed++;
     else if (isRoomish(el)) leftOut.room++;
-    // One node per id: the reader hands them over in the order that wins.
-    else if (!byId.has(el.id)) byId.set(el.id, el);
+    // One element per id: the reader hands them over in the order that wins.
+    else if (!kept.has(el.id)) kept.set(el.id, el);
   }
-  const nodes = [...byId.values()].sort((a, b) => byString(a.id, b.id));
-  const edges: Edge[] = [];
+  const g = worldGraph({ elements: [...kept.values()] }, { rung: 'owner' });
+  leftOut.readingAid = g.cut.reading_aid ?? 0;
+  const nodes = g.nodes.map((n) => kept.get(n.id)!);
+  const byId = new Map<string, Element>(nodes.map((n) => [n.id, n]));
+  const AID_ORDER = { charter: 0, guide: 1, domain: 2 } as const;
+  const aids = [...kept.values()]
+    .filter((el) => !byId.has(el.id) && isCharterElement(el))
+    .sort((a, b) => AID_ORDER[readingAidOf(a) ?? 'domain'] - AID_ORDER[readingAidOf(b) ?? 'domain'] || byString(String(a.name ?? ''), String(b.name ?? '')) || byString(a.id, b.id));
+  for (const el of aids) byId.set(el.id, el);
+  const edges: Edge[] = g.edges.map((e) => ({ source: e.source, field: e.field, target: e.target, index: e.index }));
+  // The ids an element's own link fields hold that no page here opens: exactly the chips beside it that cannot open.
   const outside = new Map<string, number>();
-  for (const el of nodes) {
-    const fields = linkFieldsOf(el.type).sort((a, b) => byString(a[0], b[0]));
-    for (const [field, multi, targetType] of fields) {
-      for (const target of idsIn(el[field], multi).sort(byString)) {
-        const t = byId.get(target);
-        // A link names its field's own type; one that names another kind is no link we draw.
-        if (t && (targetType === 'any' || t.type === targetType)) edges.push({ source: el.id, field, target });
-        else outside.set(el.id, (outside.get(el.id) ?? 0) + 1);
-      }
-    }
+  for (const el of byId.values()) {
+    let n = 0;
+    for (const [field, multi] of linkFieldsOf(el.type)) for (const target of idsIn(el[field], multi)) if (!byId.has(target)) n++;
+    if (n > 0) outside.set(el.id, n);
   }
-  return { nodes, byId, edges, outside, leftOut };
+  return { nodes, byId, aids, edges, outside, leftOut };
 }
 
 /** Links each node takes part in, either end, an edge to itself counted once. */

@@ -18,7 +18,7 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
 
 describe('the world read', () => {
   it('reads only the counted element types the graph keeps, in order', () => {
-    expect(typesToRead({ marker: 131, character: 23, pin: 4, zone: 1, map: 2, location: 3, nonsense: 9, event: 0 } as Record<string, number>)).toEqual(['character', 'location']);
+    expect(typesToRead({ marker: 131, character: 23, pin: 4, zone: 1, map: 2, location: 3, nonsense: 9, event: 0 } as Record<string, number>)).toEqual(['character', 'location', 'zone']);
   });
 
   it('follows the cursor and stops on has_more false', async () => {
@@ -96,12 +96,14 @@ describe('the world read', () => {
     const meta = await readWorldMeta(W, f);
     expect(meta.counts).toBeNull();
     const types = typesToRead(null);
-    expect(types).toHaveLength(18);
+    // Every type but the map space (Map, Pin, Marker); a Zone is a node since serial 92.
+    expect(types).toHaveLength(19);
     expect(types).not.toContain('pin');
-    expect(costOf(null)).toBe(18);
+    expect(types).toContain('zone');
+    expect(costOf(null)).toBe(19);
     const all = fake({ [`${API_BASE}/`]: json({ data: [], has_more: false, next_cursor: null }) });
     await readWorldElements(meta, all.f);
-    expect(all.seen).toHaveLength(18);
+    expect(all.seen).toHaveLength(19);
   });
 
   it('signed in, sends the token as the bearer, and only then', async () => {

@@ -136,9 +136,14 @@ export function elementView(o: ElementViewOptions): HTMLElement {
   const right = h(
     'section',
     { class: 'panel around' },
-    h('h2', { class: 'cap' }, `What it links to · ${out.length}, and what links to it · ${inn.length}`),
-    out.length + inn.length > 0 ? radial(o) : h('p', { class: 'empty' }, 'Nothing links to this element, and it links to nothing shown here.'),
-    h('p', { class: 'key' }, 'Solid line: this element links to it · dashed line: it links to this element'),
+    ...(o.graph.aids.includes(el)
+      ? // A reading aid is off the web, so it has no neighbourhood there; its own links are the fields beside it.
+        [h('p', { class: 'empty' }, 'A reading aid: it says how to read this world, so the web leaves it out. What it links to is in its fields.')]
+      : [
+          h('h2', { class: 'cap' }, `What it links to · ${out.length}, and what links to it · ${inn.length}`),
+          out.length + inn.length > 0 ? radial(o) : h('p', { class: 'empty' }, 'Nothing links to this element, and it links to nothing shown here.'),
+          h('p', { class: 'key' }, 'Solid line: this element links to it · dashed line: it links to this element'),
+        ]),
   );
   return h('div', { class: 'eview' }, left, right);
 }

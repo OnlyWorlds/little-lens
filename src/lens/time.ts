@@ -66,7 +66,7 @@ export interface TimeReading {
 
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-/** One reading of the kept nodes (the web's own set: hidden, proposed and room already out, spatial never in). */
+/** One reading of the kept nodes (the web's own set: hidden, proposed and room already out, Map, Pin and Marker never in; a Zone is a node). */
 export function readTime(nodes: readonly Element[]): TimeReading {
   const dated: Dated[] = [];
   let whole = 0;

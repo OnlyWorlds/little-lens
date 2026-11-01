@@ -329,6 +329,7 @@ function leftOutNotes(g: WorldGraph): string[] {
   if (g.leftOut.hidden) parts.push(`${g.leftOut.hidden} hidden`);
   if (g.leftOut.proposed) parts.push(`${g.leftOut.proposed} proposed`);
   if (g.leftOut.room) parts.push(`${g.leftOut.room} in a room`);
+  // The reading aids are not left out: they are off the web and the list, and the world page names them first (g.aids).
   return parts.length ? [`Left out: ${parts.join(', ')}.`] : [];
 }
 
@@ -577,8 +578,12 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
       { class: 'world' },
       h('div', { class: 'bar' }, search, switcher),
       pills,
+      // The charter, its guide and its domains say how to read the world: named first, each on its own page, never drawn.
+      g.aids.length
+        ? h('p', { class: 'aids' }, 'Read first: ', ...g.aids.flatMap((a, i) => [i ? ' · ' : '', h('a', { href: hrefOf(a.id) }, String(a.name || 'Untitled'))]))
+        : null,
       h('div', { class: 'meta' }, lens, tally, ...l.notes.map((n) => h('span', { class: 'leftout' }, n))),
-      empty ? h('p', { class: 'empty' }, 'Nothing to draw: this world has no elements Little Lens shows.') : body,
+      empty ? h('p', { class: 'empty' }, 'Nothing to draw: this world has no elements Little Lens draws on its web.') : body,
     ),
   );
   drawPills();
@@ -646,10 +651,10 @@ function messagesPage(l: Loaded, thread: string | null): void {
 
 // -- The small worlds from the standard ------------------------------------
 
-/** The elements a small world opens with: its hidden ones are left out. */
+/** The elements a small world's web draws: what the world page will count when it opens. */
 function shownCount(w: { elements: { id: string }[]; hidden?: string[] }): number {
   const hidden = new Set(w.hidden ?? []);
-  return w.elements.filter((e) => !hidden.has(e.id)).length;
+  return buildGraph(w.elements.filter((e) => !hidden.has(e.id)) as Element[]).nodes.length;
 }
 
 function standardList(): void {
