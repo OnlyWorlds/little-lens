@@ -7,6 +7,7 @@
 import './style.css';
 import { ELEMENT_TYPES, OwApiError, simpleCaseFold, type ElementType, type OwAccountWorld } from '@onlyworlds/sdk';
 import { buildGraph, degrees, isKnownOfStub, type Element, type WorldGraph } from './lens/graph';
+import { lensChoices, lensView } from './lens/lenses';
 import { parseRoute, worldHash, type Reader, type Route } from './lens/route';
 import { ReadError, readWorldElements, readWorldMeta, type Budget, type WorldMeta } from './lens/world-read';
 import { readWorldFileBytes, readWorldFolder, type FileWorld, type PickedFile } from './lens/file-read';
@@ -56,6 +57,8 @@ interface Loaded {
   /** The messages reading, made on the first Messages page; whether there is one, on the first switcher. */
   messages: MessageReading | null;
   hasMessages?: boolean;
+  /** The lens the web and the list are read through, in memory with the world; none is the whole world. */
+  lens?: string | null;
 }
 
 /** Packets kept per open world; the oldest goes first. */
@@ -510,7 +513,11 @@ function matches(el: Element, q: string): boolean {
 }
 
 function worldPage(l: Loaded, view: 'web' | 'list'): void {
-  const g = l.graph;
+  const choices = lensChoices(l.graph);
+  if (l.lens && !choices.some((c) => c.id === l.lens)) l.lens = null;
+  const through = l.lens ? lensView(l.graph, l.lens, l.time.now) : null;
+  const g = through?.kind === 'ok' ? through.graph : l.graph;
+  const degree = through?.kind === 'ok' ? degrees(g) : l.degree;
   const counts = new Map<ElementType, number>();
   for (const n of g.nodes) counts.set(n.type, (counts.get(n.type) ?? 0) + 1);
   const lit = (id: string) => {
@@ -548,7 +555,7 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
     for (const n of rows) {
       const desc = typeof n.description === 'string' ? n.description : '';
       const stub = isKnownOfStub(n);
-      const card = h('li', {}, h('a', { class: 'card', href: hrefOf(n.id) }, h('span', { class: 'chead' }, typeIcon(n.type, 15), h('span', { class: 'cname' }, n.name || 'Untitled'), h('span', { class: 'cdeg' }, stub ? 'known of' : String(l.degree.get(n.id) ?? 0))), desc ? h('span', { class: 'cdesc' }, desc) : null));
+      const card = h('li', {}, h('a', { class: 'card', href: hrefOf(n.id) }, h('span', { class: 'chead' }, typeIcon(n.type, 15), h('span', { class: 'cname' }, n.name || 'Untitled'), h('span', { class: 'cdeg' }, stub ? 'known of' : String(degree.get(n.id) ?? 0))), desc ? h('span', { class: 'cdesc' }, desc) : null));
       card.style.setProperty('--ink', inkOf(n.type));
       grid.append(card);
     }
@@ -568,9 +575,29 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
     refresh();
   });
 
-  const lens = h('label', { class: 'lens' }, h('span', {}, 'Lens'), h('select', { disabled: true, 'aria-label': 'Lens' }, h('option', {}, 'The whole world')));
+  // The world's lenses; none is the whole world. A choice redraws this page through it, in memory only.
+  const select = h(
+    'select',
+    { 'aria-label': 'Lens', disabled: choices.length === 0, title: choices.length ? null : 'This world has no lenses' },
+    h('option', { value: '' }, 'The whole world'),
+    ...choices.map((c) => h('option', { value: c.id, selected: c.id === l.lens }, c.name)),
+  ) as HTMLSelectElement;
+  select.addEventListener('change', () => {
+    l.lens = select.value || null;
+    filter = { type: null, q: filter.q };
+    worldPage(l, view);
+    document.querySelector<HTMLSelectElement>('select[aria-label="Lens"]')?.focus();
+  });
+  const lens = h('label', { class: 'lens' }, h('span', {}, 'Lens'), select);
   const tally = h('span', { class: 'tally' }, h('b', {}, String(g.nodes.length)), ' elements · ', h('b', {}, String(g.edges.length)), ' links');
-  const empty = g.nodes.length === 0;
+  // What the lens could not show, said in place of the web: the world's own web is one choice away.
+  const lensLine =
+    through?.kind === 'empty'
+      ? `${through.name} keeps nothing in this world.`
+      : through?.kind === 'unreadable'
+        ? `Little Lens cannot read the lens ${through.name}${through.key ? ` (its ${through.key})` : ''}.`
+        : null;
+  const empty = lensLine !== null || g.nodes.length === 0;
   screen(
     top(l.name, l.sub),
     h(
@@ -582,13 +609,13 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
       g.aids.length
         ? h('p', { class: 'aids' }, 'Read first: ', ...g.aids.flatMap((a, i) => [i ? ' · ' : '', h('a', { href: hrefOf(a.id) }, String(a.name || 'Untitled'))]))
         : null,
-      h('div', { class: 'meta' }, lens, tally, ...l.notes.map((n) => h('span', { class: 'leftout' }, n))),
-      empty ? h('p', { class: 'empty' }, 'Nothing to draw: this world has no elements Little Lens draws on its web.') : body,
+      h('div', { class: 'meta' }, lens, lensLine ? null : tally, ...l.notes.map((n) => h('span', { class: 'leftout' }, n))),
+      lensLine ? h('p', { class: 'empty' }, lensLine) : empty ? h('p', { class: 'empty' }, 'Nothing to draw: this world has no elements Little Lens draws on its web.') : body,
     ),
   );
   drawPills();
   if (empty) return;
-  if (view === 'web') web = mountWeb(body, { graph: g, degree: l.degree, lit, onOpen: (id) => (location.hash = hrefOf(id)) });
+  if (view === 'web') web = mountWeb(body, { graph: g, degree, lit, onOpen: (id) => (location.hash = hrefOf(id)) });
   else drawList();
 }
 

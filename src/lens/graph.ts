@@ -43,6 +43,8 @@ export interface WorldGraph {
   /** Ids an element's schema link fields hold that no page here opens (hidden, out, or not in the world), each id once per field, by source id. */
   outside: Map<string, number>;
   leftOut: LeftOut;
+  /** Every element the page keeps, before the reader: the world a lens is read over, never a slice of it. */
+  held: Element[];
 }
 
 const KNOWN = new Set<string>(ELEMENT_TYPES);
@@ -146,7 +148,7 @@ export function buildGraph(elements: Iterable<Element>): WorldGraph {
     for (const [field, multi] of linkFieldsOf(el.type)) for (const target of idsIn(el[field], multi)) if (!byId.has(target)) n++;
     if (n > 0) outside.set(el.id, n);
   }
-  return { nodes, byId, aids, edges, outside, leftOut };
+  return { nodes, byId, aids, edges, outside, leftOut, held: [...kept.values()] };
 }
 
 /** Links each node takes part in, either end, an edge to itself counted once. */
