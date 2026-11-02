@@ -48,8 +48,8 @@ button{font:inherit;color:inherit}
 .pill.on{color:var(--text);border-color:var(--accent);background:rgba(34,211,238,.1)}
 .meta{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
 .meta b{color:var(--text)}
-.lens{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 10px}
-.lens select{background:transparent;color:var(--text);border:0;font:inherit;font-weight:600}
+.lens{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:4px 10px;max-width:100%;min-width:0}
+.lens select{background:transparent;color:var(--text);border:0;font:inherit;font-weight:600;min-width:0;max-width:100%;text-overflow:ellipsis}
 .leftout{color:var(--muted)}
 .aids{margin:0 0 10px;font-size:14px;color:var(--muted)}
 .aids a{color:var(--text);display:inline-flex;align-items:center;min-height:44px;padding:0 2px}

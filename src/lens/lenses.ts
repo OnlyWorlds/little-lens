@@ -10,7 +10,12 @@
  */
 
 import { isLens, isTemplate, worldGraph } from '@onlyworlds/sdk';
-import type { Edge, Element, WorldGraph } from './graph';
+import { isKnownOfStub, type Edge, type Element, type WorldGraph } from './graph';
+
+/** A lens the box offers: a lens, not a template, and not a known-of stub (its absent fields are unknown, so it has no recipe to read). */
+function readable(el: Element | undefined): el is Element {
+  return !!el && isLens(el) && !isTemplate(el) && !isKnownOfStub(el);
+}
 
 export interface LensChoice {
   id: string;
@@ -25,7 +30,7 @@ export function lensName(el: Element): string {
 /** The world's lenses for the Lens box, by name (then id), as Atlas lists them. */
 export function lensChoices(g: WorldGraph): LensChoice[] {
   return g.held
-    .filter((el) => isLens(el) && !isTemplate(el))
+    .filter(readable)
     .map((el) => ({ id: el.id, name: lensName(el) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'en') || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
@@ -44,7 +49,7 @@ export type LensView =
  */
 export function lensView(g: WorldGraph, lensId: string, now: number | null): LensView | null {
   const lens = g.held.find((el) => el.id === lensId);
-  if (!lens || !isLens(lens) || isTemplate(lens)) return null;
+  if (!readable(lens)) return null;
   const name = lensName(lens);
   let read;
   try {

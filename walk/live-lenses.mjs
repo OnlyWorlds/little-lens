@@ -91,6 +91,10 @@ try {
     const t = await tally();
     check(t?.nodes === o.nodes && t?.edges === o.edges, `${l.name}: the web draws ${t?.nodes}/${t?.edges}, the lens keeps ${o.nodes}/${o.edges}`);
     check((await page.locator('canvas').count()) > 0, `${l.name}: a web is drawn`);
+    if (phone) {
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth);
+      check(wide <= 390, `${l.name}: nothing scrolls sideways at 390 (${wide} px)`);
+    }
     await page.screenshot({ path: `walk/out-${tag}-${l.id.slice(-6)}.png` });
   }
   // Switch to the list and back: the lens holds with the world.

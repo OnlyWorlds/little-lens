@@ -28,6 +28,12 @@ describe('lensChoices', () => {
     expect(lensChoices(g).map((c) => c.name)).toEqual(['around cy', 'Zed, around Ada']);
   });
 
+  it('leaves out a known-of stub of a lens, and will not read one (the gate\'s M1)', () => {
+    const g = buildGraph([...world, lens(16, 'Only heard of', { known_of: true })]);
+    expect(lensChoices(g).map((c) => c.name)).toEqual(['around cy', 'Zed, around Ada']);
+    expect(lensView(g, id(16), null)).toBeNull();
+  });
+
   it('has none for a world with no lenses', () => {
     expect(lensChoices(buildGraph(world.filter((e) => e.type !== 'construct')))).toEqual([]);
   });

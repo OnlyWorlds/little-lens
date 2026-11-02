@@ -516,7 +516,8 @@ function worldPage(l: Loaded, view: 'web' | 'list'): void {
   const choices = lensChoices(l.graph);
   if (l.lens && !choices.some((c) => c.id === l.lens)) l.lens = null;
   const through = l.lens ? lensView(l.graph, l.lens, l.time.now) : null;
-  const g = through?.kind === 'ok' ? through.graph : l.graph;
+  // A lens that keeps nothing, or cannot be read, shows nothing: the pills and the search count none.
+  const g = through?.kind === 'ok' ? through.graph : through ? { ...l.graph, nodes: [], edges: [] } : l.graph;
   const degree = through?.kind === 'ok' ? degrees(g) : l.degree;
   const counts = new Map<ElementType, number>();
   for (const n of g.nodes) counts.set(n.type, (counts.get(n.type) ?? 0) + 1);
