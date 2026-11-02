@@ -100,7 +100,10 @@ try {
   // Switch to the list and back: the lens holds with the world.
   if (lenses.length) {
     const last = oracle.get(lenses[lenses.length - 1].id);
-    await page.getByRole('navigation', { name: 'View' }).getByRole('link', { name: 'List', exact: true }).click();
+    // A mouse press at the link: Playwright's locator click hangs in Firefox while the Lens select
+    // holds focus (S539, read with a probe: the press itself lands and the list opens).
+    const r = await page.getByRole('navigation', { name: 'View' }).getByRole('link', { name: 'List', exact: true }).boundingBox();
+    await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
     await page.locator('ul.cards, main.world p.empty').first().waitFor({ timeout: 15_000 });
     const t = await tally();
     check(!last.nodes || t?.nodes === last.nodes, `the list keeps the chosen lens (${t?.nodes})`);
