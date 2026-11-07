@@ -5,7 +5,7 @@
  */
 
 import { h } from './dom';
-import { fromLine, isLapsed, isProposedMessage, isRoomLine, plainText, readLine, toLine, whenOf, type MessageReading, type Thread } from '../lens/messages';
+import { fromLine, isLapsed, isProposedMessage, isRoomLine, plainText, readParts, toParts, whenOf, type Line, type MessageReading, type Thread } from '../lens/messages';
 import type { Element } from '../lens/graph';
 
 export interface MessagesProps {
@@ -27,6 +27,20 @@ function when(r: MessageReading, m: Element): string | null {
 
 function subjectOf(m: Element): string {
   return plainText(m.name).trim() || 'No subject';
+}
+
+/**
+ * A line's parts as nodes: our words as text, each name in its own `<bdi>` so a right-to-left name
+ * keeps the words around it in place. The proved sender is bold, and a link when `href` is given.
+ */
+function drawLine(line: Line, href: string | null = null): Node[] {
+  return line.map((p) => {
+    if (typeof p === 'string') return document.createTextNode(p);
+    const name = h('bdi', {}, p.name);
+    if (!p.proved) return name;
+    const b = h('b', {}, name);
+    return href ? h('a', { class: 'mwho', href }, b) : b;
+  });
 }
 
 function proposedWord(m: Element): string {
@@ -53,7 +67,12 @@ export function messagesList(p: MessagesProps): HTMLElement {
     const root = t.messages[0];
     const last = t.newest ?? t.messages[t.messages.length - 1];
     const at = when(r, last);
-    const sender = `${isProposedMessage(last) ? `${proposedWord(last)} · ` : ''}${fromLine(r, last).text}`;
+    // The row is one link and its sender plain, as before: each name isolated, none bold.
+    const meta: Line = [
+      `${t.messages.length} ${t.messages.length === 1 ? 'message' : 'messages'} · ${isProposedMessage(last) ? `${proposedWord(last)} · ` : ''}`,
+      ...fromLine(r, last).parts.map((q) => (typeof q === 'string' ? q : { name: q.name })),
+      at ? ` · ${at}` : '',
+    ];
     ul.append(
       h(
         'li',
@@ -62,7 +81,7 @@ export function messagesList(p: MessagesProps): HTMLElement {
           'a',
           { class: 'thread', href: p.threadHref(t.rootId) },
           h('span', { class: 'tsubject', dir: 'auto' }, subjectOf(root)),
-          h('span', { class: 'tmeta' }, `${t.messages.length} ${t.messages.length === 1 ? 'message' : 'messages'} · ${sender}${at ? ` · ${at}` : ''}`),
+          h('span', { class: 'tmeta' }, ...drawLine(meta)),
         ),
       ),
     );
@@ -75,15 +94,12 @@ export function messagesThread(p: MessagesProps, t: Thread): HTMLElement {
   const list = h('ol', { class: 'mthread', 'aria-label': 'The conversation' });
   for (const m of t.messages) {
     const f = fromLine(r, m);
-    const read = readLine(r, m);
+    const read = readParts(r, m);
     const at = when(r, m);
     const proposed = isProposedMessage(m);
     // Only a proved sender is drawn as one: bold, and a link to which Character it is.
     const href = f.verified ? p.elementHref(f.verified.id) : null;
-    const who = f.verified ? h('b', {}, h('bdi', {}, f.verified.name)) : null;
-    const fromEl = f.verified
-      ? h('p', { class: 'mfrom' }, 'From ', href ? h('a', { class: 'mwho', href }, who) : who, f.text.slice(`From ${f.verified.name}`.length))
-      : h('p', { class: 'mfrom claim' }, f.text);
+    const fromEl = h('p', { class: f.verified ? 'mfrom' : 'mfrom claim' }, ...drawLine(f.parts, href));
     list.append(
       h(
         'li',
@@ -92,9 +108,9 @@ export function messagesThread(p: MessagesProps, t: Thread): HTMLElement {
         proposed ? h('p', { class: 'mflag' }, proposedWord(m)) : null,
         isRoomLine(m) ? h('p', { class: 'mflag' }, 'A line in a room') : null,
         fromEl,
-        h('p', { class: 'mto' }, toLine(r, m)),
+        h('p', { class: 'mto' }, ...drawLine(toParts(r, m))),
         at ? h('p', { class: 'mwhen' }, at) : null,
-        read ? h('p', { class: 'mread' }, read) : null,
+        read ? h('p', { class: 'mread' }, ...drawLine(read)) : null,
         plainText(m.story) ? h('p', { class: 'mbody', dir: 'auto' }, plainText(m.story)) : null,
       ),
     );

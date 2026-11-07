@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { threadOf } from '@onlyworlds/sdk';
 import standard from '../standard/worlds.json';
 import type { Element } from './graph';
-import { fromLine, plainText, readLine, readMessages, threadOfId, toLine, whenOf } from './messages';
+import { fromLine, lineText, plainText, readLine, readMessages, readParts, threadOfId, toLine, toParts, whenOf } from './messages';
 
 type World = { id: string; key: string; name: string; elements: Element[]; hidden: string[]; members?: { id: string | null; character: string | null }[] };
 const worlds = standard.worlds as unknown as World[];
@@ -57,6 +57,44 @@ describe("the standard's The Post, read by the profile", () => {
     const withMark = bodies.map((e) => (e.id === m.id ? { ...e, narratives: [...(m.narratives as string[]), forged.id] } : e));
     const r2 = readMessages(withMark, 'standard', w.members ?? null, true);
     expect(readLine(r2, r2.messages.find((x) => x.id === forged.id)!)).toContain('Ada Venn');
+  });
+});
+
+describe('C13: every name is its own part', () => {
+  // Right-to-left names, so a name left inside our words could turn them around on the page.
+  const names = ['עדה', 'برام', 'Cleo'];
+  const r = readMessages(
+    [
+      char('a', names[0]),
+      char('b', names[1]),
+      char('c', names[2]),
+      msg('m', { narrator: 'a', characters: ['b', 'c', 'h'], created_by: 'ua' }),
+      msg('x', { narrator: 'c', characters: ['a'], created_by: 'ub', updated_by: 'ua' }),
+      mark('k', 'b', ['m'], { created_by: 'ub' }),
+    ],
+    'standard',
+    [
+      { id: 'ua', character: 'a' },
+      { id: 'ub', character: 'b' },
+    ],
+    true,
+  );
+  const lines = r.messages.flatMap((m) => [fromLine(r, m).parts, toParts(r, m), readParts(r, m) ?? []]);
+
+  it('no string part holds a name, and each line reads as its text', () => {
+    for (const line of lines) for (const p of line) if (typeof p === 'string') for (const n of names) expect(p).not.toContain(n);
+    const m = r.messages.find((x) => x.id === 'm')!;
+    expect(toParts(r, m)).toEqual(['To ', { name: names[1] }, ', ', { name: names[2] }, ' and ', 'someone not shown here']);
+    expect(lineText(toParts(r, m))).toBe(toLine(r, m));
+    expect(lineText(readParts(r, m)!)).toBe(readLine(r, m));
+    expect(readParts(r, m)).toContainEqual({ name: names[1] });
+  });
+
+  it('only a verified sender is the proved part', () => {
+    const proved = lines.flat().filter((p) => typeof p !== 'string' && p.proved);
+    const m = r.messages.find((x) => x.id === 'm')!;
+    expect(fromLine(r, m).parts).toEqual(['From ', { name: names[0], proved: true }]);
+    expect(proved).toHaveLength(r.messages.filter((x) => fromLine(r, x).verified).length);
   });
 });
 

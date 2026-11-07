@@ -63,7 +63,10 @@ const bodyText = (page) => page.evaluate(() => document.body.textContent);
 
 /** The messages on a conversation page, field by field. */
 const readThread = (page) =>
-  page.evaluate(() => ({
+  page.evaluate(() => {
+      // The line's words outside every <bdi>: a name a world gave must never be among them (C13).
+      const loose = (el) => (el ? [...el.childNodes].map((n) => (n.nodeType === 3 ? n.textContent : n.nodeName === 'BDI' ? '' : n.querySelector('bdi') ? '' : n.textContent)).join('') : '');
+      return {
     head: document.querySelector('.mhead .mcount')?.textContent ?? null,
     check: document.querySelector('.mhead .mcheck')?.textContent ?? null,
     answersOutside: [...document.querySelectorAll('.messages > .mflag')].map((x) => x.textContent),
@@ -78,20 +81,29 @@ const readThread = (page) =>
       to: li.querySelector('.mto')?.textContent ?? null,
       read: li.querySelector('.mread')?.textContent ?? null,
       body: li.querySelector('.mbody')?.textContent ?? null,
+      loose: ['.mfrom', '.mto', '.mread'].map((q) => loose(li.querySelector(q))).join('|'),
+      isolated: [...li.querySelectorAll('.mfrom bdi, .mto bdi, .mread bdi')].map((b) => b.textContent),
     })),
-  }));
+  };
+  });
 
 /** The conversation rows on the list: subject, meta line and address, in the order shown. */
 const readList = (page) =>
-  page.evaluate(() => ({
+  page.evaluate(() => {
+      // The line's words outside every <bdi>: a name a world gave must never be among them (C13).
+      const loose = (el) => (el ? [...el.childNodes].map((n) => (n.nodeType === 3 ? n.textContent : n.nodeName === 'BDI' ? '' : n.querySelector('bdi') ? '' : n.textContent)).join('') : '');
+      return {
     head: document.querySelector('.mhead .mcount')?.textContent ?? null,
     check: document.querySelector('.mhead .mcheck')?.textContent ?? null,
     rows: [...document.querySelectorAll('a.thread')].map((a) => ({
       subject: a.querySelector('.tsubject')?.textContent ?? null,
       meta: a.querySelector('.tmeta')?.textContent ?? null,
       href: a.getAttribute('href'),
+      loose: loose(a.querySelector('.tmeta')),
+      isolated: [...a.querySelectorAll('.tmeta bdi')].map((b) => b.textContent),
     })),
-  }));
+  };
+  });
 
 /**
  * From the list: every conversation opened with a real click and read, then back by the page's own
@@ -113,6 +125,15 @@ async function visitAll(page) {
 }
 
 const allMsgs = (v) => v.threads.flatMap((t) => t.msgs);
+
+/** C13: every name in a sender, recipient, read or list line sits in its own <bdi>, and the names are there. */
+const NAMES = ['Ada Venn', 'Bram Hale', 'Cleo Marsh', 'Dov Marr'];
+function checkIsolated(label, v) {
+  const lines = [...v.list.rows, ...allMsgs(v)];
+  const bare = lines.filter((x) => NAMES.some((n) => x.loose.includes(n)));
+  check(`${label}: no name outside a <bdi> in any line`, bare.length === 0, JSON.stringify(bare.map((x) => x.loose)));
+  check(`${label}: the names are isolated`, lines.some((x) => x.isolated.includes('Ada Venn')), JSON.stringify(lines.map((x) => x.isolated)));
+}
 
 async function newPage(browser, viewport) {
   const ctx = await browser.newContext({ viewport });
@@ -239,6 +260,7 @@ await runCase(1, 'small worlds', async () => {
   check('The Post head', post.list.head === '5 messages in 5 conversations · 1 hidden, not shown', post.list.head);
   check('The Post has 5 conversations of one message each', post.threads.length === 5 && post.threads.every((t) => t.msgs.length === 1), JSON.stringify(post.threads.map((t) => t.msgs.length)));
   check('The Post needs no check line (it has its members)', post.list.check === null, post.list.check);
+  checkIsolated('The Post', post);
   await page.screenshot({ path: shot('desk-1-post-list') });
   const texts = [post.listText, ...post.threads.map((t) => t.text)];
   check('"Sealed" appears nowhere on the list or any conversation', texts.every((t) => !t.includes('Sealed')));
@@ -318,6 +340,7 @@ await runCase(2, 'world file', async () => {
   await page.screenshot({ path: shot('desk-2-file-list') });
   check('the head counts settled, proposed and hidden', v.list.head === '8 messages in 6 conversations · 1 proposed · 1 hidden, not shown', v.list.head);
   check('a file needs no check line when no mark carries hands', v.list.check === null, v.list.check);
+  checkIsolated('the file world', v);
   check('the list is newest first', v.list.rows.map((r) => r.subject).join('|') === 'Bidi evil subject|Chain root|Room line|Maybe later|Orphan|Fees 1', v.list.rows.map((r) => r.subject).join('|'));
   const T = v.threads.find((t) => t.msgs[0]?.subject === 'Fees 1');
   check('the thread shows its three in order', !!T && T.msgs.map((m) => m.subject).join('|') === 'Fees 1|Fees 2|Fees 3', T?.msgs.map((m) => m.subject).join('|'));

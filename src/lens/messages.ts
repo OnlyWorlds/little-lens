@@ -259,42 +259,60 @@ export function whenOf(r: MessageReading, m: Element): number | null {
 
 const NOT_SHOWN = 'someone not shown here';
 
-function nameIn(r: MessageReading, id: string | null): string {
-  return id === null ? NOT_SHOWN : (r.names.get(id) ?? NOT_SHOWN);
+/**
+ * A line in parts: our own words as strings, and each name a world gave as its own part, so the
+ * page can isolate it (`<bdi>`) and a right-to-left name cannot reorder the words around it. A
+ * proved part is the verified sender, the only name drawn bold.
+ */
+export type LinePart = string | { name: string; proved?: true };
+export type Line = LinePart[];
+
+/** The line as text: the parts joined, names as they are. */
+export function lineText(line: Line): string {
+  return line.map((p) => (typeof p === 'string' ? p : p.name)).join('');
+}
+
+/** A shown Character's name as a part, or the words for someone not shown. */
+function nameIn(r: MessageReading, id: string | null): LinePart {
+  const name = id === null ? undefined : r.names.get(id);
+  return name === undefined ? NOT_SHOWN : { name };
 }
 
 export interface FromLine {
   status: OwSenderStatus;
   /** The verified sender's id and name, the only sender drawn bold; never on a proposed message. */
   verified: { id: string; name: string } | null;
+  parts: Line;
   text: string;
 }
 
 export function fromLine(r: MessageReading, m: Element): FromLine {
   const s = senderStatus(m, r.members);
-  let text: string;
+  let parts: Line;
   let verified: FromLine['verified'] = null;
   if (s.status === 'verified' && s.claimed !== null) {
     const name = nameIn(r, s.claimed);
-    if (r.names.has(s.claimed) && !isProposedMessage(m)) verified = { id: s.claimed, name };
-    text = `From ${name}`;
+    if (typeof name !== 'string' && !isProposedMessage(m)) {
+      verified = { id: s.claimed, name: name.name };
+      parts = ['From ', { name: name.name, proved: true }];
+    } else parts = ['From ', name];
   } else if (s.status === 'mismatch') {
-    text = `Claims to be from ${nameIn(r, s.claimed)}, written with the key of ${nameIn(r, s.writtenBy)}`;
-  } else if (s.status === 'unseen') text = 'From someone you cannot see';
-  else text = s.claimed === null ? 'From nobody' : `Claims to be from ${nameIn(r, s.claimed)}`;
+    parts = ['Claims to be from ', nameIn(r, s.claimed), ', written with the key of ', nameIn(r, s.writtenBy)];
+  } else if (s.status === 'unseen') parts = ['From someone you cannot see'];
+  else parts = s.claimed === null ? ['From nobody'] : ['Claims to be from ', nameIn(r, s.claimed)];
   const e = editedBy(m, r.members);
-  if (e.edited) text += e.by !== null && r.names.has(e.by) ? ` · edited by ${nameIn(r, e.by)}` : ' · edited by another hand';
-  return { status: s.status, verified, text };
+  if (e.edited) parts.push(...(e.by !== null && r.names.has(e.by) ? [' · edited by ', nameIn(r, e.by)] : [' · edited by another hand']));
+  return { status: s.status, verified, parts, text: lineText(parts) };
 }
 
-function listWords(names: string[]): string {
-  if (names.length <= 1) return names.join('');
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+function listWords(names: Line): Line {
+  if (names.length <= 1) return names;
+  return [...names.slice(0, -1).flatMap((n, i) => (i ? [', ', n] : [n])), ' and ', names[names.length - 1]];
 }
 
 /** Shown names once each, in order, then one "someone not shown here" for any the reader is not shown (never how many). */
-function namesOf(r: MessageReading, ids: string[]): string[] {
-  const out: string[] = [];
+function namesOf(r: MessageReading, ids: string[]): Line {
+  const out: Line = [];
   let unknown = false;
   for (const id of ids.filter((c, i, a) => a.indexOf(c) === i)) {
     if (r.names.has(id)) out.push(nameIn(r, id));
@@ -303,18 +321,22 @@ function namesOf(r: MessageReading, ids: string[]): string[] {
   return unknown ? [...out, NOT_SHOWN] : out;
 }
 
-export function toLine(r: MessageReading, m: Element): string {
+export function toParts(r: MessageReading, m: Element): Line {
   const opts = { keyless: r.keyless };
   const ids = recipientsOf(m);
   const unseen = hasUnseenRecipients(m, opts) === true;
   if (ids.length === 0) {
-    if (isToEveryone(m, opts)) return 'To everyone';
-    if (unseen) return 'To someone you cannot see';
-    if (r.keyless) return 'No recipients named: to everyone, or to someone the public cannot see';
-    return 'To nobody';
+    if (isToEveryone(m, opts)) return ['To everyone'];
+    if (unseen) return ['To someone you cannot see'];
+    if (r.keyless) return ['No recipients named: to everyone, or to someone the public cannot see'];
+    return ['To nobody'];
   }
   const names = namesOf(r, ids);
-  return `To ${listWords(unseen ? [...names, 'someone you cannot see'] : names)}`;
+  return ['To ', ...listWords(unseen ? [...names, 'someone you cannot see'] : names)];
+}
+
+export function toLine(r: MessageReading, m: Element): string {
+  return lineText(toParts(r, m));
 }
 
 /** Whose own the message is: the proved sender where the body carries hands, its narrator where it carries none. */
@@ -339,6 +361,12 @@ function markOf(r: MessageReading, c: string): Element | null {
  * was left out, and, with a members list, of a Character some row plays (no other's mark could count).
  */
 export function readLine(r: MessageReading, m: Element): string | null {
+  const parts = readParts(r, m);
+  return parts === null ? null : lineText(parts);
+}
+
+/** `readLine` in parts. */
+export function readParts(r: MessageReading, m: Element): Line | null {
   if (!r.marksCount || isProposedMessage(m)) return null;
   const hasRead = (c: string) => {
     const mark = markOf(r, c);
@@ -351,10 +379,10 @@ export function readLine(r: MessageReading, m: Element): string | null {
   const read = readers.filter(hasRead).map((c) => nameIn(r, c));
   // To everyone, those not yet are not known here: only who has.
   const notYet = recipients.length === 0 || r.marksLeftOut || !r.everyMark ? [] : readers.filter((c) => (r.played === null || r.played.has(c)) && !hasRead(c)).map((c) => nameIn(r, c));
-  const parts = [];
-  if (read.length) parts.push(`Read by ${listWords(read)}`);
-  if (notYet.length) parts.push(`${read.length ? 'not' : 'Not'} yet by ${listWords(notYet)}`);
-  return parts.length ? parts.join(' · ') : null;
+  const parts: Line = [];
+  if (read.length) parts.push('Read by ', ...listWords(read));
+  if (notYet.length) parts.push(`${read.length ? ' · not' : 'Not'} yet by `, ...listWords(notYet));
+  return parts.length ? parts : null;
 }
 
 /** The bidirectional controls (embeddings, overrides, isolates, the marks) and C0 and C1 controls but tab and newline, by code point. */
