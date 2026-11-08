@@ -6,8 +6,11 @@
 // host's own rules, and real keel (the live walk). A path the played keel does not know answers 404, never an empty list.
 //   npm run build && node walk/signin-played.mjs [chromium|firefox]      DIST=<dir> for a control
 import { chromium, firefox } from '@playwright/test';
-import { ELEMENT_TYPES } from '@onlyworlds/sdk';
+import { ELEMENT_TYPES, worldGraph, writeWorldFile } from '@onlyworlds/sdk';
 import { createHash } from 'node:crypto';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { hostFor } from './host.mjs';
 
 const DIST = process.env.DIST ?? 'dist';
@@ -148,7 +151,14 @@ async function session(tag, viewport = { width: 1280, height: 860 }, worlds = WO
       if (live().length === 0 && !KEEP_CONSENT) keel.consent = false;
       return json(204, null);
     }
-    if (p === '/account/worlds') return t ? json(200, { data: keel.worlds }) : json(401, { error: { code: 'authentication_failed' } });
+    if (p === '/account/worlds') {
+      // `holdWorlds`: the next read of the account's worlds waits until `releaseWorlds()` (case 7).
+      if (t && keel.holdWorlds) {
+        keel.holdWorlds = false;
+        await new Promise((res) => (keel.releaseWorlds = res));
+      }
+      return t ? json(200, { data: keel.worlds }) : json(401, { error: { code: 'authentication_failed' } });
+    }
     const world = u.searchParams.get('world');
     const isMembers = p === '/members/' || p === '/members';
     if (isMembers && !world) return json(422, { error: { code: 'validation_error', param: 'world' } });
@@ -279,7 +289,11 @@ async function leftRevoke(tag, page, keel, token, how) {
   await page.waitForSelector('.tally', { timeout: 15_000 });
   check(tag, (await page.textContent('.tally')) === '2 elements · 0 links', `a countless world still draws (${await page.textContent('.tally')})`);
   const lists = keel.calls.slice(before).filter((c) => c.path !== '/api/v2/world/');
-  check(tag, lists.length === 18, `it reads the 18 types the graph keeps (${lists.length})`);
+  // The types the graph keeps, asked of the SDK's reader as the page asks it (src/lens/graph.ts):
+  // 19 since a Zone became a node (serial 92); the old count of 18 went stale with 711585a.
+  const kept = ELEMENT_TYPES.filter((t) => worldGraph({ elements: [{ id: id(1), type: t, name: 'probe' }] }, { rung: 'owner' }).nodes.length === 1);
+  const read = lists.map((c) => c.path.replace('/api/v2', '').replaceAll('/', '')).sort();
+  check(tag, read.join(' ') === [...kept].sort().join(' '), `it reads the ${kept.length} types the graph keeps, each once (${read.length}: ${read.join(' ')})`);
 
   // One world, two readers: never one standing in for the other.
   await page.goto(`${PROD}/#/w/${SHARED}`);
@@ -706,6 +720,120 @@ async function leftRevoke(tag, page, keel, token, how) {
   check(tag, second.page.url() === `${PROD}/#/me/${MINE}`, `and the sign-in resumes to it (${second.page.url()})`);
   check(tag, errors.length === 0 && second.errors.length === 0, `no page error (${[...errors, ...second.errors].slice(0, 2).join(' | ')})`);
   await second.ctx.close();
+}
+
+// 7. A press on the ways in while the account's worlds land: the list is drawn above the ways, so the
+// front door is rebuilt and moves down. The press must do what it was pressed on, by mouse and (Chromium)
+// by a real touch, and the list must still be drawn once a press ends without a click.
+{
+  const tag = `${which} press`;
+  const STD = 'Small worlds from the OnlyWorlds standard';
+  /** Signed in with the worlds read held; returns once the front door says it is reading them. */
+  const held = async (s) => {
+    await s.page.goto(`${PROD}/`);
+    s.keel.holdWorlds = true;
+    await signIn(s.page, s.keel);
+    await s.page.getByText('Reading your worlds…').waitFor({ timeout: 15_000 });
+    await waitFor(() => typeof s.keel.releaseWorlds === 'function', 5000);
+  };
+  const centre = async (page) => {
+    const b = await page.getByRole('link', { name: STD }).boundingBox();
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  };
+  /** Let the held read go and wait until the page has its answer (a redraw, if any, has run). */
+  const land = async (s) => {
+    s.keel.releaseWorlds();
+    s.keel.releaseWorlds = null;
+    await s.page.waitForTimeout(700);
+  };
+
+  // By mouse: down on the link, the list lands, up.
+  {
+    const s = await session(tag);
+    await held(s);
+    const [x, y] = await centre(s.page);
+    await s.page.mouse.move(x, y);
+    await s.page.mouse.down();
+    await s.page.evaluate(([x, y]) => { window.__pressed = document.elementFromPoint(x, y)?.closest('a, button') ?? null; }, [x, y]);
+    await land(s);
+    const replaced = await s.page.evaluate(() => !window.__pressed?.isConnected);
+    await s.page.mouse.up();
+    check(tag, !replaced, 'mouse: the pressed link is not replaced while the press is down');
+    check(tag, await waitFor(() => s.page.url() === `${PROD}/#/std`, 3000), `mouse: the press opens the small worlds (${s.page.url()})`);
+    await s.page.goto(`${PROD}/#/`);
+    check(tag, (await s.page.locator('ul.mine').count()) === 1, 'mouse: back on the ways in, the list is drawn');
+    await s.ctx.close();
+  }
+
+  // Pressed, dragged off and lifted (no click): the held list is drawn once the press ends.
+  {
+    const s = await session(tag);
+    await held(s);
+    const [x, y] = await centre(s.page);
+    await s.page.mouse.move(x, y);
+    await s.page.mouse.down();
+    await land(s);
+    const under = await s.page.locator('ul.mine').count();
+    await s.page.mouse.move(20, 20, { steps: 4 });
+    await s.page.mouse.up();
+    check(tag, under === 0, 'off: nothing is redrawn while the press is down');
+    check(tag, await s.page.locator('ul.mine').waitFor({ timeout: 2500 }).then(() => true, () => false), 'off: the list is drawn once the press ends with no click');
+    check(tag, s.page.url() === `${PROD}/#/`, `off: and nothing was opened (${s.page.url()})`);
+    await s.ctx.close();
+  }
+
+  // Open a world file pressed while the list lands: the picker opens on the click, the list is drawn
+  // under it, and what the file's open says must still reach the page: the front door's input and its
+  // line stay (the press gate's M1). Playwright's chooser delivers to an input even after it left the
+  // page, so the instrument is the line: a broken file, whose error is said on the front door.
+  for (const kind of ['broken', 'world']) {
+    const dir = mkdtempSync(join(tmpdir(), 'll-press-'));
+    const file = join(dir, `picker-${kind}.owworld`);
+    const enc = new TextEncoder();
+    writeFileSync(file, kind === 'broken' ? 'not a zip' : writeWorldFile([
+      { path: 'world.json', data: enc.encode(JSON.stringify({ id: id(90), name: 'Picker world' })) },
+      { path: 'elements/character/a.json', data: enc.encode(JSON.stringify({ id: id(91), name: 'Pia Pick' })) },
+    ], 'picker-world'));
+    const s = await session(tag);
+    await held(s);
+    const b = await s.page.getByRole('button', { name: 'Open a world file' }).boundingBox();
+    const chooser = s.page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null);
+    await s.page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await s.page.mouse.down();
+    await land(s);
+    await s.page.mouse.up();
+    const c = await chooser;
+    await s.page.waitForTimeout(300); // the held list has been drawn under the open picker
+    const set = c ? await c.setFiles(file).then(() => 'set', (e) => String(e?.message ?? e).split('\n')[0]) : 'no picker';
+    check(tag, set === 'set', `picker ${kind}: the picker opened by the press takes the file (${set})`);
+    if (kind === 'world') {
+      check(tag, await waitFor(() => s.page.url() === `${PROD}/#/file`, 5000), `picker world: the file opens (${s.page.url()})`);
+    } else {
+      const line = s.page.locator('main.ways > p.said');
+      const said = await line.textContent({ timeout: 3000 }).catch(() => '');
+      const shown = await s.page.waitForFunction(() => {
+        const t = document.querySelector('main.ways > p.said')?.textContent ?? '';
+        return t !== '' && t !== 'Opening…';
+      }, null, { timeout: 5000 }).then(() => true, () => false);
+      check(tag, shown, `picker broken: the front door says the file could not be opened (${(await line.textContent().catch(() => said)) || 'nothing'})`);
+      check(tag, (await s.page.locator('ul.mine').count()) === 1, 'picker broken: and the list was drawn under the picker');
+    }
+    await s.ctx.close();
+  }
+
+  // By a real touch (Chromium's touch input): the lift on a moved front door opens what moved under it.
+  if (which === 'chromium') {
+    const s = await session(tag, { width: 390, height: 844 });
+    await held(s);
+    const [x, y] = await centre(s.page);
+    const cdp = await s.ctx.newCDPSession(s.page);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    await land(s);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    check(tag, await waitFor(() => s.page.url() === `${PROD}/#/std`, 3000), `touch: the tap opens the small worlds, not what moved under it (${s.page.url()})`);
+    await s.ctx.close();
+  }
 }
 
 await browser.close();

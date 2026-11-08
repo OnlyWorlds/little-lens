@@ -15,6 +15,7 @@ import { beginOnlyWorldsSignIn, canSignInWithOnlyWorlds, isSignInCallback, signI
 import { listMyWorlds, revokeToken, type SignedIn } from './lens/account';
 import { paceFor, readMembers, servesEveryMark } from './lens/members';
 import { clear, h, inkOf, owMark, pluralWord, typeIcon } from './ui/dom';
+import { afterPress, watchPresses } from './ui/press';
 import { mountWeb, type WebHandle } from './ui/web';
 import { mountTime, type TimeHandle } from './ui/time-view';
 import { readTime, type TimeReading, type WorldTime } from './lens/time';
@@ -313,7 +314,15 @@ async function readMyWorlds(s: SignedIn): Promise<void> {
         : 'Little Lens could not read your worlds. Check your connection and try again.';
   }
   worldsRead = null;
-  if (parseRoute(location.hash).kind === 'home') route();
+  // The list is drawn once a press in flight on the front door has landed (a way in, a link), and only
+  // the list is swapped: the ways below it stay on the page, so a file or folder picker opened by that
+  // press still answers to its own input (the press gate's M1). Signed out meanwhile, nothing is drawn.
+  afterPress(() => {
+    if (session !== s || parseRoute(location.hash).kind !== 'home') return;
+    const shown = app.querySelector('section.signed');
+    if (shown) shown.replaceWith(yourWorlds(s));
+    else route();
+  });
 }
 
 function holdFile(w: FileWorld): void {
@@ -976,4 +985,5 @@ async function start(): Promise<void> {
   route();
 }
 
+watchPresses();
 void start();

@@ -12,6 +12,7 @@ import { isElementType, type Element } from '../lens/graph';
 import { dateWordOf, stepWords, type Dated, type TimeReading, type WorldTime } from '../lens/time';
 import { clear, h, inkOf, singularWord, typeIcon } from './dom';
 import { mountTime, type TimeHandle } from './time-view';
+import { afterPress } from './press';
 
 export interface DraughtHandle {
   /** The address moved to another moment (Back, Forward): redraw and read for it. */
@@ -127,7 +128,8 @@ export function mountDraught(host: HTMLElement, o: DraughtViewOptions): DraughtH
       momentFailed = o.onFailure(err);
       if (!live) return;
     }
-    redraw();
+    // A late answer: the rows and the ways a finger may be on are redrawn once the press has landed.
+    afterPress(redraw);
   }
 
   /** The whole read, from whichever read brought it: a failure said before it is over. */
@@ -161,7 +163,7 @@ export function mountDraught(host: HTMLElement, o: DraughtViewOptions): DraughtH
     } finally {
       if (wholeRead === ctl) wholeRead = null;
     }
-    redraw();
+    afterPress(redraw);
   }
 
   function retry(): void {
@@ -186,7 +188,8 @@ export function mountDraught(host: HTMLElement, o: DraughtViewOptions): DraughtH
         at = next;
         // Key presses settle one by one: the read waits for a pause, so five presses are one read.
         clearTimeout(settleTimer);
-        settleTimer = window.setTimeout(() => void readMoment(), SETTLE_MS);
+        // The read redraws the ways and the line: it waits for a press in flight (a pill tapped just after a drag).
+        settleTimer = window.setTimeout(() => afterPress(() => { if (live) void readMoment(); }), SETTLE_MS);
         redraw();
       },
     });
@@ -363,7 +366,8 @@ export function mountDraught(host: HTMLElement, o: DraughtViewOptions): DraughtH
   }
 
   async function copy(): Promise<void> {
-    const d = drawn;
+    // What the screen shows: a late answer may have moved `drawn` while its redraw waits for this press.
+    const d = copyFor;
     if (!d) return;
     const text = textOf(d);
     if (text === null) return;

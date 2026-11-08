@@ -19,7 +19,7 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@onlyworlds/sdk": "^4.133.1",
+    "@onlyworlds/sdk": "^4.133.2",
     "d3-force": "3.0.0"
   }
 }
