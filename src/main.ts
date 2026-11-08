@@ -272,7 +272,18 @@ function yourWorlds(s: SignedIn): HTMLElement {
   const list = h('div', { class: 'picker' });
   if (worlds === null) {
     if (worldsProblem) {
-      list.append(h('p', { class: 'said' }, worldsProblem), h('button', { class: 'way', type: 'button', onclick: () => ((worldsProblem = null), route()) }, 'Try again'));
+      // Try again keeps its place while it asks: a redraw here would shrink the line to one and slide the
+      // ways below up under the finger, so a second tap opened Open a world file. The answer is swapped in
+      // once a press has landed, as the first read's is.
+      const again = h('button', { class: 'way', type: 'button' }, 'Try again');
+      again.addEventListener('click', () => {
+        if (again.disabled) return;
+        worldsProblem = null;
+        again.disabled = true;
+        again.textContent = 'Reading your worlds…';
+        void readMyWorlds(s);
+      });
+      list.append(h('p', { class: 'said' }, worldsProblem), again);
     } else {
       list.append(h('p', { class: 'said', role: 'status' }, 'Reading your worlds…'));
       void readMyWorlds(s);

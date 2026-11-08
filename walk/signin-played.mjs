@@ -157,6 +157,11 @@ async function session(tag, viewport = { width: 1280, height: 860 }, worlds = WO
         keel.holdWorlds = false;
         await new Promise((res) => (keel.releaseWorlds = res));
       }
+      // `failWorlds`: the next read answers 503, keel's server error (case 8).
+      if (t && keel.failWorlds) {
+        keel.failWorlds = false;
+        return json(503, { error: { code: 'server_error' } });
+      }
       return t ? json(200, { data: keel.worlds }) : json(401, { error: { code: 'authentication_failed' } });
     }
     const world = u.searchParams.get('world');
@@ -834,6 +839,35 @@ async function leftRevoke(tag, page, keel, token, how) {
     check(tag, await waitFor(() => s.page.url() === `${PROD}/#/std`, 3000), `touch: the tap opens the small worlds, not what moved under it (${s.page.url()})`);
     await s.ctx.close();
   }
+}
+
+// 8. The account's worlds could not be read: Try again asks again in place. A double press on it must not
+// slide the ways below up under the finger (the second press opened Open a world file's picker), and the
+// list is drawn once the answer lands.
+{
+  const tag = `${which} try again`;
+  const s = await session(tag);
+  await s.page.goto(`${PROD}/`);
+  s.keel.failWorlds = true;
+  await signIn(s.page, s.keel);
+  const again = s.page.getByRole('button', { name: 'Try again' });
+  await again.waitFor({ timeout: 15_000 });
+  const fileWay = s.page.getByRole('button', { name: 'Open a world file' });
+  const before = (await fileWay.boundingBox()).y;
+  const b = await again.boundingBox();
+  s.keel.holdWorlds = true;
+  const chooser = s.page.waitForEvent('filechooser', { timeout: 1500 }).then(() => true, () => false);
+  await s.page.mouse.dblclick(b.x + b.width / 2, b.y + b.height / 2);
+  check(tag, !(await chooser), 'a double press on Try again opens no file picker');
+  check(tag, (await fileWay.boundingBox()).y === before, 'the ways below stay where they were while it reads');
+  check(tag, (await s.page.getByRole('button', { name: 'Reading your worlds…' }).count()) === 1, 'Try again says it is reading, in its own place');
+  await waitFor(() => typeof s.keel.releaseWorlds === 'function', 5000);
+  s.keel.releaseWorlds();
+  s.keel.releaseWorlds = null;
+  check(tag, await s.page.locator('ul.mine').waitFor({ timeout: 3000 }).then(() => true, () => false), 'the list is drawn once the answer lands');
+  check(tag, s.page.url() === `${PROD}/#/`, `and nothing else was opened (${s.page.url()})`);
+  check(tag, s.errors.length === 0, `no page error (${s.errors.slice(0, 2).join(' | ')})`);
+  await s.ctx.close();
 }
 
 await browser.close();
