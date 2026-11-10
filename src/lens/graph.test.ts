@@ -119,6 +119,15 @@ describe('buildGraph', () => {
     expect(g.nodes.map((n) => n.id)).toEqual([id(3), id(4)]);
   });
 
+  it('leaves out a report a room left behind (narrative/Report with the mark); the same report without the mark is lore (SDK 4.146.0)', () => {
+    const g = buildGraph([
+      el(1, 'narrative', { supertype: 'Report', x_room_of: id(9) }),
+      el(2, 'narrative', { supertype: 'Report' }),
+    ]);
+    expect(g.leftOut.room).toBe(1);
+    expect(g.nodes.map((n) => n.id)).toEqual([id(2)]);
+  });
+
   it('gives the same order whatever order the elements came in', () => {
     const a = [el(3, 'character', { friends: [id(2), id(1)] }), el(1, 'character', { friends: [id(3)] }), el(2, 'location')];
     const b = [...a].reverse();
