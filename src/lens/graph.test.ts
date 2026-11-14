@@ -6,7 +6,7 @@ const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')
 const el = (n: number, type: string, extra: Record<string, unknown> = {}): Element => ({ id: id(n), type, name: `E${n}`, ...extra }) as Element;
 
 describe('buildGraph', () => {
-  it('draws the reader\'s edges: one per listed target, the declared x_ links too, never a text field', () => {
+  it('draws the reader\'s edges: one per listed target, a repeat once at its first place, the declared x_ links too, never a text field', () => {
     const g = buildGraph([
       el(1, 'character', { location: id(2), friends: [id(3), id(3), ''], rivals: [id(3)], x_spine_depends_on: [id(2)], description: id(2) }),
       el(2, 'location'),
@@ -14,7 +14,6 @@ describe('buildGraph', () => {
     ]);
     expect(g.edges).toEqual([
       { source: id(1), field: 'friends', target: id(3), index: 0 },
-      { source: id(1), field: 'friends', target: id(3), index: 1 },
       { source: id(1), field: 'location', target: id(2), index: 0 },
       { source: id(1), field: 'rivals', target: id(3), index: 0 },
       { source: id(1), field: 'x_spine_depends_on', target: id(2), index: 0 },
