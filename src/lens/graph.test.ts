@@ -103,6 +103,11 @@ describe('buildGraph', () => {
     ]);
     expect(g.aids.map((a) => a.name)).toEqual(['House Rules', 'Start here', 'Docks']);
     expect(g.nodes).toHaveLength(0);
+    // Domains by folded name, code point by code point: 'apple' before 'Banana' (folded), a trimmed U+0085 ignored,
+    // U+FF5A (full-width z) before the astral U+10428 (UTF-16 would put the astral first).
+    const d = (n: number, name: string) => el(n, 'construct', { supertype: 'Domain', x_charter_of: 'world', name });
+    const order = buildGraph([d(11, 'Banana'), d(12, '\u0085apple'), d(13, '\u{10428}'), d(14, 'ｚ')]).aids.map((a) => a.id);
+    expect(order).toEqual([id(12), id(11), id(14), id(13)]);
     expect(g.outside.get(id(1))).toBe(1);
   });
 

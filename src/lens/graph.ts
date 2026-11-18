@@ -11,7 +11,7 @@
  * owner's: what the page holds is what it was served, and nothing more is cut by rung.
  */
 
-import { ELEMENT_TYPES, FIELD_SCHEMA, ROOM_PAIRS, handsOnAsProposed, isCharterElement, isRoomElement, readingAidOf, simpleCaseFold, worldGraph, type ElementType } from '@onlyworlds/sdk';
+import { ELEMENT_TYPES, FIELD_SCHEMA, ROOM_PAIRS, domainsOf, handsOnAsProposed, isCharterElement, isRoomElement, readingAidOf, simpleCaseFold, worldGraph, type ElementType } from '@onlyworlds/sdk';
 
 export type Element = { id: string; type: ElementType; name?: string; [field: string]: unknown };
 
@@ -117,6 +117,17 @@ export function idsIn(value: unknown, multi: boolean): string[] {
 }
 
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+/** Code point by code point (never UTF-16 units or a locale's collation), as the standard compares a folded name. */
+function byCodePoint(a: string, b: string): number {
+  const x = [...a], y = [...b];
+  for (let i = 0; i < Math.min(x.length, y.length); i++) {
+    const d = x[i].codePointAt(0)! - y[i].codePointAt(0)!;
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return x.length - y.length;
+}
+/** The standard's fold: trim Unicode's White_Space set, then simple case folding; nothing normalized. */
+const fold = (s: unknown) => simpleCaseFold(String(s ?? '').replace(/^\p{White_Space}+|\p{White_Space}+$/gu, ''));
 
 export function buildGraph(elements: Iterable<Element>): WorldGraph {
   const leftOut: LeftOut = { hidden: 0, proposed: 0, room: 0, readingAid: 0 };
@@ -136,9 +147,14 @@ export function buildGraph(elements: Iterable<Element>): WorldGraph {
   const nodes = g.nodes.map((n) => kept.get(n.id)!);
   const byId = new Map<string, Element>(nodes.map((n) => [n.id, n]));
   const AID_ORDER = { charter: 0, guide: 1, domain: 2 } as const;
+  // The Domains in the standard's order, read from the SDK (the Guide's order, then by folded name, ties by id); the
+  // rest by kind, then folded name by code point, then id.
+  const domainRank = new Map(domainsOf({ elements: [...kept.values()] } as never, { rung: 'owner' }).map((d, i) => [d.id, i]));
   const aids = [...kept.values()]
     .filter((el) => !byId.has(el.id) && isCharterElement(el))
-    .sort((a, b) => AID_ORDER[readingAidOf(a) ?? 'domain'] - AID_ORDER[readingAidOf(b) ?? 'domain'] || byString(String(a.name ?? ''), String(b.name ?? '')) || byString(a.id, b.id));
+    .sort((a, b) => AID_ORDER[readingAidOf(a) ?? 'domain'] - AID_ORDER[readingAidOf(b) ?? 'domain']
+      || (domainRank.get(a.id) ?? -1) - (domainRank.get(b.id) ?? -1)
+      || byCodePoint(fold(a.name), fold(b.name)) || byString(a.id, b.id));
   for (const el of aids) byId.set(el.id, el);
   const edges: Edge[] = g.edges.map((e) => ({ source: e.source, field: e.field, target: e.target, index: e.index }));
   // The ids an element's own link fields hold that no page here opens: exactly the chips beside it that cannot open.
