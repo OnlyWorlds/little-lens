@@ -8,7 +8,8 @@
  * folder, a second one only under `records/`. Then it is read as an online world is, through the
  * SDK's client, its source the SDK's folder source: the folder format as the SDK reads it, every
  * element as keel would serve it. From the folder only `world.json`, `elements/` and `spatial/` are
- * opened, never a dot folder or file, nor `.env`; the world's `api` block is dropped by the source.
+ * opened, and of those only `.json` files, never a dot folder or file, nor `.env`; the world's `api`
+ * block is dropped by the source.
  */
 
 import { OwWorldFileError, readWorldFile } from '@onlyworlds/sdk';
@@ -29,6 +30,8 @@ export interface FileWorld {
 }
 
 export const NOT_A_WORLD = 'That is not a world Little Lens can open: it holds no world.json.';
+/** A folder's world.json is there, and the folder format's reader cannot read it (not JSON, not UTF-8, no id). */
+export const WORLD_UNREADABLE = "That folder's world.json cannot be read.";
 export const MORE_THAN_ONE = 'That holds more than one world. Open one world at a time.';
 export const NOT_OPENABLE = 'That file is not a world Little Lens can open.';
 export const TOO_BIG = 'That world is too big for Little Lens to open in a browser.';
@@ -135,10 +138,14 @@ export function worldRootOf(paths: string[]): string {
   return picked + prefix;
 }
 
-/** What a folder's read opens: its world and its element files, never a dot folder or file (`.env`, `.atlas/`). */
+/**
+ * What a folder's read opens: its world and the `.json` files under `elements/` and `spatial/`,
+ * never a dot folder or file (`.env`, `.atlas/`), nor a file that could be no element (a picture,
+ * a video), which is never read into memory. Which of them is an element is the SDK's rule.
+ */
 function opensInFolder(rel: string): boolean {
   if (rel.split('/').some((seg) => seg.startsWith('.'))) return false;
-  return rel === 'world.json' || rel.startsWith('elements/') || rel.startsWith('spatial/');
+  return rel === 'world.json' || ((rel.startsWith('elements/') || rel.startsWith('spatial/')) && rel.endsWith('.json'));
 }
 
 export async function readWorldFolder(files: PickedFile[]): Promise<FileWorld> {
@@ -155,8 +162,9 @@ export async function readWorldFolder(files: PickedFile[]): Promise<FileWorld> {
   try {
     meta = await readWorldMeta(null, source);
   } catch (e) {
-    // A world.json that does not parse, or has no id: the source serves nothing from it.
-    if (seen.report && !seen.report.world) throw new Error(NOT_A_WORLD);
+    // The world.json is there (the root was found by it), and the source cannot read it: not JSON,
+    // not UTF-8, or no id. It serves nothing from it.
+    if (seen.report && !seen.report.world) throw new Error(WORLD_UNREADABLE);
     throw e;
   }
   const elements = await readWorldElements(meta, source);

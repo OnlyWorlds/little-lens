@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { writeWorldFile } from '@onlyworlds/sdk';
-import { MORE_THAN_ONE, NOT_A_WORLD, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
+import { MORE_THAN_ONE, NOT_A_WORLD, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
 
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -57,14 +57,39 @@ describe('the file read', () => {
     expect(buildGraph(w.elements).leftOut.room).toBe(1);
   });
 
-  it('is no world when the world.json of a folder does not parse or has no id', async () => {
-    for (const body of ['{not json', JSON.stringify({ name: 'no id' }), JSON.stringify({ id: '' })]) {
+  it('says the world.json cannot be read when it does not parse, is not UTF-8 or has no id', async () => {
+    const latin1 = new Uint8Array([...enc.encode(`{"id":"${W}","name":"caf`), 0xe9, ...enc.encode('"}')]);
+    for (const body of [enc.encode('{not json'), enc.encode(JSON.stringify({ name: 'no id' })), enc.encode(JSON.stringify({ id: '' })), enc.encode('[]'), latin1]) {
       const picked = [
-        { path: 'W/world.json', bytes: async () => enc.encode(body) },
+        { path: 'W/world.json', bytes: async () => body },
         { path: 'W/elements/character/a.json', bytes: async () => enc.encode(JSON.stringify({ id: id(1) })) },
       ];
-      await expect(readWorldFolder(picked)).rejects.toThrow(NOT_A_WORLD);
+      await expect(readWorldFolder(picked)).rejects.toThrow(WORLD_UNREADABLE);
     }
+    expect(WORLD_UNREADABLE).not.toBe(NOT_A_WORLD);
+  });
+
+  it('opens only .json files under elements/ and spatial/: a large file of any other kind is never read', async () => {
+    const opened: string[] = [];
+    const big = new Uint8Array(64 * 1024 ** 2);
+    const pick = (path: string, data: Uint8Array) => ({
+      path,
+      bytes: async () => {
+        opened.push(path);
+        return data;
+      },
+    });
+    const w = await readWorldFolder([
+      pick('W/world.json', enc.encode(JSON.stringify({ id: W, name: 'With media' }))),
+      pick('W/elements/character/a.json', enc.encode(JSON.stringify({ id: id(1), name: 'A' }))),
+      pick('W/elements/character/portrait.mp4', big),
+      pick('W/elements/portrait.png', big),
+      pick('W/spatial/readme.txt', big),
+      pick('W/elements/character/a.json.bak', big),
+    ]);
+    expect(opened.sort()).toEqual(['W/elements/character/a.json', 'W/world.json']);
+    expect(w.elements.map((e) => e.id)).toEqual([id(1)]);
+    expect(w.unreadable).toBe(0);
   });
 
   it('opens nothing but the world and its element files from a folder, and drops the key', async () => {

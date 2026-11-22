@@ -9,23 +9,25 @@
  *
  * The read now follows the SDK's reader of the folder format, so a folder reads as keel would
  * serve it. Every difference from the read before is named below, by the rule that makes it:
- *   A  keel's body: every schema field served (empty as "", null or []), any key that is neither
- *      schema nor an extension dropped
+ *   A  keel's body: every schema field served, an absent one as its kind's empty value (text "",
+ *      integer null, single link null, multi link []), any key that is neither schema nor an
+ *      extension dropped
  *   B  a link held twice is held once, a null in a list dropped
  *   C  the body's type over its folder's
  *   D  the legacy `spatial/` layout read (a Zone is a node)
- *   E  a file that is not UTF-8 is not JSON
+ *   E  a file that is not UTF-8 is not JSON; a world.json so is one that cannot be read
  *   F  ids matched as UUIDs: one in capitals repeats the other
  *   G  the world's time as the world body serves it (`time_current` first, as given)
  *   U  the unreadable count holds only the graph's own types; E and F add to it
- * Added fields that are empty are rule A and listed by no one; any other difference is red.
+ * An added field holding its kind's empty value is rule A and listed by no one; any other
+ * difference, an added field of another value or of no schema kind included, is red.
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { OwV2Client } from '@onlyworlds/sdk';
+import { FIELD_SCHEMA, OwV2Client } from '@onlyworlds/sdk';
 import worlds from '../standard/worlds.json';
 import recorded from './folder.parity.json';
-import { fromEntries, keptElementType, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
+import { WORLD_UNREADABLE, fromEntries, keptElementType, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
 import { buildGraph, type Element } from './graph';
 
 const enc = new TextEncoder();
@@ -159,7 +161,16 @@ async function recordOf(w: FileWorld, opened: string[]) {
   };
 }
 
-const empty = (v: unknown) => v === '' || v === null || (Array.isArray(v) && v.length === 0);
+/** What the source serves for a field the file left out, by the field's kind in the SDK's schema; undefined for no kind. */
+const EMPTY_BY_KIND: Record<string, unknown> = { text: '', integer: null, single_link: null, multi_link: [] };
+function emptyOf(type: string, field: string): unknown {
+  const kind = (FIELD_SCHEMA as Record<string, Record<string, { type: string } | undefined>>)[type]?.[field]?.type;
+  return kind === undefined ? undefined : EMPTY_BY_KIND[kind];
+}
+const servedEmpty = (type: string, field: string, v: unknown) => {
+  const want = emptyOf(type, field);
+  return want !== undefined && JSON.stringify(v) === JSON.stringify(want);
+};
 
 /** Every way the read now differs from the read before, one line each; an added empty field is rule A and not a line. */
 function differences(a: FileWorld, b: FileWorld): string[] {
@@ -183,7 +194,7 @@ function differences(a: FileWorld, b: FileWorld): string[] {
     const y = bb[eid] as Record<string, unknown> | undefined;
     if (!y) continue;
     for (const f of Object.keys(x)) if (!(f in y)) out.push(`body ${eid} - ${f}`);
-    for (const f of Object.keys(y)) if (!(f in x) && !empty(y[f])) out.push(`body ${eid} + ${f}`);
+    for (const f of Object.keys(y)) if (!(f in x) && !servedEmpty(String(y.type), f, y[f])) out.push(`body ${eid} + ${f} = ${JSON.stringify(y[f])}`);
     for (const f of Object.keys(x)) if (f in y && JSON.stringify(x[f]) !== JSON.stringify(y[f])) out.push(`body ${eid} ~ ${f}`);
   }
   return out;
@@ -285,6 +296,16 @@ describe('parity of the folder read', () => {
         .map(at)
         .sort(),
     );
+  });
+
+  it('E on the world file: a world.json that is not UTF-8 opened before; now it is one that cannot be read', async () => {
+    const world = new Uint8Array([...enc.encode(`{"id":"${W}","name":"caf`), 0xe9, ...enc.encode('"}')]);
+    const files = [
+      { path: 'W/world.json', bytes: async () => world },
+      { path: 'W/elements/character/a.json', bytes: async () => enc.encode(JSON.stringify({ id: id(1), name: 'A' })) },
+    ];
+    expect((await before(files)).name).toBe('caf\uFFFD');
+    await expect(readWorldFolder(files)).rejects.toThrow(WORLD_UNREADABLE);
   });
 
   it('reads a folder through OwV2Client', async () => {
