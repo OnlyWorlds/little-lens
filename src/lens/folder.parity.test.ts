@@ -1,25 +1,33 @@
 /**
  * Parity for a picked folder: every small world of the standard written out as a folder, the
  * played folders the tests and the walk open, and one folder of the shapes the folder read guards.
- * Each is read by `readWorldFolder` as it stands and recorded (`folder.parity.json`): the files it
- * opened, the elements, the graph (its structure and its bodies), the unreadable count a person sees.
  *
- * To record again: `PARITY_RECORD=1 npx vitest run src/lens/folder.parity.test.ts` prints one
- * `PARITY {...}` line; that line's JSON is the file. `FOLDER_COMPARE=1` instead prints, per folder,
- * how a read through the SDK's folder source (`@onlyworlds/sdk/folder`) differs from the record.
+ * `folder.parity.json` is the record of the folder read before it moved onto the SDK's folder
+ * source: the files it opened, the meta, the unreadable count, the graph's structure and bodies,
+ * hashed. That read is kept here (`before`: the guards, then the world file's element reader on the
+ * same files) and held to the record first, so the comparison below is with the read as it was.
+ *
+ * The read now follows the SDK's reader of the folder format, so a folder reads as keel would
+ * serve it. Every difference from the read before is named below, by the rule that makes it:
+ *   A  keel's body: every schema field served (empty as "", null or []), any key that is neither
+ *      schema nor an extension dropped
+ *   B  a link held twice is held once, a null in a list dropped
+ *   C  the body's type over its folder's
+ *   D  the legacy `spatial/` layout read (a Zone is a node)
+ *   E  a file that is not UTF-8 is not JSON
+ *   F  ids matched as UUIDs: one in capitals repeats the other
+ *   G  the world's time as the world body serves it (`time_current` first, as given)
+ *   U  the unreadable count holds only the graph's own types; E and F add to it
+ * Added fields that are empty are rule A and listed by no one; any other difference is red.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { OwV2Client } from '@onlyworlds/sdk';
-import { folderFetch, type OwFolderReadReport } from '@onlyworlds/sdk/folder';
 import worlds from '../standard/worlds.json';
 import recorded from './folder.parity.json';
-import { readWorldFolder, worldRootOf, type PickedFile } from './file-read';
-import { buildGraph, isGraphType, type Element } from './graph';
-import { timeOfWorldBody } from './time';
-import { PAGE_LIMIT, typesToRead } from './world-read';
+import { fromEntries, keptElementType, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
+import { buildGraph, type Element } from './graph';
 
-const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 const enc = new TextEncoder();
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 const W = '0695db52-5433-7332-8000-db7fe10da375';
@@ -122,12 +130,23 @@ function structure(els: Element[]) {
 }
 const bodiesOf = (els: Element[]) => Object.fromEntries([...buildGraph(els).byId.entries()].map(([k, v]) => [k, v]));
 
-async function recordOf(files: PickedFile[]) {
-  const o = opening(files);
-  const w = await readWorldFolder(o.files);
+/** The folder read before the source, as it stood: the kept element files under the world's root, read as a world file's are. */
+async function before(files: PickedFile[]): Promise<FileWorld> {
+  const root = worldRootOf(files.map((f) => f.path));
+  const world = JSON.parse(new TextDecoder().decode(await files.find((f) => f.path === `${root}world.json`)!.bytes())) as Record<string, unknown>;
+  const parts: Part[] = [];
+  for (const f of files) {
+    if (!f.path.startsWith(root)) continue;
+    const rel = f.path.slice(root.length);
+    if (keptElementType(rel) !== null) parts.push({ path: rel, data: await f.bytes() });
+  }
+  return fromEntries(world, parts);
+}
+
+async function recordOf(w: FileWorld, opened: string[]) {
   const s = structure(w.elements);
   return {
-    opened: o.opened.sort(),
+    opened: [...opened].sort(),
     name: w.name,
     description: w.description,
     time: w.time,
@@ -140,87 +159,139 @@ async function recordOf(files: PickedFile[]) {
   };
 }
 
-/** The same folder read through the SDK's folder source: the guards first, then the client's reads. */
-async function throughSource(files: PickedFile[]) {
-  const root = worldRootOf(files.map((f) => f.path));
-  const entries: Part[] = [];
-  for (const f of files) {
-    if (!f.path.startsWith(root)) continue;
-    const rel = f.path.slice(root.length);
-    if (rel.split('/').some((s) => s.startsWith('.'))) continue;
-    if (rel !== 'world.json' && !rel.startsWith('elements/') && !rel.startsWith('spatial/')) continue;
-    entries.push({ path: rel, data: await f.bytes() });
+const empty = (v: unknown) => v === '' || v === null || (Array.isArray(v) && v.length === 0);
+
+/** Every way the read now differs from the read before, one line each; an added empty field is rule A and not a line. */
+function differences(a: FileWorld, b: FileWorld): string[] {
+  const out: string[] = [];
+  const sa = structure(a.elements);
+  const sb = structure(b.elements);
+  for (const key of ['nodes', 'edges', 'aids', 'outside', 'held'] as const) {
+    const x = new Set(sa[key]);
+    const y = new Set(sb[key]);
+    for (const v of sa[key]) if (!y.has(v)) out.push(`${key} - ${v}`);
+    for (const v of sb[key]) if (!x.has(v)) out.push(`${key} + ${v}`);
+    if (sa[key].filter((v) => y.has(v)).join('|') !== sb[key].filter((v) => x.has(v)).join('|')) out.push(`${key} order`);
   }
-  let report: OwFolderReadReport | null = null;
-  const c = new OwV2Client({ fetch: folderFetch(entries, { onRead: (r) => (report = r) }) });
-  const body = (await c.getWorld()) as unknown as Record<string, unknown>;
-  const types = (body.counts as { types?: Record<string, number> } | undefined)?.types ?? null;
-  const counts: Record<string, number> | null = types ? Object.fromEntries(Object.entries(types).filter(([, n]) => n > 0)) : null;
-  const out = new Map<string, Element>();
-  for (const type of typesToRead(counts)) {
-    let cursor: string | undefined;
-    for (;;) {
-      const page = await c.list(type, { limit: PAGE_LIMIT, cursor });
-      for (const r of page.data) out.set(r.id as string, { ...(r as object), type } as Element);
-      if (!page.has_more || !page.next_cursor) break;
-      cursor = page.next_cursor;
-    }
+  if (JSON.stringify(sa.leftOut) !== JSON.stringify(sb.leftOut)) out.push(`leftOut ${JSON.stringify(sa.leftOut)} -> ${JSON.stringify(sb.leftOut)}`);
+  for (const k of ['id', 'name', 'description'] as const) if (a[k] !== b[k]) out.push(`${k} ${JSON.stringify(a[k])} -> ${JSON.stringify(b[k])}`);
+  if (JSON.stringify(a.time) !== JSON.stringify(b.time)) out.push(`time ${JSON.stringify(a.time)} -> ${JSON.stringify(b.time)}`);
+  if (a.unreadable !== b.unreadable) out.push(`unreadable ${a.unreadable} -> ${b.unreadable}`);
+  const ab = bodiesOf(a.elements);
+  const bb = bodiesOf(b.elements);
+  for (const [eid, x] of Object.entries(ab) as [string, Record<string, unknown>][]) {
+    const y = bb[eid] as Record<string, unknown> | undefined;
+    if (!y) continue;
+    for (const f of Object.keys(x)) if (!(f in y)) out.push(`body ${eid} - ${f}`);
+    for (const f of Object.keys(y)) if (!(f in x) && !empty(y[f])) out.push(`body ${eid} + ${f}`);
+    for (const f of Object.keys(x)) if (f in y && JSON.stringify(x[f]) !== JSON.stringify(y[f])) out.push(`body ${eid} ~ ${f}`);
   }
-  const els = [...out.values()];
-  const r = report as OwFolderReadReport | null;
-  return { name: typeof body.name === 'string' && body.name ? body.name : 'Untitled world', description: typeof body.description === 'string' ? body.description : '', time: timeOfWorldBody(body), els, report: r };
+  return out;
 }
 
+/** The differences each folder is expected to show, each with the rule that makes it. */
+const HEX = 'ABCDEF00-0000-7000-8000-0000000000CC';
+const EXPECTED: Record<string, [string, string][]> = {
+  'standard 019a7f00-0000-7000-8000-00000000f101 Grey Harbour': [['B', 'body 019a7f00-0000-7000-8000-000000000203 ~ constructs']],
+  'file read test folder': [
+    ['C', `nodes - character:${id(1)}`],
+    ['C', `nodes + location:${id(1)}`],
+    ['C', `outside - ${id(1)} 1`],
+    ['C', `held - character:${id(1)}`],
+    ['C', `held + location:${id(1)}`],
+    ['C', `body ${id(1)} - friends`],
+    ['C', `body ${id(1)} ~ type`],
+  ],
+  'guarded shapes': [
+    ['E', `nodes - character:${id(5)}`],
+    ['C', `nodes - location:${id(11)}`],
+    ['F', `nodes - character:${HEX}`],
+    ['C', `nodes + character:${id(11)}`],
+    ['D', `nodes + zone:${id(12)}`],
+    ['E', `held - character:${id(5)}`],
+    ['F', `held - character:${HEX}`],
+    ['C', `held - location:${id(11)}`],
+    ['C', `held + character:${id(11)}`],
+    ['D', `held + zone:${id(12)}`],
+    ['G', 'time {"unit":"Year","now":40} -> {"unit":"Year","now":null}'],
+    ['U', 'unreadable 4 -> 6'],
+    ['A', `body ${id(1)} - notes_extra`],
+    ['A', `body ${id(13)} - map`],
+    ['B', `body ${id(1)} ~ friends`],
+    ['C', `body ${id(11)} ~ type`],
+  ],
+};
+
 describe('parity of the folder read', () => {
-  it('reads every folder into the same record', async () => {
+  it('keeps the read before as it was recorded', async () => {
     const now: Record<string, unknown> = {};
-    for (const [k, files] of folders()) now[k] = await recordOf(files);
-    if (env.PARITY_RECORD) console.log(`PARITY ${JSON.stringify(now)}`);
+    for (const [k, files] of folders()) {
+      const o = opening(files);
+      now[k] = await recordOf(await before(o.files), o.opened);
+    }
     expect(Object.keys(now)).toHaveLength(worlds.worlds.length + 3);
     expect(now).toEqual(recorded);
   });
 
-  it.runIf(!!env.FOLDER_COMPARE)('prints how the folder source differs from the record', async () => {
-    const lines: string[] = [];
+  it('reads every folder through the client, differing only as each rule says', async () => {
+    const got: Record<string, [string, string][]> = {};
+    const want: Record<string, [string, string][]> = {};
     for (const [k, files] of folders()) {
-      const old = await readWorldFolder(files);
-      const s = await throughSource(files);
-      const a = structure(old.elements);
-      const b = structure(s.els);
-      const diff: string[] = [];
-      for (const key of ['nodes', 'edges', 'aids', 'outside', 'held'] as const) {
-        const x = new Set(a[key]);
-        const y = new Set(b[key]);
-        const lost = [...x].filter((v) => !y.has(v));
-        const got = [...y].filter((v) => !x.has(v));
-        if (lost.length || got.length) diff.push(`${key}: only file-read [${lost.join('; ')}] only source [${got.join('; ')}]`);
-        else if (a[key].join('|') !== b[key].join('|')) diff.push(`${key}: same set, other order`);
-      }
-      if (JSON.stringify(a.leftOut) !== JSON.stringify(b.leftOut)) diff.push(`leftOut ${JSON.stringify(a.leftOut)} vs ${JSON.stringify(b.leftOut)}`);
-      if (old.name !== s.name || old.description !== s.description) diff.push(`name/description ${JSON.stringify([old.name, old.description])} vs ${JSON.stringify([s.name, s.description])}`);
-      if (JSON.stringify(old.time) !== JSON.stringify(s.time)) diff.push(`time ${JSON.stringify(old.time)} vs ${JSON.stringify(s.time)}`);
-      const skipped = s.report?.skipped ?? [];
-      const keptSkips = skipped.filter((x) => isGraphType(x.path.split('/')[1]));
-      if (old.unreadable !== skipped.length || old.unreadable !== keptSkips.length) diff.push(`unreadable ${old.unreadable} vs source skipped ${skipped.length} (${skipped.map((x) => `${x.path}:${x.reason}`).join(', ')}), of them in kept types ${keptSkips.length}`);
-      // Bodies: what the source adds, drops or changes in each element both hold.
-      const ob = bodiesOf(old.elements);
-      const sb = bodiesOf(s.els);
-      const added = new Set<string>();
-      const dropped = new Set<string>();
-      const changed = new Set<string>();
-      for (const [eid, x] of Object.entries(ob)) {
-        const y = sb[eid] as Record<string, unknown> | undefined;
-        if (!y) continue;
-        const xo = x as Record<string, unknown>;
-        for (const f of Object.keys(y)) if (!(f in xo)) added.add(f);
-        for (const f of Object.keys(xo)) if (!(f in y)) dropped.add(f);
-        for (const f of Object.keys(xo)) if (f in y && JSON.stringify(xo[f]) !== JSON.stringify(y[f])) changed.add(`${f}: ${JSON.stringify(xo[f])} -> ${JSON.stringify(y[f])}`);
-      }
-      if (dropped.size) diff.push(`body fields dropped: ${[...dropped].join(', ')}`);
-      if (changed.size) diff.push(`body fields changed: ${[...changed].join('; ')}`);
-      if (added.size) diff.push(`body fields added (${added.size}): ${[...added].slice(0, 12).join(', ')}${added.size > 12 ? ', …' : ''}`);
-      lines.push(`## ${k}: ${diff.length ? `${diff.length} differences` : 'same'}\n${diff.map((d) => `- ${d}`).join('\n')}`);
+      const lines = differences(await before(files), await readWorldFolder(files));
+      const expected = EXPECTED[k] ?? [];
+      const rule = new Map(expected.map(([r, l]) => [l, r]));
+      got[k] = lines.map((l) => [rule.get(l) ?? '?', l]);
+      want[k] = expected;
     }
-    console.log(`COMPARE\n${lines.join('\n')}\nEND`);
+    expect(got).toEqual(want);
+  });
+
+  it('keeps the graph whole on every standard world and the played folder: only empty fields added', async () => {
+    for (const [k, files] of folders()) {
+      if (k === 'file read test folder' || k === 'guarded shapes') continue;
+      const a = structure((await before(files)).elements);
+      const b = structure((await readWorldFolder(files)).elements);
+      expect(b, k).toEqual(a);
+    }
+  });
+
+  it('opens only the world and its element files: no producer record, no dot folder or file, no .env, nothing outside', async () => {
+    const [, files] = folders().find(([k]) => k === 'guarded shapes')!;
+    const o = opening(files);
+    await readWorldFolder(o.files);
+    const at = (p: string) => `${PICKED}/Guarded/${p}`;
+    expect(o.opened.sort()).toEqual(
+      [
+        'world.json',
+        'elements/character/a.json',
+        'elements/character/b.json',
+        'elements/character/bad.json',
+        'elements/character/dup.json',
+        'elements/character/emptyid.json',
+        'elements/character/hex.json',
+        'elements/character/latin1.json',
+        'elements/character/sub/deep.json',
+        'elements/character/upper.json',
+        'elements/event/arr.json',
+        'elements/location/l.json',
+        'elements/location/typed.json',
+        'elements/notatype/x.json',
+        'elements/pin/broken.json',
+        'elements/zone/z2.json',
+        'spatial/zone/z.json',
+      ]
+        .map(at)
+        .sort(),
+    );
+  });
+
+  it('reads a folder through OwV2Client', async () => {
+    const getWorld = vi.spyOn(OwV2Client.prototype, 'getWorld');
+    const list = vi.spyOn(OwV2Client.prototype, 'list');
+    const [, files] = folders().find(([k]) => k === 'played walk folder')!;
+    await readWorldFolder(files);
+    expect(getWorld).toHaveBeenCalledTimes(1);
+    expect(list.mock.calls.map((c) => c[0]).sort()).toEqual(['character', 'location', 'narrative']);
+    vi.restoreAllMocks();
   });
 });

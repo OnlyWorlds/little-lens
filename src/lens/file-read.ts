@@ -48,7 +48,8 @@ interface Entry {
   data: Uint8Array;
 }
 
-function fromEntries(world: Record<string, unknown>, entries: Entry[]): FileWorld {
+/** A world file's world and its kept element files as one world: the folder names the type, broken files counted. */
+export function fromEntries(world: Record<string, unknown>, entries: Entry[]): FileWorld {
   const id = typeof world.id === 'string' ? world.id : '';
   if (!id) throw new Error(NOT_A_WORLD);
   const byId = new Map<string, Element>();
