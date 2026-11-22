@@ -29,10 +29,15 @@ describe('the file read', () => {
     expect(w.unreadable).toBe(2);
   });
 
-  it('reads the same world from a picked folder', async () => {
+  it('reads the same files from a picked folder as the SDK reads a folder: the body names the type', async () => {
     const picked = parts.map((p) => ({ path: `Test world/${p.path}`, bytes: async () => p.data }));
     const w = await readWorldFolder(picked);
-    expect(w.elements.map((e) => e.id)).toEqual([id(1), id(2)]);
+    // a.json says it is a location: the SDK's folder reader takes the body's type over its folder's.
+    expect(w.elements.map((e) => [e.id, e.type])).toEqual([
+      [id(2), 'character'],
+      [id(1), 'location'],
+    ]);
+    expect(w.unreadable).toBe(2);
   });
 
   it('finds the root as the file reader does: a producer record and a dot folder are no second world', () => {
@@ -52,7 +57,17 @@ describe('the file read', () => {
     expect(buildGraph(w.elements).leftOut.room).toBe(1);
   });
 
-  it('opens nothing but the world and its kept element files from a folder, and drops the key', async () => {
+  it('is no world when the world.json of a folder does not parse or has no id', async () => {
+    for (const body of ['{not json', JSON.stringify({ name: 'no id' }), JSON.stringify({ id: '' })]) {
+      const picked = [
+        { path: 'W/world.json', bytes: async () => enc.encode(body) },
+        { path: 'W/elements/character/a.json', bytes: async () => enc.encode(JSON.stringify({ id: id(1) })) },
+      ];
+      await expect(readWorldFolder(picked)).rejects.toThrow(NOT_A_WORLD);
+    }
+  });
+
+  it('opens nothing but the world and its element files from a folder, and drops the key', async () => {
     const opened: string[] = [];
     const pick = (path: string, body: unknown) => ({
       path,
@@ -69,8 +84,10 @@ describe('the file read', () => {
       pick('W/elements/pin/p.json', { id: id(2) }),
       pick('W/elements/.hidden/x.json', { id: id(3) }),
     ]);
-    expect(opened.sort()).toEqual(['W/elements/character/a.json', 'W/elements/character/a2.json', 'W/world.json']);
+    // Every element file is opened, map space too: a body may name another type than its folder's.
+    expect(opened.sort()).toEqual(['W/elements/character/a.json', 'W/elements/character/a2.json', 'W/elements/pin/p.json', 'W/world.json']);
     expect(w.elements.map((e) => e.id)).toEqual([id(1)]);
     expect(w.unreadable).toBe(1);
+    expect(JSON.stringify(w)).not.toContain('secret');
   });
 });

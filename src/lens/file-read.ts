@@ -1,23 +1,28 @@
 /**
  * A world from a file or a folder, read in the browser and held in memory: nothing read from it
  * is sent anywhere or stored. A world file (`.owworld`, a zip) goes through the SDK's
- * `readWorldFile`; a folder is the same world unpacked and is found by the same rule (OW-2, OW-5):
- * `world.json` at the top or in one top-level folder, a second one only under `records/`.
- * Element files sit at `elements/<type>/<name>.json` and the folder names the type. Map space is
- * not read, since the graph leaves it out, and from a folder nothing else is opened: no dot
- * folder, no `.env`, and the world's `api` block is dropped as the file reader drops it.
+ * `readWorldFile`, its element files at `elements/<type>/<name>.json` and the folder naming the
+ * type; map space is not read, since the graph leaves it out.
+ *
+ * A folder is found by the same rule (OW-2, OW-5): `world.json` at the top or in one top-level
+ * folder, a second one only under `records/`. Then it is read as an online world is, through the
+ * SDK's client, its source the SDK's folder source: the folder format as the SDK reads it, every
+ * element as keel would serve it. From the folder only `world.json`, `elements/` and `spatial/` are
+ * opened, never a dot folder or file, nor `.env`; the world's `api` block is dropped by the source.
  */
 
 import { OwWorldFileError, readWorldFile } from '@onlyworlds/sdk';
+import type { OwFolderReadReport } from '@onlyworlds/sdk/folder';
 import { isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldFile, type WorldTime } from './time';
+import { folderSource, readWorldElements, readWorldMeta } from './world-read';
 
 export interface FileWorld {
   id: string;
   name: string;
   description: string;
   elements: Element[];
-  /** Element files that were not JSON, had no id, or repeated an id already read. */
+  /** Element files of the graph's own types that were not JSON, had no id, or repeated an id already read. */
   unreadable: number;
   /** The world's unit and now, from its `world.json`. */
   time: WorldTime;
@@ -130,24 +135,32 @@ export function worldRootOf(paths: string[]): string {
   return picked + prefix;
 }
 
+/** What a folder's read opens: its world and its element files, never a dot folder or file (`.env`, `.atlas/`). */
+function opensInFolder(rel: string): boolean {
+  if (rel.split('/').some((seg) => seg.startsWith('.'))) return false;
+  return rel === 'world.json' || rel.startsWith('elements/') || rel.startsWith('spatial/');
+}
+
 export async function readWorldFolder(files: PickedFile[]): Promise<FileWorld> {
   const root = worldRootOf(files.map((f) => f.path));
-  const worldFile = files.find((f) => f.path === `${root}world.json`)!;
-  let world: Record<string, unknown>;
-  try {
-    world = JSON.parse(dec.decode(await worldFile.bytes())) as Record<string, unknown>;
-  } catch {
-    throw new Error(NOT_A_WORLD);
-  }
-  if (!world || typeof world !== 'object' || Array.isArray(world)) throw new Error(NOT_A_WORLD);
-  // A linked folder's key never enters this page's memory.
-  delete world.api;
   const entries: Entry[] = [];
   for (const f of files) {
     if (!f.path.startsWith(root)) continue;
     const rel = f.path.slice(root.length);
-    if (keptElementType(rel) === null) continue;
-    entries.push({ path: rel, data: await f.bytes() });
+    if (opensInFolder(rel)) entries.push({ path: rel, data: await f.bytes() });
   }
-  return fromEntries(world, entries);
+  const seen: { report: OwFolderReadReport | null } = { report: null };
+  const source = folderSource(entries, (r) => (seen.report = r));
+  let meta;
+  try {
+    meta = await readWorldMeta(null, source);
+  } catch (e) {
+    // A world.json that does not parse, or has no id: the source serves nothing from it.
+    if (seen.report && !seen.report.world) throw new Error(NOT_A_WORLD);
+    throw e;
+  }
+  const elements = await readWorldElements(meta, source);
+  // A file the view never reads (map space) is not one it failed to read.
+  const unreadable = (seen.report?.skipped ?? []).filter((s) => isGraphType(s.path.split('/')[1] ?? '')).length;
+  return { id: meta.id, name: meta.name, description: meta.description, elements, unreadable, time: meta.time };
 }

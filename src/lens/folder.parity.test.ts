@@ -240,8 +240,10 @@ describe('parity of the folder read', () => {
       const lines = differences(await before(files), await readWorldFolder(files));
       const expected = EXPECTED[k] ?? [];
       const rule = new Map(expected.map(([r, l]) => [l, r]));
-      got[k] = lines.map((l) => [rule.get(l) ?? '?', l]);
-      want[k] = expected;
+      // In line order: which line comes first is the graph's order, held by the other tests.
+      const byLine = (a: [string, string], b: [string, string]) => (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0);
+      got[k] = lines.map((l): [string, string] => [rule.get(l) ?? '?', l]).sort(byLine);
+      want[k] = [...expected].sort(byLine);
     }
     expect(got).toEqual(want);
   });

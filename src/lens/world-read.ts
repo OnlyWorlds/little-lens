@@ -6,10 +6,12 @@
  * keeps and the world counts. Nothing read is stored. A world that is private, unknown or no world
  * at all is one answer: closed. Signed in, a 401 is the sign-in ending, never a closed world.
  * Every read goes through the SDK's client, made in one place (`worldClient`), on a `fetch` of
- * this file's that adds the limit, the caller's signal and the budget on the way through.
+ * this file's that adds the limit, the caller's signal and the budget on the way through. A world
+ * folder is read the same way, its source the SDK's folder source (`folderSource`) in keel's place.
  */
 
 import { OwApiError, OwNetworkError, OwV2Client } from '@onlyworlds/sdk';
+import { folderFetch, type OwFolderReadReport, type OwWorldFileEntry } from '@onlyworlds/sdk/folder';
 import { GRAPH_TYPES, isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldBody, type WorldTime } from './time';
 
@@ -64,10 +66,23 @@ export function budgetOf(res: Response): Budget {
 /**
  * The one client every world read goes through: keyless, or the account token as the bearer, on
  * the world named. It adds nothing to a read: no key, no PIN, and no client name (that rides writes
- * only).
+ * only). With no world named it reads a folder source, which names its own world.
  */
-export function worldClient(worldId: string, token: string | null, fetchImpl: Fetch): OwV2Client {
-  return new OwV2Client({ baseUrl: API_BASE, world: worldId, fetch: fetchImpl, ...(token ? { apiKey: token } : {}) });
+export function worldClient(worldId: string | null, token: string | null, fetchImpl: Fetch): OwV2Client {
+  return new OwV2Client({ baseUrl: API_BASE, fetch: fetchImpl, ...(worldId !== null ? { world: worldId } : {}), ...(token ? { apiKey: token } : {}) });
+}
+
+const FOLDERS = new WeakSet<Fetch>();
+
+/**
+ * A world folder's files as the reads' source: the SDK's folder source, which answers the client's
+ * reads as keel would serve the folder to its owner, under the SDK's reader of the folder format.
+ * The reads take it as they take keel; `onRead` is told once what was read and what was skipped.
+ */
+export function folderSource(entries: OwWorldFileEntry[], onRead?: (report: OwFolderReadReport) => void): Fetch {
+  const f = folderFetch(entries, onRead ? { onRead } : {});
+  FOLDERS.add(f);
+  return f;
 }
 
 /**
@@ -83,6 +98,15 @@ export async function clientRead<T>(
   budget: ((b: Budget) => void) | undefined,
   read: (client: OwV2Client) => Promise<T>,
 ): Promise<T> {
+  // A folder answers in memory: the client is handed the source itself (it reads keyless and with
+  // no world only from a source it knows as local), with no world, no time limit and no budget.
+  if (FOLDERS.has(fetchImpl)) {
+    try {
+      return await read(worldClient(null, null, fetchImpl));
+    } catch (e) {
+      throw failureOf(e, null, null, false);
+    }
+  }
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), REQUEST_LIMIT_MS);
   const onAbort = () => ctl.abort();
@@ -137,16 +161,17 @@ function str(v: unknown): string {
   return typeof v === 'string' ? v : '';
 }
 
-export async function readWorldMeta(worldId: string, fetchImpl: Fetch = fetch, signal?: AbortSignal, budget?: (b: Budget) => void, token: string | null = null): Promise<WorldMeta> {
-  const body = (await clientRead(worldId, token, fetchImpl, signal, budget, (c) => c.getWorld())) as unknown as Record<string, unknown>;
-  if (!body || typeof body !== 'object' || body.id !== worldId) throw new ReadError({ kind: 'closed' });
+/** The world's meta; `worldId` null for a folder source, whose world is the one it holds. */
+export async function readWorldMeta(worldId: string | null, fetchImpl: Fetch = fetch, signal?: AbortSignal, budget?: (b: Budget) => void, token: string | null = null): Promise<WorldMeta> {
+  const body = (await clientRead(worldId ?? '', token, fetchImpl, signal, budget, (c) => c.getWorld())) as unknown as Record<string, unknown>;
+  if (!body || typeof body !== 'object' || typeof body.id !== 'string' || body.id === '' || (worldId !== null && body.id !== worldId)) throw new ReadError({ kind: 'closed' });
   const types = (body.counts as { types?: unknown } | undefined)?.types;
   let counts: Record<string, number> | null = null;
   if (types && typeof types === 'object') {
     counts = {};
     for (const [t, n] of Object.entries(types as Record<string, unknown>)) if (typeof n === 'number' && n > 0) counts[t] = n;
   }
-  return { id: worldId, name: str(body.name) || 'Untitled world', description: str(body.description), imageUrl: str(body.image_url), counts, time: timeOfWorldBody(body) };
+  return { id: body.id, name: str(body.name) || 'Untitled world', description: str(body.description), imageUrl: str(body.image_url), counts, time: timeOfWorldBody(body) };
 }
 
 /**
