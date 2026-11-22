@@ -5,8 +5,11 @@
  * keyless reads a minute, a token 300), each with its own time limit, and only the types the graph
  * keeps and the world counts. Nothing read is stored. A world that is private, unknown or no world
  * at all is one answer: closed. Signed in, a 401 is the sign-in ending, never a closed world.
+ * Every read goes through the SDK's client, made in one place (`worldClient`), on a `fetch` of
+ * this file's that adds the limit, the caller's signal and the budget on the way through.
  */
 
+import { OwApiError, OwNetworkError, OwV2Client } from '@onlyworlds/sdk';
 import { GRAPH_TYPES, isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldBody, type WorldTime } from './time';
 
@@ -58,41 +61,74 @@ export function budgetOf(res: Response): Budget {
   return { remaining: n('RateLimit-Remaining'), reset: n('RateLimit-Reset') };
 }
 
-export async function getJson(url: string, fetchImpl: Fetch, signal: AbortSignal | undefined, budget: ((b: Budget) => void) | undefined, token: string | null): Promise<unknown> {
+/**
+ * The one client every world read goes through: keyless, or the account token as the bearer, on
+ * the world named. It adds nothing to a read: no key, no PIN, and no client name (that rides writes
+ * only).
+ */
+export function worldClient(worldId: string, token: string | null, fetchImpl: Fetch): OwV2Client {
+  return new OwV2Client({ baseUrl: API_BASE, world: worldId, fetch: fetchImpl, ...(token ? { apiKey: token } : {}) });
+}
+
+/**
+ * One read on the client: under its own time limit and the caller's signal, credentials omitted,
+ * keel's budget handed on from the answer before anything else is made of it, and the client's
+ * failure read as this reader's.
+ */
+export async function clientRead<T>(
+  worldId: string,
+  token: string | null,
+  fetchImpl: Fetch,
+  signal: AbortSignal | undefined,
+  budget: ((b: Budget) => void) | undefined,
+  read: (client: OwV2Client) => Promise<T>,
+): Promise<T> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), REQUEST_LIMIT_MS);
   const onAbort = () => ctl.abort();
   signal?.addEventListener('abort', onAbort);
-  try {
-    let res: Response;
-    try {
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      res = await fetchImpl(url, { method: 'GET', signal: ctl.signal, credentials: 'omit', headers });
-    } catch {
-      throw new ReadError({ kind: 'network' });
-    }
+  const last: { res: Response | null } = { res: null };
+  const limited: Fetch = async (input, init) => {
+    const res = await fetchImpl(input, { ...init, signal: ctl.signal, credentials: 'omit' });
+    last.res = res;
     budget?.(budgetOf(res));
-    // Signed in, keel judges the bearer before the world: a 401 is the token, and a world the
-    // account cannot read is the 404 below.
-    if (res.status === 401 && token) throw new ReadError({ kind: 'ended' });
-    // 401 is keel's answer while its public door is shut: from outside, a closed world like any other.
-    // 410 is a deleted element, for a reader keel shows tombstones: gone is closed, never a retry.
-    if (res.status === 404 || res.status === 410 || res.status === 401 || res.status === 403) throw new ReadError({ kind: 'closed', status: res.status });
-    if (res.status === 429 || res.status === 503) {
-      const ra = Number(res.headers.get('Retry-After'));
-      throw new ReadError({ kind: 'slow-down', retryAfter: Number.isFinite(ra) && ra > 0 ? ra : null });
-    }
-    if (!res.ok) throw new ReadError({ kind: 'server', status: res.status });
-    try {
-      return await res.json();
-    } catch {
-      // A body cut by the time limit is the network's; one that is not JSON is the server's.
-      throw new ReadError(ctl.signal.aborted ? { kind: 'network' } : { kind: 'server', status: res.status });
-    }
+    return res;
+  };
+  try {
+    const out = await read(worldClient(worldId, token, limited));
+    // The client reads a 204 as no body. No read is answered so, and a body that is none is the server's.
+    if (last.res?.status === 204) throw new ReadError({ kind: 'server', status: 204 });
+    return out;
+  } catch (e) {
+    throw failureOf(e, last.res, token, ctl.signal.aborted);
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', onAbort);
   }
+}
+
+/** The client's failure as a ReadFailure, by keel's status; what the client refused before sending is thrown as it is. */
+function failureOf(e: unknown, res: Response | null, token: string | null, aborted: boolean): unknown {
+  if (e instanceof ReadError) return e;
+  if (e instanceof OwApiError) {
+    const status = e.status;
+    // Signed in, keel judges the bearer before the world: a 401 is the token, and a world the
+    // account cannot read is the 404 below.
+    if (status === 401 && token) return new ReadError({ kind: 'ended' });
+    // 401 is keel's answer while its public door is shut: from outside, a closed world like any other.
+    // 410 is a deleted element, for a reader keel shows tombstones: gone is closed, never a retry.
+    if (status === 404 || status === 410 || status === 401 || status === 403) return new ReadError({ kind: 'closed', status });
+    if (status === 429 || status === 503) {
+      // Seconds only, as keel sends it (the client would also read a date).
+      const ra = Number(res?.headers.get('Retry-After'));
+      return new ReadError({ kind: 'slow-down', retryAfter: Number.isFinite(ra) && ra > 0 ? ra : null });
+    }
+    return new ReadError({ kind: 'server', status });
+  }
+  if (e instanceof OwNetworkError) return new ReadError({ kind: 'network' });
+  // An answer came and its body did not read: cut by the time limit, the network's; not JSON, the server's.
+  if (res) return new ReadError(aborted ? { kind: 'network' } : { kind: 'server', status: res.status });
+  return e;
 }
 
 function str(v: unknown): string {
@@ -100,7 +136,7 @@ function str(v: unknown): string {
 }
 
 export async function readWorldMeta(worldId: string, fetchImpl: Fetch = fetch, signal?: AbortSignal, budget?: (b: Budget) => void, token: string | null = null): Promise<WorldMeta> {
-  const body = (await getJson(`${API_BASE}/world/?world=${encodeURIComponent(worldId)}`, fetchImpl, signal, budget, token)) as Record<string, unknown>;
+  const body = (await clientRead(worldId, token, fetchImpl, signal, budget, (c) => c.getWorld())) as unknown as Record<string, unknown>;
   if (!body || typeof body !== 'object' || body.id !== worldId) throw new ReadError({ kind: 'closed' });
   const types = (body.counts as { types?: unknown } | undefined)?.types;
   let counts: Record<string, number> | null = null;
@@ -163,12 +199,18 @@ export async function readWorldElements(world: WorldMeta, fetchImpl: Fetch = fet
         await (hooks.sleep ?? sleepFor)(budget.reset * 1000 + 250, signal);
         budget = { remaining: null, reset: null };
       }
-      const q = new URLSearchParams({ world: world.id, limit: String(PAGE_LIMIT) });
-      if (cursor) q.set('cursor', cursor);
-      const body = (await getJson(`${API_BASE}/${type}/?${q}`, fetchImpl, signal, (b) => {
-        budget = b;
-        hooks.onBudget?.(b);
-      }, token)) as { data?: unknown; has_more?: unknown; next_cursor?: unknown };
+      const page = cursor ?? undefined;
+      const body = (await clientRead(
+        world.id,
+        token,
+        fetchImpl,
+        signal,
+        (b) => {
+          budget = b;
+          hooks.onBudget?.(b);
+        },
+        (c) => c.list(type, { limit: PAGE_LIMIT, cursor: page }),
+      )) as unknown as { data?: unknown; has_more?: unknown; next_cursor?: unknown };
       left = Math.max(left - 1, 0);
       const rows = Array.isArray(body?.data) ? body.data : [];
       for (const r of rows) {

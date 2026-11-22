@@ -110,7 +110,7 @@ describe('the draught read', () => {
       await expect(readDraught(W, C, 300, f)).rejects.toMatchObject({ failure: { kind: 'closed' } });
     }
     const f401 = (async () => new Response('{}', { status: 401 })) as unknown as typeof fetch;
-    await expect(readDraught(W, C, 300, f401, undefined, 'tok')).rejects.toMatchObject({ failure: { kind: 'ended' } });
+    await expect(readDraught(W, C, 300, f401, undefined, 'ow_a_tok')).rejects.toMatchObject({ failure: { kind: 'ended' } });
   });
 });
 

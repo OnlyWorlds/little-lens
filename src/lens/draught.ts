@@ -7,7 +7,7 @@
  */
 
 import { dateOf } from '@onlyworlds/sdk';
-import { API_BASE, ReadError, getJson } from './world-read';
+import { ReadError, clientRead } from './world-read';
 
 /** keel's `as_of` is a 32-bit signed integer: at its top nothing dated is fenced. */
 export const WHOLE = 2147483647;
@@ -128,11 +128,11 @@ export function datedAfter(moment: Draught, whole: Draught): Row[] {
 }
 
 /**
- * One draught read: keyless, or on the session's token as the bearer. `as_of` is always sent:
- * left out, keel would fence at whatever the world's now is when the read lands.
+ * One draught read on the world reads' client: keyless, or on the session's token as the bearer.
+ * `as_of` is always sent: left out, keel would fence at whatever the world's now is when the read
+ * lands. The client also sends `compact=false`, the fixed shape keel serves when it is left out.
  */
 export async function readDraught(worldId: string, characterId: string, asOf: number, fetchImpl: typeof fetch = fetch, signal?: AbortSignal, token: string | null = null): Promise<Draught> {
-  const q = new URLSearchParams({ world: worldId, as_of: String(asOf), budget: String(DRAUGHT_BUDGET), components: DRAUGHT_COMPONENTS.join(',') });
-  const body = await getJson(`${API_BASE}/character/${encodeURIComponent(characterId)}/context?${q}`, fetchImpl, signal, undefined, token);
+  const body = await clientRead(worldId, token, fetchImpl, signal, undefined, (c) => c.draught(characterId, { asOf, budget: DRAUGHT_BUDGET, components: [...DRAUGHT_COMPONENTS] }));
   return parseDraught(body, worldId, characterId);
 }

@@ -4,12 +4,21 @@ import { API_BASE, ReadError, costOf, readWorldElements, readWorldMeta, typesToR
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 
+/**
+ * A route is a path prefix, or a path and its exact parameters (in any order: the client sends
+ * `world` last, the read before it sent it first).
+ */
+const params = (u: URL) => [...u.searchParams.entries()].map(([k, v]) => `${k}=${v}`).sort().join('&');
 function fake(routes: Record<string, () => Response>) {
   const seen: string[] = [];
   const f = (async (input: RequestInfo | URL) => {
     const url = String(input);
     seen.push(url);
-    const hit = Object.entries(routes).find(([k]) => url.startsWith(k));
+    const u = new URL(url);
+    const hit = Object.entries(routes).find(([k]) => {
+      const r = new URL(k);
+      return u.pathname.startsWith(r.pathname) && (r.search === '' || params(r) === params(u));
+    });
     return hit ? hit[1]() : new Response('{}', { status: 404 });
   }) as typeof fetch;
   return { f, seen };
