@@ -1,0 +1,703 @@
+{
+ "standard 019a7f00-0000-7000-8000-00000000f001 Harrow Vale": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/relation/ limit=1000&world=019a7f00-0000-7000-8000-00000000f001 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/6",
+   "budget 55/30",
+   "budget 54/30",
+   "progress 2/6",
+   "budget 53/30",
+   "progress 3/6",
+   "budget 52/30",
+   "progress 4/6",
+   "budget 51/30",
+   "budget 50/30",
+   "progress 5/6",
+   "budget 49/30",
+   "progress 6/6"
+  ],
+  "counts": {
+   "elements": 14
+  },
+  "meta": "26d79969c47e4b80af7bd8a01e672376813d624927f08b9029ddf7a4eb6283dc",
+  "elements": "7b338d70bb430614e614cbc6c1467a4cc28d5169943a97cb7cdf03b80fbe4e1f",
+  "graph": "95604e0a6ca5696b5d6e4cad9a9838924cc17943cf6cc3b379efbb7f58f596ba"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f002 The Press Office": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f002 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/5",
+   "budget 56/30",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "progress 2/5",
+   "budget 52/30",
+   "budget 51/30",
+   "progress 3/5",
+   "budget 50/30",
+   "progress 4/5",
+   "budget 49/30",
+   "progress 5/5"
+  ],
+  "counts": {
+   "elements": 17
+  },
+  "meta": "7934152fe28322cff5717c53c2616a145f7f2802e6214317b2aca1a4fdef6baa",
+  "elements": "5456d0ee775e79f71424f3c67d5e69f61bedaffb8714ea9296c31ca8025f5298",
+  "graph": "fe72cfbe70d9e2fc2318974ed4cb561ca345ae19b62dbbca08df6f90cb04582b"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f003 Planted": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/relation/ limit=1000&world=019a7f00-0000-7000-8000-00000000f003 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/4",
+   "budget 55/30",
+   "progress 2/4",
+   "budget 54/30",
+   "progress 3/4",
+   "budget 53/30",
+   "progress 4/4"
+  ],
+  "counts": {
+   "elements": 6
+  },
+  "meta": "4b6e1f455cbe6d83efcf3112cf1957824e336dac6de4ef6170b57f9d138e8f12",
+  "elements": "11ad8dedb6cc33fb33aecaea725a6efdd3d79169027e4a9569284692dacdff9b",
+  "graph": "17a3ec8e776ec43449de30eaa5faa1290216bf4c3efcf015f1dadd63834807a3"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f004 The Post": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/relation/ limit=1000&world=019a7f00-0000-7000-8000-00000000f004 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/3",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "progress 2/3",
+   "budget 52/30",
+   "progress 3/3"
+  ],
+  "counts": {
+   "elements": 10
+  },
+  "meta": "b39365a191796d8543e19ee1231107b3774ba5f972c18ece8728624842dddd10",
+  "elements": "edd11344691c5fec4fb3ba5e7023be5182feb2008473c5b4ac4015331d194cdd",
+  "graph": "8f97005c8a7a3479aa2ea926d2d39550a7c47127c7f82db3217f6f97a9673b74"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f005 Dawn": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f005 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ limit=1000&world=019a7f00-0000-7000-8000-00000000f005 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f005 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/1"
+  ],
+  "counts": {
+   "elements": 3
+  },
+  "meta": "a51ff3bad558f2e9d46811ea58d30c8b874084120386b6338aea54798d326af9",
+  "elements": "272e695e323efc5e09acfc01f44d489e173e03f13959f43b8d03a9cee549b496",
+  "graph": "7a67fcb585ccaf669d5de643c94b912ce01de71de74f142d2f417192998933eb"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f006 The Stub Room": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f006 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/3",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "progress 2/3",
+   "budget 52/30",
+   "progress 3/3"
+  ],
+  "counts": {
+   "elements": 10
+  },
+  "meta": "8ce10a43570018145ae4b296384cbaae13a0332ba4f4a531577982c9e079d67b",
+  "elements": "5a94f0f1e20fa3196f291760339632d1bd2f0f2ed5371354f7f97ffe716f85ff",
+  "graph": "a558587741061c8a9f176d56b5da27bdc4d2de28d48d2abaf7270560f1d0b691"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f007 Tull's Reach": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p8&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p10&limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f007 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "budget 55/30",
+   "budget 54/30",
+   "progress 1/5",
+   "budget 53/30",
+   "budget 52/30",
+   "budget 51/30",
+   "budget 50/30",
+   "budget 49/30",
+   "budget 48/30",
+   "progress 2/5",
+   "budget 47/30",
+   "progress 3/5",
+   "budget 46/30",
+   "progress 4/5",
+   "budget 45/30",
+   "progress 5/5"
+  ],
+  "counts": {
+   "elements": 22
+  },
+  "meta": "a7e031e26b38d65a33ad4127da82f083cd1a7b4f78829cdc856d0e3322e34ece",
+  "elements": "f8db2341cf502977d70f44f0d7a6c717f9271fd7d9da89d93ac927b10156ce8b",
+  "graph": "020089af2471c6ef49f7b6dfd7a1b13b5388eaf7b5f0d8f35acc385ede06364a"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f008 Merrow Gate": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f008 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f008 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f008 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f008 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f008 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/4",
+   "budget 56/30",
+   "progress 2/4",
+   "budget 55/30",
+   "progress 3/4",
+   "budget 54/30",
+   "progress 4/4"
+  ],
+  "counts": {
+   "elements": 5
+  },
+  "meta": "ff0cba4bacd60aef5a692abd3d249751b72d119b3c34e36ea735d077e9fc7ebe",
+  "elements": "6471d6442a4b3ab498f5a2e1db5aa6e5d2115918999f94513ebf2cb1188db381",
+  "graph": "304bef56b449c07b2b672bfcc3376e4012cbd6f95c905c74e882c5d4032a4fed"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f009 Ashfen": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/ability/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p8&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p10&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p12&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f009 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/6",
+   "budget 56/30",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "budget 52/30",
+   "budget 51/30",
+   "budget 50/30",
+   "progress 2/6",
+   "budget 49/30",
+   "budget 48/30",
+   "progress 3/6",
+   "budget 47/30",
+   "progress 4/6",
+   "budget 46/30",
+   "progress 5/6",
+   "budget 45/30",
+   "progress 6/6"
+  ],
+  "counts": {
+   "elements": 22
+  },
+  "meta": "c535ad2410a36334bc14fc3dc964fa23208488445162dc066f90919d671de9dc",
+  "elements": "e5260103c40202b87eb7078d77af3b65a1e9d379f2fda8176102306d3c002379",
+  "graph": "d24fcb9aebba4610486212dd810ad429095bcdb82a9d52ded431ef233867d039"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f101 Grey Harbour": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f101 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/6",
+   "budget 56/30",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "progress 2/6",
+   "budget 52/30",
+   "progress 3/6",
+   "budget 51/30",
+   "budget 50/30",
+   "progress 4/6",
+   "budget 49/30",
+   "progress 5/6",
+   "budget 48/30",
+   "budget 47/30",
+   "progress 6/6"
+  ],
+  "counts": {
+   "elements": 17
+  },
+  "meta": "fad639e2487b16f13f1c48d4a5e385c0020c69b563606384fbae0ae8d8991298",
+  "elements": "c3fd4ef19be1346e900103bee8d086245c3acb15350dbaf7e9d1f2b7024e4269",
+  "graph": "6f5655f95f4ce88a5994ec35d60cb5b2a63b0644d3d3ea99868c23a82b8b8fbc"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f102 Ties": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f102 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f102 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f102 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/2",
+   "budget 56/30",
+   "progress 2/2"
+  ],
+  "counts": {
+   "elements": 4
+  },
+  "meta": "cafc071ba72346e6d682aec1f2870886088a39144ccb715f393deeaa8c2dd098",
+  "elements": "1e66159e7d171072529653177c277a4af13678ab8ff539396aef8f488cda532e",
+  "graph": "8ee3c8a3212fcf7643b44276e661ac2ff01b703bf311552103b581acb3afe672"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f103 The Old Kingdom": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f103 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f103 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f103 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f103 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/2",
+   "budget 55/30",
+   "progress 2/2"
+  ],
+  "counts": {
+   "elements": 5
+  },
+  "meta": "a7f8954a5a1018e24b126acec2626f7f542adfefb6077a18999cb06de9eb115a",
+  "elements": "4f0f152483a720db368439dc3543db4c0154753f0feb3197011bb77b12c8ffab",
+  "graph": "de8fc47404a42d7235b9948534761e9f3a7795fad7e80a2490db40372ade8e1b"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f104 A Copy": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f104 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f104 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f104 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/2",
+   "budget 56/30",
+   "progress 2/2"
+  ],
+  "counts": {
+   "elements": 4
+  },
+  "meta": "65431466cdb9c8b57ed86e35c9b58fe254db41516359d42fc8458175b9e5cd2f",
+  "elements": "66ab2e06668ac5e974d12d92580a3ccbee132b630e05d719c4224f38ba189128",
+  "graph": "9a4216c4c50118855dde1b1aed39f5897f2b06799a5ac6ec5a2d83908821982d"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f105 Bare": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f105 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f105 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f105 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/1"
+  ],
+  "counts": {
+   "elements": 4
+  },
+  "meta": "1381f3d186299634ed420e7d6d79243624c9011fd8dab21da0c9699b6fbc71d1",
+  "elements": "66a3e534cc9f27705df3a4240e082db179bca0ab2ed65316f3cfe8a6e50da045",
+  "graph": "d1572e81c1abaa8910cfe207da0cf79c364561ffff09a068f751eea60ad76006"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f106 The Open Square": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f106 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/5",
+   "budget 55/30",
+   "progress 2/5",
+   "budget 54/30",
+   "progress 3/5",
+   "budget 53/30",
+   "progress 4/5",
+   "budget 52/30",
+   "progress 5/5"
+  ],
+  "counts": {
+   "elements": 8
+  },
+  "meta": "88d9a1123df53e9ece62616cca00e734a6edd38466b06f1b7563c78c57d8f8ba",
+  "elements": "aed9d1b8add3062255e1d9f821b6a126599855d38f80f4cbd3670cfde4edf057",
+  "graph": "f43d2369da93c3c6d8d536576e207b2176c82c620b8e94f89b50780de0b6c5f9"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f107 The Workshop": {
+  "sent": [
+   "GET /api/v2/world/ world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ cursor=p2&limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ cursor=p4&limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ cursor=p6&limit=1000&world=019a7f00-0000-7000-8000-00000000f107 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/3",
+   "budget 56/30",
+   "progress 2/3",
+   "budget 55/30",
+   "budget 54/30",
+   "budget 53/30",
+   "budget 52/30",
+   "progress 3/3"
+  ],
+  "counts": {
+   "elements": 9
+  },
+  "meta": "5c8e870afec26b3b4ce5edc15147accad685b697dfd781c8404ee0b0789edacd",
+  "elements": "6897446d96f95cb15b404575fc6c6b319fd3ea7d32e5da89b941ff94e203b852",
+  "graph": "2eafdfd48955b3ed162d7afaaf9c4fff9e64bf019fe9f4c955b49c7ef8edb9b7"
+ },
+ "played one, signed out": {
+  "sent": [
+   "GET /api/v2/world/ world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/ability/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=c2&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=c3&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/collective/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/creature/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/family/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/language/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ cursor=same&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/phenomenon/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/relation/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/species/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/title/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/trait/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/zone/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/19",
+   "budget 56/30",
+   "budget 1/9",
+   "wait 9",
+   "sleep 9250",
+   "budget 54/30",
+   "progress 2/19",
+   "budget 53/30",
+   "progress 3/19",
+   "budget 52/30",
+   "progress 4/19",
+   "budget 51/30",
+   "progress 5/19",
+   "budget 50/30",
+   "progress 6/19",
+   "budget 49/30",
+   "progress 7/19",
+   "budget 48/30",
+   "progress 8/19",
+   "budget 47/30",
+   "progress 9/19",
+   "budget 46/30",
+   "progress 10/19",
+   "budget 45/30",
+   "budget 44/30",
+   "progress 11/19",
+   "budget 43/30",
+   "progress 12/19",
+   "budget 42/30",
+   "progress 13/19",
+   "budget 41/30",
+   "progress 14/19",
+   "budget 40/30",
+   "progress 15/19",
+   "budget 39/30",
+   "progress 16/19",
+   "budget 38/30",
+   "progress 17/19",
+   "budget 37/30",
+   "progress 18/19",
+   "budget 36/30",
+   "progress 19/19"
+  ],
+  "counts": {
+   "elements": 6
+  },
+  "meta": "f7f255960538d666fb37c536ada7e14800c6194ed018a3df8afe7ade04a8cdbb",
+  "elements": "d078d070e4a1f19a356a8466a543b6a5f9ede0f4117b7a336e206e015f89da52",
+  "graph": "56ec1418ed14223e62b9dafa8dcabe960cd84cae334abb01ddd49d3c959984bf"
+ },
+ "played one, signed in": {
+  "sent": [
+   "GET /api/v2/world/ world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/ability/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=c2&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=c3&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/collective/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/construct/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/creature/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/event/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/family/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/institution/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/language/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/law/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/location/ cursor=same&limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/object/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/phenomenon/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/relation/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/species/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/title/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/trait/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/zone/ limit=1000&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "progress 1/19",
+   "budget 56/30",
+   "budget 1/9",
+   "wait 9",
+   "sleep 9250",
+   "budget 54/30",
+   "progress 2/19",
+   "budget 53/30",
+   "progress 3/19",
+   "budget 52/30",
+   "progress 4/19",
+   "budget 51/30",
+   "progress 5/19",
+   "budget 50/30",
+   "progress 6/19",
+   "budget 49/30",
+   "progress 7/19",
+   "budget 48/30",
+   "progress 8/19",
+   "budget 47/30",
+   "progress 9/19",
+   "budget 46/30",
+   "progress 10/19",
+   "budget 45/30",
+   "budget 44/30",
+   "progress 11/19",
+   "budget 43/30",
+   "progress 12/19",
+   "budget 42/30",
+   "progress 13/19",
+   "budget 41/30",
+   "progress 14/19",
+   "budget 40/30",
+   "progress 15/19",
+   "budget 39/30",
+   "progress 16/19",
+   "budget 38/30",
+   "progress 17/19",
+   "budget 37/30",
+   "progress 18/19",
+   "budget 36/30",
+   "progress 19/19"
+  ],
+  "counts": {
+   "elements": 6
+  },
+  "meta": "f7f255960538d666fb37c536ada7e14800c6194ed018a3df8afe7ade04a8cdbb",
+  "elements": "d078d070e4a1f19a356a8466a543b6a5f9ede0f4117b7a336e206e015f89da52",
+  "graph": "56ec1418ed14223e62b9dafa8dcabe960cd84cae334abb01ddd49d3c959984bf"
+ },
+ "played two, signed in": {
+  "sent": [
+   "GET /api/v2/world/ world=00000000-0000-7000-8000-000000009002 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ limit=1000&world=00000000-0000-7000-8000-000000009002 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/ cursor=p1000&limit=1000&world=00000000-0000-7000-8000-000000009002 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/narrative/ limit=1000&world=00000000-0000-7000-8000-000000009002 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/zone/ limit=1000&world=00000000-0000-7000-8000-000000009002 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30",
+   "budget 57/30",
+   "budget 56/30",
+   "progress 1/3",
+   "budget 55/30",
+   "progress 2/3",
+   "budget 54/30",
+   "progress 3/3"
+  ],
+  "counts": {
+   "elements": 1503
+  },
+  "meta": "e4cd6466ed96cf83f1a7b39f68a25f7a0e9f1248d195c531abb06c63856e93dd",
+  "elements": "d871f8cce0db84786b916bac549ff7d3d08e881637710ca7e95fce8296331d35",
+  "graph": "8bcb14378a352de2bea45dabaa17fdb08cc604da4bb8dbc370326dcce439d0fb"
+ },
+ "closed": {
+  "sent": [
+   "GET /api/v2/world/ world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 58/30"
+  ],
+  "failure": {
+   "kind": "closed",
+   "status": 404
+  }
+ },
+ "busy, signed in": {
+  "sent": [
+   "GET /api/v2/world/ world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none"
+  ],
+  "calls": [
+   "meta budget 0/17"
+  ],
+  "failure": {
+   "kind": "slow-down",
+   "retryAfter": 17
+  }
+ },
+ "draught, signed out": {
+  "sent": [
+   "GET /api/v2/character/00000000-0000-7000-8000-000000000001/context as_of=250&budget=1000&components=self,role,work,style,events,knowledge,names,sheet,roster&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/00000000-0000-7000-8000-000000000001/context as_of=2147483647&budget=1000&components=self,role,work,style,events,knowledge,names,sheet,roster&world=00000000-0000-7000-8000-000000009001 heads=[] credentials=omit signal=yes body=none"
+  ],
+  "draught": "4d5bd302a9099a940dd1936734f6b63ebf9fe569cfcd9a553f37ff969e8bbec9"
+ },
+ "draught, signed in": {
+  "sent": [
+   "GET /api/v2/character/00000000-0000-7000-8000-000000000001/context as_of=250&budget=1000&components=self,role,work,style,events,knowledge,names,sheet,roster&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none",
+   "GET /api/v2/character/00000000-0000-7000-8000-000000000001/context as_of=2147483647&budget=1000&components=self,role,work,style,events,knowledge,names,sheet,roster&world=00000000-0000-7000-8000-000000009001 heads=[authorization:Bearer ow_a_played] credentials=omit signal=yes body=none"
+  ],
+  "draught": "4d5bd302a9099a940dd1936734f6b63ebf9fe569cfcd9a553f37ff969e8bbec9"
+ }
+}
