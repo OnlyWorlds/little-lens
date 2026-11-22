@@ -111,6 +111,30 @@ describe('the reads on the client: failures', () => {
       expect(await p).toEqual({ kind: 'network' });
     });
 
+    it(`${read}: a refusal whose body never ends is mapped at once, as before the client`, async () => {
+      vi.useFakeTimers();
+      const stuck = (status: number, headers: Record<string, string>) =>
+        ((_u: RequestInfo | URL, init?: RequestInit) => {
+          const body = new ReadableStream<Uint8Array>({
+            start(c) {
+              init?.signal?.addEventListener('abort', () => c.error(new DOMException('aborted', 'AbortError')));
+            },
+          });
+          return Promise.resolve(new Response(body, { status, headers }));
+        }) as typeof fetch;
+      for (const [status, headers, failure] of [
+        [429, { 'Retry-After': '9' }, { kind: 'slow-down', retryAfter: 9 }],
+        [500, {}, { kind: 'server', status: 500 }],
+      ] as const) {
+        vi.clearAllMocks();
+        let got: unknown = 'pending';
+        void failureOf(read, stuck(status, headers)).then((f) => (got = f));
+        await vi.advanceTimersByTimeAsync(1);
+        expect(got).toEqual(failure);
+        await vi.advanceTimersByTimeAsync(REQUEST_LIMIT_MS);
+      }
+    });
+
     it(`${read}: the caller's abort is the network`, async () => {
       const ctl = new AbortController();
       const hang = ((_u: RequestInfo | URL, init?: RequestInit) =>

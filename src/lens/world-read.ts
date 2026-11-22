@@ -92,7 +92,9 @@ export async function clientRead<T>(
     const res = await fetchImpl(input, { ...init, signal: ctl.signal, credentials: 'omit' });
     last.res = res;
     budget?.(budgetOf(res));
-    return res;
+    // A refusal is read by its status and Retry-After alone (failureOf, on the answer kept above):
+    // the client is handed it without the body, so a body that never ends cannot hold the mapping.
+    return res.ok ? res : new Response(null, { status: res.status, headers: res.headers });
   };
   try {
     const out = await read(worldClient(worldId, token, limited));
