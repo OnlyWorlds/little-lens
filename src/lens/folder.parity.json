@@ -1,0 +1,506 @@
+{
+ "standard 019a7f00-0000-7000-8000-00000000f001 Harrow Vale": {
+  "opened": [
+   "Harrow Vale/elements/character/019a7f00-0000-7000-8000-000000000001.json",
+   "Harrow Vale/elements/character/019a7f00-0000-7000-8000-000000000004.json",
+   "Harrow Vale/elements/character/019a7f00-0000-7000-8000-000000000006.json",
+   "Harrow Vale/elements/character/019a7f00-0000-7000-8000-000000000007.json",
+   "Harrow Vale/elements/event/019a7f00-0000-7000-8000-000000000008.json",
+   "Harrow Vale/elements/event/019a7f00-0000-7000-8000-000000000009.json",
+   "Harrow Vale/elements/event/019a7f00-0000-7000-8000-000000000010.json",
+   "Harrow Vale/elements/institution/019a7f00-0000-7000-8000-000000000003.json",
+   "Harrow Vale/elements/institution/019a7f00-0000-7000-8000-000000000005.json",
+   "Harrow Vale/elements/location/019a7f00-0000-7000-8000-000000000002.json",
+   "Harrow Vale/elements/narrative/019a7f00-0000-7000-8000-000000000011.json",
+   "Harrow Vale/elements/narrative/019a7f00-0000-7000-8000-000000000012.json",
+   "Harrow Vale/elements/narrative/019a7f00-0000-7000-8000-000000000013.json",
+   "Harrow Vale/elements/relation/019a7f00-0000-7000-8000-000000000014.json",
+   "Harrow Vale/world.json"
+  ],
+  "name": "Harrow Vale",
+  "description": "",
+  "time": {
+   "unit": "year",
+   "now": 1200
+  },
+  "unreadable": 0,
+  "elements": 14,
+  "nodes": 11,
+  "edges": 15,
+  "structure": "5424576f84f7e14da037b7898ce222eed83f31cc130653b2f1b6fcc512469ba5",
+  "bodies": "83e29fb4724673488fccb0bf838fa75c614ec356f8d4bdda0a119e9d186746c8"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f002 The Press Office": {
+  "opened": [
+   "The Press Office/elements/character/019a7f00-0000-7000-8000-000000000015.json",
+   "The Press Office/elements/character/019a7f00-0000-7000-8000-000000000016.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000018.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000019.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000020.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000021.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000022.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000023.json",
+   "The Press Office/elements/construct/019a7f00-0000-7000-8000-000000000082.json",
+   "The Press Office/elements/institution/019a7f00-0000-7000-8000-000000000017.json",
+   "The Press Office/elements/institution/019a7f00-0000-7000-8000-000000000080.json",
+   "The Press Office/elements/institution/019a7f00-0000-7000-8000-000000000083.json",
+   "The Press Office/elements/institution/019a7f00-0000-7000-8000-000000000089.json",
+   "The Press Office/elements/law/019a7f00-0000-7000-8000-000000000081.json",
+   "The Press Office/elements/law/019a7f00-0000-7000-8000-000000000088.json",
+   "The Press Office/elements/object/019a7f00-0000-7000-8000-000000000084.json",
+   "The Press Office/elements/object/019a7f00-0000-7000-8000-000000000085.json",
+   "The Press Office/world.json"
+  ],
+  "name": "The Press Office",
+  "description": "",
+  "time": {
+   "unit": "day",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 17,
+  "nodes": 15,
+  "edges": 14,
+  "structure": "ec1258153935c5db56afc24db7df217dc66b99882b00328d9da5fefd639a4292",
+  "bodies": "ba0eccd82d1f3de5975e3fe4e0d84fcff7d84e965131f2f232249772a030ed43"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f003 Planted": {
+  "opened": [
+   "Planted/elements/character/019a7f00-0000-7000-8000-000000000024.json",
+   "Planted/elements/character/019a7f00-0000-7000-8000-000000000026.json",
+   "Planted/elements/character/019a7f00-0000-7000-8000-000000000027.json",
+   "Planted/elements/location/019a7f00-0000-7000-8000-000000000025.json",
+   "Planted/elements/object/019a7f00-0000-7000-8000-000000000028.json",
+   "Planted/elements/relation/019a7f00-0000-7000-8000-000000000029.json",
+   "Planted/world.json"
+  ],
+  "name": "Planted",
+  "description": "",
+  "time": {
+   "unit": "day",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 6,
+  "nodes": 4,
+  "edges": 2,
+  "structure": "5d532acf0b711612ea2bc8f9ca7ec0684c43b5e3519bd809e8fb24ea4ff9328b",
+  "bodies": "1d5e50fb9ba643e1f4b229ce3dee544fb99340f839a2702db76740a05fcabb21"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f004 The Post": {
+  "opened": [
+   "The Post/elements/character/019a7f00-0000-7000-8000-000000000030.json",
+   "The Post/elements/character/019a7f00-0000-7000-8000-000000000031.json",
+   "The Post/elements/character/019a7f00-0000-7000-8000-000000000032.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000033.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000034.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000035.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000036.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000037.json",
+   "The Post/elements/narrative/019a7f00-0000-7000-8000-000000000038.json",
+   "The Post/elements/relation/019a7f00-0000-7000-8000-000000000039.json",
+   "The Post/world.json"
+  ],
+  "name": "The Post",
+  "description": "",
+  "time": {
+   "unit": "day",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 10,
+  "nodes": 9,
+  "edges": 11,
+  "structure": "1778ad0b45283390a71ac7cee07494350971e93a1e7d42e211961705f91a36ae",
+  "bodies": "4cb8b9a21f7427b1d93e78acaf9b5504d91398ef2976d64e6b9181b977915fcf"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f005 Dawn": {
+  "opened": [
+   "Dawn/elements/event/019a7f00-0000-7000-8000-000000000073.json",
+   "Dawn/elements/event/019a7f00-0000-7000-8000-000000000074.json",
+   "Dawn/elements/event/019a7f00-0000-7000-8000-000000000075.json",
+   "Dawn/world.json"
+  ],
+  "name": "Dawn",
+  "description": "",
+  "time": {
+   "unit": "year",
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 3,
+  "nodes": 3,
+  "edges": 0,
+  "structure": "5948dd315c4cd4b1b2bf93e9169e820eafa1af5666cb96c707a0d1cb278f4135",
+  "bodies": "3a81bc50b59453055a15f4f09694de20361e36dc76a680d88347aaac8f665c21"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f006 The Stub Room": {
+  "opened": [
+   "The Stub Room/elements/character/019a7f00-0000-7000-8000-000000000100.json",
+   "The Stub Room/elements/character/019a7f00-0000-7000-8000-000000000101.json",
+   "The Stub Room/elements/character/019a7f00-0000-7000-8000-000000000102.json",
+   "The Stub Room/elements/construct/019a7f00-0000-7000-8000-000000000103.json",
+   "The Stub Room/elements/construct/019a7f00-0000-7000-8000-000000000104.json",
+   "The Stub Room/elements/construct/019a7f00-0000-7000-8000-000000000105.json",
+   "The Stub Room/elements/construct/019a7f00-0000-7000-8000-000000000130.json",
+   "The Stub Room/elements/construct/019a7f00-0000-7000-8000-000000000131.json",
+   "The Stub Room/elements/narrative/019a7f00-0000-7000-8000-000000000106.json",
+   "The Stub Room/elements/narrative/019a7f00-0000-7000-8000-000000000107.json",
+   "The Stub Room/world.json"
+  ],
+  "name": "The Stub Room",
+  "description": "",
+  "time": {
+   "unit": "day",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 10,
+  "nodes": 10,
+  "edges": 7,
+  "structure": "00d4ffc181089096c0620bfc062d07adc866b81f00f3cf1d836ebc396277c064",
+  "bodies": "00818c43701cbcea62aa3a624dcc791204472e2b6d264ac943ef4ea61c40368e"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f007 Tull's Reach": {
+  "opened": [
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000111.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000112.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000113.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000125.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000126.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000127.json",
+   "Tull's Reach/elements/character/019a7f00-0000-7000-8000-000000000133.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000116.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000119.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000120.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000121.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000122.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000123.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000124.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000128.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000129.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000134.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000135.json",
+   "Tull's Reach/elements/construct/019a7f00-0000-7000-8000-000000000136.json",
+   "Tull's Reach/elements/event/019a7f00-0000-7000-8000-000000000110.json",
+   "Tull's Reach/elements/location/019a7f00-0000-7000-8000-000000000114.json",
+   "Tull's Reach/elements/narrative/019a7f00-0000-7000-8000-000000000115.json",
+   "Tull's Reach/world.json"
+  ],
+  "name": "Tull's Reach",
+  "description": "",
+  "time": {
+   "unit": "year",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 22,
+  "nodes": 20,
+  "edges": 17,
+  "structure": "352ff91894ee6171667f6bb798ca7b402a95a6be5f1bdc0deade92632d19ad2f",
+  "bodies": "c8168bb0e03ba21808f6128686a0f60b5d0b14e93842263d7edd37c6ee8aec78"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f008 Merrow Gate": {
+  "opened": [
+   "Merrow Gate/elements/character/019a7f00-0000-7000-8000-000000000140.json",
+   "Merrow Gate/elements/character/019a7f00-0000-7000-8000-000000000141.json",
+   "Merrow Gate/elements/construct/019a7f00-0000-7000-8000-000000000144.json",
+   "Merrow Gate/elements/location/019a7f00-0000-7000-8000-000000000143.json",
+   "Merrow Gate/elements/object/019a7f00-0000-7000-8000-000000000142.json",
+   "Merrow Gate/world.json"
+  ],
+  "name": "Merrow Gate",
+  "description": "",
+  "time": {
+   "unit": "day",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 5,
+  "nodes": 3,
+  "edges": 1,
+  "structure": "6864901abbece1eb13e8924f5d300a131cc78394e9b6304a7f87e792f5651787",
+  "bodies": "73ffb33e31ead58565657a0e8b7ee87690b159923bb8a54d82da8f7e88a2b9da"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f009 Ashfen": {
+  "opened": [
+   "Ashfen/elements/ability/019a7f00-0000-7000-8000-000000000167.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000150.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000153.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000156.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000158.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000159.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000161.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000166.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000168.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000169.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000170.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000171.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000172.json",
+   "Ashfen/elements/character/019a7f00-0000-7000-8000-000000000175.json",
+   "Ashfen/elements/construct/019a7f00-0000-7000-8000-000000000160.json",
+   "Ashfen/elements/construct/019a7f00-0000-7000-8000-000000000162.json",
+   "Ashfen/elements/construct/019a7f00-0000-7000-8000-000000000163.json",
+   "Ashfen/elements/location/019a7f00-0000-7000-8000-000000000152.json",
+   "Ashfen/elements/location/019a7f00-0000-7000-8000-000000000164.json",
+   "Ashfen/elements/narrative/019a7f00-0000-7000-8000-000000000173.json",
+   "Ashfen/elements/narrative/019a7f00-0000-7000-8000-000000000174.json",
+   "Ashfen/elements/object/019a7f00-0000-7000-8000-000000000165.json",
+   "Ashfen/world.json"
+  ],
+  "name": "Ashfen",
+  "description": "",
+  "time": {
+   "unit": "year",
+   "now": 100
+  },
+  "unreadable": 0,
+  "elements": 22,
+  "nodes": 22,
+  "edges": 10,
+  "structure": "30537f1515aa209b89914d6fb949dea7c556323b725069e357401737d6354e54",
+  "bodies": "40f3c7984b3088de81d9cb46a2df930ea98691269f3fb3650f449b9710932d87"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f101 Grey Harbour": {
+  "opened": [
+   "Grey Harbour/elements/character/019a7f00-0000-7000-8000-000000000214.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000203.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000204.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000205.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000206.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000207.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000208.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000209.json",
+   "Grey Harbour/elements/construct/019a7f00-0000-7000-8000-000000000213.json",
+   "Grey Harbour/elements/institution/019a7f00-0000-7000-8000-000000000216.json",
+   "Grey Harbour/elements/law/019a7f00-0000-7000-8000-000000000200.json",
+   "Grey Harbour/elements/law/019a7f00-0000-7000-8000-000000000201.json",
+   "Grey Harbour/elements/law/019a7f00-0000-7000-8000-000000000202.json",
+   "Grey Harbour/elements/location/019a7f00-0000-7000-8000-000000000215.json",
+   "Grey Harbour/elements/object/019a7f00-0000-7000-8000-000000000210.json",
+   "Grey Harbour/elements/object/019a7f00-0000-7000-8000-000000000211.json",
+   "Grey Harbour/elements/object/019a7f00-0000-7000-8000-000000000212.json",
+   "Grey Harbour/world.json"
+  ],
+  "name": "Grey Harbour",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 17,
+  "nodes": 7,
+  "edges": 0,
+  "structure": "c22c90ec08bf516f47b6cef6ea277853b8dbe013e52533c05d8e5ecea3741984",
+  "bodies": "697f7e9ff777ef9fb0a2ac04180c0b53694c08feaba714c996418fd78df4ee40"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f102 Ties": {
+  "opened": [
+   "Ties/elements/construct/019a7f00-0000-7000-8000-000000000222.json",
+   "Ties/elements/construct/019a7f00-0000-7000-8000-000000000223.json",
+   "Ties/elements/law/019a7f00-0000-7000-8000-000000000220.json",
+   "Ties/elements/law/019a7f00-0000-7000-8000-000000000221.json",
+   "Ties/world.json"
+  ],
+  "name": "Ties",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 4,
+  "nodes": 0,
+  "edges": 0,
+  "structure": "79480b074edf9d325b13a8eda5caa648b98dc7c2a0baa08aa98fb66003296af3",
+  "bodies": "fa2a7d2116a945ae06cae941442de760b99234dea801512dc6ff033d4ce18d65"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f103 The Old Kingdom": {
+  "opened": [
+   "The Old Kingdom/elements/construct/019a7f00-0000-7000-8000-000000000231.json",
+   "The Old Kingdom/elements/construct/019a7f00-0000-7000-8000-000000000232.json",
+   "The Old Kingdom/elements/construct/019a7f00-0000-7000-8000-000000000234.json",
+   "The Old Kingdom/elements/law/019a7f00-0000-7000-8000-000000000230.json",
+   "The Old Kingdom/elements/law/019a7f00-0000-7000-8000-000000000233.json",
+   "The Old Kingdom/world.json"
+  ],
+  "name": "The Old Kingdom",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 5,
+  "nodes": 5,
+  "edges": 0,
+  "structure": "17d76f0b20467e35db11056b592c005469b61a4bf5aa7b52c56962a8bda2a02a",
+  "bodies": "022e6dad09801ee5796f5ec38c5a29dfe140a66f07558d63f3eef78bcf5a65c9"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f104 A Copy": {
+  "opened": [
+   "A Copy/elements/construct/019a7f00-0000-7000-8000-000000000242.json",
+   "A Copy/elements/construct/019a7f00-0000-7000-8000-000000000243.json",
+   "A Copy/elements/law/019a7f00-0000-7000-8000-000000000240.json",
+   "A Copy/elements/law/019a7f00-0000-7000-8000-000000000241.json",
+   "A Copy/world.json"
+  ],
+  "name": "A Copy",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 4,
+  "nodes": 2,
+  "edges": 0,
+  "structure": "af04aa7db66671f075eaa5629b7d2c9d0559898d29ea0b0112a8ae35f4123cf6",
+  "bodies": "6c5a901d04ce4499eac5b83a46cd321adb5750a53e86a8029b51e18f88a697c7"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f105 Bare": {
+  "opened": [
+   "Bare/elements/construct/019a7f00-0000-7000-8000-000000000250.json",
+   "Bare/elements/construct/019a7f00-0000-7000-8000-000000000251.json",
+   "Bare/elements/construct/019a7f00-0000-7000-8000-000000000252.json",
+   "Bare/elements/construct/019a7f00-0000-7000-8000-000000000253.json",
+   "Bare/world.json"
+  ],
+  "name": "Bare",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 4,
+  "nodes": 0,
+  "edges": 0,
+  "structure": "aa075811d573035bd082e7f3924db63893910da1cefce61f3150a3da9c4fb991",
+  "bodies": "0daca079aee5d387f7929dbe48b9cace9c9951d4027ae67f0db1a24f7b0c790b"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f106 The Open Square": {
+  "opened": [
+   "The Open Square/elements/construct/019a7f00-0000-7000-8000-000000000261.json",
+   "The Open Square/elements/construct/019a7f00-0000-7000-8000-000000000262.json",
+   "The Open Square/elements/construct/019a7f00-0000-7000-8000-000000000266.json",
+   "The Open Square/elements/law/019a7f00-0000-7000-8000-000000000260.json",
+   "The Open Square/elements/location/019a7f00-0000-7000-8000-000000000264.json",
+   "The Open Square/elements/narrative/019a7f00-0000-7000-8000-000000000267.json",
+   "The Open Square/elements/object/019a7f00-0000-7000-8000-000000000263.json",
+   "The Open Square/elements/object/019a7f00-0000-7000-8000-000000000265.json",
+   "The Open Square/world.json"
+  ],
+  "name": "The Open Square",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 8,
+  "nodes": 2,
+  "edges": 0,
+  "structure": "fe0d93b85ae5c459cc538b7ec5187dea5b9795fa400e3b199fdc8aa4e6698be8",
+  "bodies": "7f86384efc7f7c88277f2a6330e03af24d6f9a5a9397f02a18965f086f2449ab"
+ },
+ "standard 019a7f00-0000-7000-8000-00000000f107 The Workshop": {
+  "opened": [
+   "The Workshop/elements/character/019a7f00-0000-7000-8000-000000000278.json",
+   "The Workshop/elements/law/019a7f00-0000-7000-8000-000000000270.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000271.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000272.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000273.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000274.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000275.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000276.json",
+   "The Workshop/elements/object/019a7f00-0000-7000-8000-000000000277.json",
+   "The Workshop/world.json"
+  ],
+  "name": "The Workshop",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 9,
+  "nodes": 7,
+  "edges": 0,
+  "structure": "148e47d31a6c74330005db73f62416bb55db172ec402b745b09d2d5664271221",
+  "bodies": "4586a5a19d046cce8f100469b27d387aea1d29f23dc77506c8887e2a3a31f810"
+ },
+ "file read test folder": {
+  "opened": [
+   "Test world/elements/character/a.json",
+   "Test world/elements/character/b.json",
+   "Test world/elements/character/broken.json",
+   "Test world/elements/character/noid.json",
+   "Test world/world.json"
+  ],
+  "name": "Test world",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 2,
+  "elements": 2,
+  "nodes": 1,
+  "edges": 0,
+  "structure": "3c6358e96b5e14890c7e901ac4bc8c0cdc3cc587df8753a2502d60dc18c7bf94",
+  "bodies": "2453d0fa553d0e0156a3de89dc08c0bd7562c9be14b27d67ecc36c93bb9a1fb9"
+ },
+ "played walk folder": {
+  "opened": [
+   "File world/elements/character/a.json",
+   "File world/elements/character/b.json",
+   "File world/elements/character/c.json",
+   "File world/elements/character/k.json",
+   "File world/elements/location/e.json",
+   "File world/elements/narrative/d.json",
+   "File world/world.json"
+  ],
+  "name": "File world",
+  "description": "",
+  "time": {
+   "unit": null,
+   "now": null
+  },
+  "unreadable": 0,
+  "elements": 6,
+  "nodes": 3,
+  "edges": 0,
+  "structure": "d5e506299fda0dc3b1fed7a2bd784de7509228dbd2e43a2ad6e32ec3f2ca85ee",
+  "bodies": "ae897b0de05a07073615e239e3cf7a5e5bfa47c5eaaa7249d163a43a45b409ec"
+ },
+ "guarded shapes": {
+  "opened": [
+   "Picked/Guarded/elements/character/a.json",
+   "Picked/Guarded/elements/character/b.json",
+   "Picked/Guarded/elements/character/bad.json",
+   "Picked/Guarded/elements/character/dup.json",
+   "Picked/Guarded/elements/character/emptyid.json",
+   "Picked/Guarded/elements/character/latin1.json",
+   "Picked/Guarded/elements/character/upper.json",
+   "Picked/Guarded/elements/event/arr.json",
+   "Picked/Guarded/elements/location/l.json",
+   "Picked/Guarded/elements/location/typed.json",
+   "Picked/Guarded/elements/zone/z2.json",
+   "Picked/Guarded/world.json"
+  ],
+  "name": "Guarded",
+  "description": "every shape",
+  "time": {
+   "unit": "Year",
+   "now": 40
+  },
+  "unreadable": 5,
+  "elements": 6,
+  "nodes": 6,
+  "edges": 2,
+  "structure": "f6aadb4f777230fa5fbd4cefa3409598e776ec28ac7ee1f347f915d6ba7f89d1",
+  "bodies": "703c6ad2b51d2b2d9c2718f80c8298b1aaa7064745b029758de9af4bd1c9161b"
+ }
+}
