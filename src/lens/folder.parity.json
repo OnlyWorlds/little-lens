@@ -482,6 +482,7 @@
    "Picked/Guarded/elements/character/bad.json",
    "Picked/Guarded/elements/character/dup.json",
    "Picked/Guarded/elements/character/emptyid.json",
+   "Picked/Guarded/elements/character/hex.json",
    "Picked/Guarded/elements/character/latin1.json",
    "Picked/Guarded/elements/character/upper.json",
    "Picked/Guarded/elements/event/arr.json",
@@ -496,11 +497,11 @@
    "unit": "Year",
    "now": 40
   },
-  "unreadable": 5,
-  "elements": 6,
-  "nodes": 6,
+  "unreadable": 4,
+  "elements": 8,
+  "nodes": 8,
   "edges": 2,
-  "structure": "f6aadb4f777230fa5fbd4cefa3409598e776ec28ac7ee1f347f915d6ba7f89d1",
-  "bodies": "703c6ad2b51d2b2d9c2718f80c8298b1aaa7064745b029758de9af4bd1c9161b"
+  "structure": "1eb38e56bb550e52e23e35d8b6a161c6a2d2dc4f0f56f07a4155a9e8fc7419b8",
+  "bodies": "ce97a16cf938798b55c086e48012e0709044be7548f8fa1b71ba607725fb9151"
  }
 }
