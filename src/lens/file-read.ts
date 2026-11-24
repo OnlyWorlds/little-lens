@@ -35,6 +35,8 @@ export const MORE_THAN_ONE = 'That holds more than one world. Open one world at 
 export const NOT_OPENABLE = 'That file is not a world Little Lens can open.';
 export const TOO_BIG = 'That world is too big for Little Lens to open in a browser.';
 
+const enc = new TextEncoder();
+
 /** A world file larger than this is refused before it is inflated. */
 export const MAX_FILE_BYTES = 512 * 1024 ** 2;
 
@@ -56,7 +58,11 @@ export async function readWorldFileBytes(bytes: Uint8Array): Promise<FileWorld> 
     }
     throw e;
   }
-  return readEntries(read.files);
+  // The world as the file reader read it: it decodes world.json leniently (a name in Latin-1
+  // opens, its odd byte shown as a replacement mark, as it always has here) and drops `api`; the
+  // folder source decodes strictly and would take such a file for no world.
+  const world = enc.encode(JSON.stringify(read.world));
+  return readEntries(read.files.map((f) => (f.path === 'world.json' ? { path: f.path, data: world } : f)));
 }
 
 /** A picked folder's files, each with its path from the picked folder (`webkitRelativePath`). */

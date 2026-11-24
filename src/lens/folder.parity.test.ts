@@ -365,12 +365,13 @@ describe('parity of the folder read', () => {
       for (const f of files) if (f.path.startsWith(root)) parts.push({ path: f.path.slice(root.length), data: await f.bytes() });
       // The writer packs a folder as a world file should (it leaves out who wrote each element), so
       // the folder compared is the one the file holds, unpacked whole.
-      const zip = writeWorldFile(parts, 'parity');
+      let zip = writeWorldFile(parts, 'parity');
       if (k === 'guarded shapes') {
         // The one difference left, the SDK's: its world file reader takes the `.atlas/world.json`
         // inside this world for a second world, where its folder reader never reads a dot folder.
         await expect(readWorldFileBytes(zip)).rejects.toThrow(MORE_THAN_ONE);
-        continue;
+        // Without that one file the rest of the folder is compared like every other.
+        zip = writeWorldFile(parts.filter((p) => p.path !== '.atlas/world.json'), 'parity');
       }
       const held = readWorldFile(zip).files.map((f) => ({ path: `W/${f.path}`, bytes: async () => f.data }));
       expect(await readWorldFileBytes(zip), k).toEqual(await readWorldFolder(held));

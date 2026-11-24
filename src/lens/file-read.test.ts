@@ -58,6 +58,13 @@ describe('the file read', () => {
     expect(buildGraph(w.elements).leftOut.room).toBe(1);
   });
 
+  it('opens a world file whose world.json is not UTF-8, as the file reader always has: the odd byte a replacement mark', async () => {
+    const latin1 = new Uint8Array([...enc.encode(`{"id":"${W}","name":"caf`), 0xe9, ...enc.encode('"}')]);
+    const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: latin1 }, file('elements/character/a.json', { id: id(1), name: 'A' })], 'w'));
+    expect(w.name).toBe('caf\uFFFD');
+    expect(w.elements.map((e) => e.id)).toEqual([id(1)]);
+  });
+
   it('says the world.json cannot be read when it does not parse, is not UTF-8 or has no id', async () => {
     const latin1 = new Uint8Array([...enc.encode(`{"id":"${W}","name":"caf`), 0xe9, ...enc.encode('"}')]);
     for (const body of [enc.encode('{not json'), enc.encode(JSON.stringify({ name: 'no id' })), enc.encode(JSON.stringify({ id: '' })), enc.encode('[]'), latin1]) {
