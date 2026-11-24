@@ -57,7 +57,10 @@ export async function readWorldFileBytes(bytes: Uint8Array): Promise<FileWorld> 
       if (e.reason === 'too_big' || e.reason === 'too_many') throw new Error(TOO_BIG);
       throw new Error(NOT_OPENABLE);
     }
-    throw e;
+    // Anything else the reader throws on a file (the engine's own limits included) is still a file
+    // this reader cannot open, said as one: the person never reads the engine's text.
+    console.warn('[little-lens] the world file reader threw', e);
+    throw new Error(NOT_OPENABLE);
   }
   return readEntries(read.files.map((f) => (f.path === 'world.json' ? { path: f.path, data: worldBytesOf(f.data, read.world) } : f)));
 }
