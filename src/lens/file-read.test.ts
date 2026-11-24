@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { writeWorldFile } from '@onlyworlds/sdk';
-import { MORE_THAN_ONE, NOT_A_WORLD, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
+import { MORE_THAN_ONE, NOT_A_WORLD, NOT_OPENABLE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
 
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -63,6 +63,14 @@ describe('the file read', () => {
     const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: latin1 }, file('elements/character/a.json', { id: id(1), name: 'A' })], 'w'));
     expect(w.name).toBe('caf\uFFFD');
     expect(w.elements.map((e) => e.id)).toEqual([id(1)]);
+  });
+
+  it('opens a world file whose world.json is deeply nested, and says a sentence when it cannot be written back out', async () => {
+    const deep = (tail: Uint8Array) => new Uint8Array([...enc.encode(`{"id":"${W}","x":${'['.repeat(20000)}${']'.repeat(20000)},"name":"caf`), ...tail, ...enc.encode('"}')]);
+    const a = file('elements/character/a.json', { id: id(1), name: 'A' });
+    const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(enc.encode('e')) }, a], 'w'));
+    expect(w.name).toBe('cafe');
+    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(new Uint8Array([0xe9])) }, a], 'w'))).rejects.toThrow(NOT_OPENABLE);
   });
 
   it('says the world.json cannot be read when it does not parse, is not UTF-8 or has no id', async () => {
