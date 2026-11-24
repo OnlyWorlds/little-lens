@@ -210,7 +210,7 @@ function waysIn(line: string | null = null): void {
     if (!f) return;
     said.textContent = 'Opening…';
     try {
-      holdFile(readWorldFileBytes(new Uint8Array(await f.arrayBuffer())));
+      holdFile(await readWorldFileBytes(new Uint8Array(await f.arrayBuffer())));
     } catch (e) {
       said.textContent = e instanceof Error ? e.message : 'That file could not be opened.';
     }

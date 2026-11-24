@@ -27,8 +27,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { FIELD_SCHEMA, OwV2Client } from '@onlyworlds/sdk';
 import worlds from '../standard/worlds.json';
 import recorded from './folder.parity.json';
-import { WORLD_UNREADABLE, fromEntries, keptElementType, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
-import { buildGraph, type Element } from './graph';
+import { readWorldFile, writeWorldFile } from '@onlyworlds/sdk';
+import { MORE_THAN_ONE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
+import { buildGraph, isElementType, isGraphType, type Element } from './graph';
+import { timeOfWorldFile } from './time';
 
 const enc = new TextEncoder();
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -131,6 +133,54 @@ function structure(els: Element[]) {
   };
 }
 const bodiesOf = (els: Element[]) => Object.fromEntries([...buildGraph(els).byId.entries()].map(([k, v]) => [k, v]));
+
+// The world file's element reader before the source, kept whole as the read before (S641 moved
+// the world file onto the folder's source too).
+const ELEMENT_PATH = /^elements\/([a-z]+)\/[^/]+\.json$/;
+
+const dec = new TextDecoder();
+const NOT_A_WORLD = 'That is not a world Little Lens can open: it holds no world.json.';
+
+/** The element files the graph reads: a kept type's own folder, no dot-prefixed name. */
+function keptElementType(rel: string): string | null {
+  const m = rel.match(ELEMENT_PATH);
+  if (!m || !isElementType(m[1]) || !isGraphType(m[1])) return null;
+  if (rel.split('/').some((seg) => seg.startsWith('.'))) return null;
+  return m[1];
+}
+
+/** A world file's world and its kept element files as one world: the folder names the type, broken files counted. */
+function fromEntries(world: Record<string, unknown>, entries: Part[]): FileWorld {
+  const id = typeof world.id === 'string' ? world.id : '';
+  if (!id) throw new Error(NOT_A_WORLD);
+  const byId = new Map<string, Element>();
+  let unreadable = 0;
+  // Code-point order, so the same files always give the same winner of a repeated id.
+  const sorted = [...entries].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  for (const f of sorted) {
+    const type = keptElementType(f.path);
+    if (!type) continue;
+    try {
+      const body = JSON.parse(dec.decode(f.data)) as Record<string, unknown>;
+      if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.id !== 'string' || body.id === '' || byId.has(body.id)) {
+        unreadable++;
+        continue;
+      }
+      // The folder names the type, set before any mark is read (the room mark needs it).
+      byId.set(body.id, { ...body, id: body.id, type } as Element);
+    } catch {
+      unreadable++;
+    }
+  }
+  return {
+    id,
+    name: typeof world.name === 'string' && world.name ? world.name : 'Untitled world',
+    description: typeof world.description === 'string' ? world.description : '',
+    elements: [...byId.values()],
+    unreadable,
+    time: timeOfWorldFile(world),
+  };
+}
 
 /** The folder read before the source, as it stood: the kept element files under the world's root, read as a world file's are. */
 async function before(files: PickedFile[]): Promise<FileWorld> {
@@ -306,6 +356,25 @@ describe('parity of the folder read', () => {
     ];
     expect((await before(files)).name).toBe('caf\uFFFD');
     await expect(readWorldFolder(files)).rejects.toThrow(WORLD_UNREADABLE);
+  });
+
+  it('reads a world file of each folder exactly as the folder it holds: one reader for both', async () => {
+    for (const [k, files] of folders()) {
+      const root = worldRootOf(files.map((f) => f.path));
+      const parts: Part[] = [];
+      for (const f of files) if (f.path.startsWith(root)) parts.push({ path: f.path.slice(root.length), data: await f.bytes() });
+      // The writer packs a folder as a world file should (it leaves out who wrote each element), so
+      // the folder compared is the one the file holds, unpacked whole.
+      const zip = writeWorldFile(parts, 'parity');
+      if (k === 'guarded shapes') {
+        // The one difference left, the SDK's: its world file reader takes the `.atlas/world.json`
+        // inside this world for a second world, where its folder reader never reads a dot folder.
+        await expect(readWorldFileBytes(zip)).rejects.toThrow(MORE_THAN_ONE);
+        continue;
+      }
+      const held = readWorldFile(zip).files.map((f) => ({ path: `W/${f.path}`, bytes: async () => f.data }));
+      expect(await readWorldFileBytes(zip), k).toEqual(await readWorldFolder(held));
+    }
   });
 
   it('reads a folder through OwV2Client', async () => {

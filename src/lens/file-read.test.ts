@@ -18,13 +18,14 @@ const parts = [
 ];
 
 describe('the file read', () => {
-  it('reads a world file: the folder names the type, broken files counted, map space skipped', () => {
-    const w = readWorldFileBytes(writeWorldFile(parts, 'test-world'));
+  it('reads a world file as the SDK reads a folder: the body names the type, broken files counted', async () => {
+    const w = await readWorldFileBytes(writeWorldFile(parts, 'test-world'));
     expect(w.id).toBe(W);
     expect(w.name).toBe('Test world');
+    // a.json says it is a location: the SDK's folder reader takes the body's type over its folder's.
     expect(w.elements.map((e) => [e.id, e.type])).toEqual([
-      [id(1), 'character'],
       [id(2), 'character'],
+      [id(1), 'location'],
     ]);
     expect(w.unreadable).toBe(2);
   });
@@ -51,7 +52,7 @@ describe('the file read', () => {
 
   it('marks a room element whose file carries no type, since the folder names it', async () => {
     const { buildGraph } = await import('./graph');
-    const w = readWorldFileBytes(
+    const w = await readWorldFileBytes(
       writeWorldFile([file('world.json', { id: W }), file('elements/narrative/r.json', { id: id(5), supertype: 'Message', x_room_of: id(9) })], 'w'),
     );
     expect(buildGraph(w.elements).leftOut.room).toBe(1);

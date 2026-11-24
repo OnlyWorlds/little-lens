@@ -1,21 +1,20 @@
 /**
  * A world from a file or a folder, read in the browser and held in memory: nothing read from it
- * is sent anywhere or stored. A world file (`.owworld`, a zip) goes through the SDK's
- * `readWorldFile`, its element files at `elements/<type>/<name>.json` and the folder naming the
- * type; map space is not read, since the graph leaves it out.
+ * is sent anywhere or stored. A world file (`.owworld`, a zip) is unpacked by the SDK's
+ * `readWorldFile`, which finds its world; a folder's world is found by the same rule (OW-2, OW-5):
+ * `world.json` at the top or in one top-level folder, a second one only under `records/`.
  *
- * A folder is found by the same rule (OW-2, OW-5): `world.json` at the top or in one top-level
- * folder, a second one only under `records/`. Then it is read as an online world is, through the
- * SDK's client, its source the SDK's folder source: the folder format as the SDK reads it, every
- * element as keel would serve it. From the folder only `world.json`, `elements/` and `spatial/` are
- * opened, and of those only `.json` files, never a dot folder or file, nor `.env`; the world's `api`
- * block is dropped by the source.
+ * Then both are read the same way, as an online world is: through the SDK's client, its source the
+ * SDK's folder source, so the folder format is read as the SDK reads it and every element as keel
+ * would serve it, and a world file and the same folder read alike. Only `world.json`, `elements/`
+ * and `spatial/` are opened, and of those only `.json` files, never a dot folder or file, nor
+ * `.env`; the world's `api` block is dropped.
  */
 
 import { OwWorldFileError, readWorldFile } from '@onlyworlds/sdk';
 import type { OwFolderReadReport } from '@onlyworlds/sdk/folder';
-import { isElementType, isGraphType, type Element } from './graph';
-import { timeOfWorldFile, type WorldTime } from './time';
+import { isGraphType, type Element } from './graph';
+import type { WorldTime } from './time';
 import { folderSource, readWorldElements, readWorldMeta } from './world-read';
 
 export interface FileWorld {
@@ -39,60 +38,15 @@ export const TOO_BIG = 'That world is too big for Little Lens to open in a brows
 /** A world file larger than this is refused before it is inflated. */
 export const MAX_FILE_BYTES = 512 * 1024 ** 2;
 
-const ELEMENT_PATH = /^elements\/([a-z]+)\/[^/]+\.json$/;
-
-const dec = new TextDecoder();
-
-/** The element files the graph reads: a kept type's own folder, no dot-prefixed name. */
-export function keptElementType(rel: string): string | null {
-  const m = rel.match(ELEMENT_PATH);
-  if (!m || !isElementType(m[1]) || !isGraphType(m[1])) return null;
-  if (rel.split('/').some((seg) => seg.startsWith('.'))) return null;
-  return m[1];
-}
-
 interface Entry {
   path: string;
   data: Uint8Array;
 }
 
-/** A world file's world and its kept element files as one world: the folder names the type, broken files counted. */
-export function fromEntries(world: Record<string, unknown>, entries: Entry[]): FileWorld {
-  const id = typeof world.id === 'string' ? world.id : '';
-  if (!id) throw new Error(NOT_A_WORLD);
-  const byId = new Map<string, Element>();
-  let unreadable = 0;
-  // Code-point order, so the same files always give the same winner of a repeated id.
-  const sorted = [...entries].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  for (const f of sorted) {
-    const type = keptElementType(f.path);
-    if (!type) continue;
-    try {
-      const body = JSON.parse(dec.decode(f.data)) as Record<string, unknown>;
-      if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.id !== 'string' || body.id === '' || byId.has(body.id)) {
-        unreadable++;
-        continue;
-      }
-      // The folder names the type, set before any mark is read (the room mark needs it).
-      byId.set(body.id, { ...body, id: body.id, type } as Element);
-    } catch {
-      unreadable++;
-    }
-  }
-  return {
-    id,
-    name: typeof world.name === 'string' && world.name ? world.name : 'Untitled world',
-    description: typeof world.description === 'string' ? world.description : '',
-    elements: [...byId.values()],
-    unreadable,
-    time: timeOfWorldFile(world),
-  };
-}
-
-export function readWorldFileBytes(bytes: Uint8Array): FileWorld {
+export async function readWorldFileBytes(bytes: Uint8Array): Promise<FileWorld> {
   let read: ReturnType<typeof readWorldFile>;
   try {
-    read = readWorldFile(bytes, { maxBytes: MAX_FILE_BYTES, skip: (p) => keptElementType(p) === null });
+    read = readWorldFile(bytes, { maxBytes: MAX_FILE_BYTES, skip: (p) => !opensInFolder(p) });
   } catch (e) {
     if (e instanceof OwWorldFileError) {
       if (e.reason === 'not_a_world') throw new Error(NOT_A_WORLD);
@@ -102,7 +56,7 @@ export function readWorldFileBytes(bytes: Uint8Array): FileWorld {
     }
     throw e;
   }
-  return fromEntries(read.world as Record<string, unknown>, read.files);
+  return readEntries(read.files);
 }
 
 /** A picked folder's files, each with its path from the picked folder (`webkitRelativePath`). */
@@ -156,6 +110,14 @@ export async function readWorldFolder(files: PickedFile[]): Promise<FileWorld> {
     const rel = f.path.slice(root.length);
     if (opensInFolder(rel)) entries.push({ path: rel, data: await f.bytes() });
   }
+  return readEntries(entries);
+}
+
+/**
+ * A world's opened files, a folder's or a world file's, read as one world through the SDK's
+ * folder source (`world.json` among them, relative to the world's folder).
+ */
+async function readEntries(entries: Entry[]): Promise<FileWorld> {
   const seen: { report: OwFolderReadReport | null } = { report: null };
   const source = folderSource(entries, (r) => (seen.report = r));
   let meta;
