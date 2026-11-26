@@ -16,9 +16,10 @@
  *   C  the body's type over its folder's
  *   D  the legacy `spatial/` layout read (a Zone is a node)
  *   E  a file that is not UTF-8 is not JSON; a world.json so is one that cannot be read
- *   F  ids matched as UUIDs: one in capitals repeats the other
+ *   F  ids as written (the address profile, SDK 4.197.0): one in capitals is an element of its
+ *      own, as the read before had it, and is held in another place among the rest
  *   G  the world's time as the world body serves it (`time_current` first, as given)
- *   U  the unreadable count holds only the graph's own types; E and F add to it
+ *   U  the unreadable count holds only the graph's own types; E adds to it
  * An added field holding its kind's empty value is rule A and listed by no one; any other
  * difference, an added field of another value or of no schema kind included, is red.
  */
@@ -28,7 +29,7 @@ import { FIELD_SCHEMA, OwV2Client } from '@onlyworlds/sdk';
 import worlds from '../standard/worlds.json';
 import recorded from './folder.parity.json';
 import { readWorldFile, writeWorldFile } from '@onlyworlds/sdk';
-import { MORE_THAN_ONE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
+import { WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf, type FileWorld, type PickedFile } from './file-read';
 import { buildGraph, isElementType, isGraphType, type Element } from './graph';
 import { timeOfWorldFile } from './time';
 
@@ -251,7 +252,6 @@ function differences(a: FileWorld, b: FileWorld): string[] {
 }
 
 /** The differences each folder is expected to show, each with the rule that makes it. */
-const HEX = 'ABCDEF00-0000-7000-8000-0000000000CC';
 const EXPECTED: Record<string, [string, string][]> = {
   'standard 019a7f00-0000-7000-8000-00000000f101 Grey Harbour': [['B', 'body 019a7f00-0000-7000-8000-000000000203 ~ constructs']],
   'file read test folder': [
@@ -266,16 +266,15 @@ const EXPECTED: Record<string, [string, string][]> = {
   'guarded shapes': [
     ['E', `nodes - character:${id(5)}`],
     ['C', `nodes - location:${id(11)}`],
-    ['F', `nodes - character:${HEX}`],
     ['C', `nodes + character:${id(11)}`],
     ['D', `nodes + zone:${id(12)}`],
     ['E', `held - character:${id(5)}`],
-    ['F', `held - character:${HEX}`],
     ['C', `held - location:${id(11)}`],
     ['C', `held + character:${id(11)}`],
     ['D', `held + zone:${id(12)}`],
+    ['F', 'held order'],
     ['G', 'time {"unit":"Year","now":40} -> {"unit":"Year","now":null}'],
-    ['U', 'unreadable 4 -> 6'],
+    ['U', 'unreadable 4 -> 5'],
     ['A', `body ${id(1)} - notes_extra`],
     ['A', `body ${id(13)} - map`],
     ['B', `body ${id(1)} ~ friends`],
@@ -365,14 +364,9 @@ describe('parity of the folder read', () => {
       for (const f of files) if (f.path.startsWith(root)) parts.push({ path: f.path.slice(root.length), data: await f.bytes() });
       // The writer packs a folder as a world file should (it leaves out who wrote each element), so
       // the folder compared is the one the file holds, unpacked whole.
-      let zip = writeWorldFile(parts, 'parity');
-      if (k === 'guarded shapes') {
-        // The one difference left, the SDK's: its world file reader takes the `.atlas/world.json`
-        // inside this world for a second world, where its folder reader never reads a dot folder.
-        await expect(readWorldFileBytes(zip)).rejects.toThrow(MORE_THAN_ONE);
-        // Without that one file the rest of the folder is compared like every other.
-        zip = writeWorldFile(parts.filter((p) => p.path !== '.atlas/world.json'), 'parity');
-      }
+      // A tool's own `.atlas/world.json` inside the guarded world is no second world to the world
+      // file reader either (SDK 4.201.1): every folder, that one included, is compared whole.
+      const zip = writeWorldFile(parts, 'parity');
       const held = readWorldFile(zip).files.map((f) => ({ path: `W/${f.path}`, bytes: async () => f.data }));
       expect(await readWorldFileBytes(zip), k).toEqual(await readWorldFolder(held));
     }

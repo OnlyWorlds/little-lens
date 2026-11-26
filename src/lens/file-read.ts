@@ -31,6 +31,8 @@ export interface FileWorld {
 export const NOT_A_WORLD = 'That is not a world Little Lens can open: it holds no world.json.';
 /** A folder's world.json is there, and the folder format's reader cannot read it (not JSON, not UTF-8, no id). */
 export const WORLD_UNREADABLE = "That folder's world.json cannot be read.";
+/** The same for a world file: its world.json opened, and the folder format's reader cannot read it (nested past the format's bound, 200 levels). */
+export const FILE_WORLD_UNREADABLE = "That world file's world.json cannot be read.";
 export const MORE_THAN_ONE = 'That holds more than one world. Open one world at a time.';
 export const NOT_OPENABLE = 'That file is not a world Little Lens can open.';
 export const TOO_BIG = 'That world is too big for Little Lens to open in a browser.';
@@ -62,7 +64,7 @@ export async function readWorldFileBytes(bytes: Uint8Array): Promise<FileWorld> 
     console.warn('[little-lens] the world file reader threw', e);
     throw new Error(NOT_OPENABLE);
   }
-  return readEntries(read.files.map((f) => (f.path === 'world.json' ? { path: f.path, data: worldBytesOf(f.data, read.world) } : f)));
+  return readEntries(read.files.map((f) => (f.path === 'world.json' ? { path: f.path, data: worldBytesOf(f.data, read.world) } : f)), FILE_WORLD_UNREADABLE);
 }
 
 /**
@@ -143,7 +145,7 @@ export async function readWorldFolder(files: PickedFile[]): Promise<FileWorld> {
  * A world's opened files, a folder's or a world file's, read as one world through the SDK's
  * folder source (`world.json` among them, relative to the world's folder).
  */
-async function readEntries(entries: Entry[]): Promise<FileWorld> {
+async function readEntries(entries: Entry[], worldRefusal = WORLD_UNREADABLE): Promise<FileWorld> {
   const seen: { report: OwFolderReadReport | null } = { report: null };
   const source = folderSource(entries, (r) => (seen.report = r));
   let meta;
@@ -151,8 +153,8 @@ async function readEntries(entries: Entry[]): Promise<FileWorld> {
     meta = await readWorldMeta(null, source);
   } catch (e) {
     // The world.json is there (the root was found by it), and the source cannot read it: not JSON,
-    // not UTF-8, or no id. It serves nothing from it.
-    if (seen.report && !seen.report.world) throw new Error(WORLD_UNREADABLE);
+    // not UTF-8, no id, or nested past the format's bound (200 levels). It serves nothing from it.
+    if (seen.report && !seen.report.world) throw new Error(worldRefusal);
     throw e;
   }
   const elements = await readWorldElements(meta, source);

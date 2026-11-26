@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DATE_FIELD, formatStep, readCalendarValue } from '@onlyworlds/sdk';
 import { buildGraph, type Element } from './graph';
-import { binColumns, datedUpTo, dateWordOf, parseAt, readTime, stepToDate, stepWords, timeOfWorldBody, timeOfWorldFile } from './time';
+import { CALENDAR_BOUNDS, binColumns, datedUpTo, dateWordOf, parseAt, readTime, stepToDate, stepWords, timeOfWorldBody, timeOfWorldFile } from './time';
 import { parseRoute, worldHash } from './route';
 
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -80,6 +80,25 @@ describe('T3, the calendar', () => {
     expect(stepWords(4, null, 'year')).toBe('year 4');
     expect(stepWords(4, null, null)).toBe('4');
   });
+
+  // A world is anyone's: a calendar past the bound words no dates (the SDK's label cost grows with each count).
+  const months = (n: number) => ({ names: Array.from({ length: n }, (_, i) => `M${i}`), lengths: Array.from({ length: n }, () => 3) });
+  const base = () => ({ version: 2, grain: 'day', bundles: { months: months(2) }, format: '{day} {month} {year}' });
+  const shapes: Array<[keyof typeof CALENDAR_BOUNDS, (n: number) => object]> = [
+    ['eras', (n) => ({ ...base(), eras: Array.from({ length: n }, (_, i) => ({ name: `E${i}`, start: i * 10 })) })],
+    ['months', (n) => ({ ...base(), bundles: { months: months(n) } })],
+    ['intercalary', (n) => ({ ...base(), intercalary: Array.from({ length: n }, (_, i) => ({ name: `I${i}`, after_month: 1, every_years: 1 })) })],
+    ['except', (n) => ({ ...base(), intercalary: [{ name: 'Leap', after_month: 1, every_years: 2, except: Array.from({ length: n }, (_, k) => 2 ** (k + 2)) }] })],
+    ['weekdays', (n) => ({ ...base(), bundles: { months: months(2), week: { length: n, names: Array.from({ length: n }, (_, i) => `W${i}`) } } })],
+    ['template', (n) => ({ ...base(), format: '{day}' + ' '.repeat(n - 5) })],
+    ['name', (n) => ({ ...base(), bundles: { months: { names: ['x'.repeat(n), 'B'], lengths: [3, 3] } } })],
+  ];
+  for (const [key, make] of shapes) {
+    it(`${key}: ${CALENDAR_BOUNDS[key]} words dates, one more reads the numbers`, () => {
+      expect(readTime([calendar(1, make(CALENDAR_BOUNDS[key]))]).calendar?.id).toBe(id(1));
+      expect(readTime([calendar(1, make(CALENDAR_BOUNDS[key] + 1))]).calendar).toBeNull();
+    });
+  }
 });
 
 describe('T4, the world\'s now', () => {

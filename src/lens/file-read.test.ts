@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { writeWorldFile } from '@onlyworlds/sdk';
-import { MORE_THAN_ONE, NOT_A_WORLD, NOT_OPENABLE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
+import { FILE_WORLD_UNREADABLE, MORE_THAN_ONE, NOT_A_WORLD, NOT_OPENABLE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
 
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -65,12 +65,16 @@ describe('the file read', () => {
     expect(w.elements.map((e) => e.id)).toEqual([id(1)]);
   });
 
-  it('opens a world file whose world.json is deeply nested, and says a sentence when it cannot be written back out', async () => {
-    const deep = (tail: Uint8Array) => new Uint8Array([...enc.encode(`{"id":"${W}","x":${'['.repeat(20000)}${']'.repeat(20000)},"name":"caf`), ...tail, ...enc.encode('"}')]);
+  it('opens a world file whose world.json nests within the format\'s bound, and refuses one past it in a sentence', async () => {
+    const deep = (n: number, tail: Uint8Array) => new Uint8Array([...enc.encode(`{"id":"${W}","x":${'['.repeat(n)}${']'.repeat(n)},"name":"caf`), ...tail, ...enc.encode('"}')]);
     const a = file('elements/character/a.json', { id: id(1), name: 'A' });
-    const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(enc.encode('e')) }, a], 'w'));
+    // world.json itself is one level: a value 199 deep inside it is 200, the format's bound.
+    const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(199, enc.encode('e')) }, a], 'w'));
     expect(w.name).toBe('cafe');
-    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(new Uint8Array([0xe9])) }, a], 'w'))).rejects.toThrow(NOT_OPENABLE);
+    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(200, enc.encode('e')) }, a], 'w'))).rejects.toThrow(FILE_WORLD_UNREADABLE);
+    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(20000, enc.encode('e')) }, a], 'w'))).rejects.toThrow(FILE_WORLD_UNREADABLE);
+    // Past the bound and not UTF-8: the world cannot be written back out, said in this reader's own sentence.
+    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(20000, new Uint8Array([0xe9])) }, a], 'w'))).rejects.toThrow(NOT_OPENABLE);
   });
 
   it('says the world.json cannot be read when it does not parse, is not UTF-8 or has no id', async () => {
