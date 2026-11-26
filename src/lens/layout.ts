@@ -1,12 +1,12 @@
 /**
  * The world web's layout: a small force layout run to rest before the first paint, each kind
- * pulled toward its family's quarter, starting from positions hashed from each id, so the same set
+ * pulled toward its colour group's quarter, starting from positions hashed from each id, so the same set
  * always lands the same way. Elements with no links sit along the frame's edge, in id order.
  * Positions are the drawing's own, never the world's (the graph sheet's point 10).
  */
 
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationNodeDatum } from 'd3-force';
-import { familyOf, FAMILY_ORDER, type ElementFamily } from '@onlyworlds/sdk';
+import { groupOf, GROUP_ORDER, type ElementGroup } from '@onlyworlds/sdk';
 import { isKnownOfStub, type WorldGraph } from './graph';
 
 export interface Placed {
@@ -27,12 +27,12 @@ export function unitHash(s: string, salt = 0): number {
   return (h >>> 0) / 0x100000000;
 }
 
-/** Each family's quarter, as a point in the unit square. */
-const QUARTER: Record<ElementFamily, [number, number]> = Object.fromEntries(
-  FAMILY_ORDER.map((f, i) => [f, [i % 2 === 0 ? 0.3 : 0.7, i < 2 ? 0.32 : 0.68]]),
-) as Record<ElementFamily, [number, number]>;
+/** Each colour group's quarter, as a point in the unit square. */
+const QUARTER: Record<ElementGroup, [number, number]> = Object.fromEntries(
+  GROUP_ORDER.map((f, i) => [f, [i % 2 === 0 ? 0.3 : 0.7, i < 2 ? 0.32 : 0.68]]),
+) as Record<ElementGroup, [number, number]>;
 
-type Node = SimulationNodeDatum & { id: string; fam: ElementFamily };
+type Node = SimulationNodeDatum & { id: string; fam: ElementGroup };
 
 /** d3's own linear congruential source, seeded the same each run. */
 function lcg(seed = 1): () => number {
@@ -52,7 +52,7 @@ export function layOut(g: WorldGraph, degree: Map<string, number>, width: number
 
   const nodes: Node[] = linked.map((n) => ({
     id: n.id,
-    fam: familyOf(n.type),
+    fam: groupOf(n.type),
     x: unitHash(n.id, 1) * w,
     y: unitHash(n.id, 2) * h,
   }));

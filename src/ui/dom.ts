@@ -1,6 +1,6 @@
 /** A small element builder. Text goes in as text, never as markup: every name and description is a stranger's. */
 
-import { ELEMENT_ICONS, familyOf, getElementLabel, type ElementType, type ElementFamily } from '@onlyworlds/sdk';
+import { ELEMENT_ICONS, groupOf, getElementLabel, type ElementType, type ElementGroup } from '@onlyworlds/sdk';
 import { TYPE_ICON_PATHS } from './type-icons';
 import owmark from './owmark.svg?raw';
 
@@ -51,16 +51,16 @@ export function owMark(size = 28, label = 'OnlyWorlds'): HTMLElement {
   return span;
 }
 
-/** The kind's colour on the dark ground: the old tool's palette, one per family. */
-export const FAMILY_INK: Record<ElementFamily, string> = {
-  agents: '#7fa8ec',
-  world: '#5fb760',
-  abstract: '#e07aa0',
-  temporal: '#d6a548',
+/** The kind's colour on the dark ground: the old tool's palette, one per colour group. */
+export const GROUP_INK: Record<ElementGroup, string> = {
+  blue: '#7fa8ec',
+  green: '#5fb760',
+  pink: '#e07aa0',
+  amber: '#d6a548',
 };
 
 export function inkOf(type: ElementType): string {
-  return FAMILY_INK[familyOf(type)];
+  return GROUP_INK[groupOf(type)];
 }
 
 /** "Characters" → "characters"; "Phenomena" stays plural. */
