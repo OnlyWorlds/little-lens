@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DATE_FIELD, formatStep, readCalendarValue } from '@onlyworlds/sdk';
 import { buildGraph, type Element } from './graph';
-import { CALENDAR_BOUNDS, binColumns, datedUpTo, dateWordOf, parseAt, readTime, stepToDate, stepWords, timeOfWorldBody, timeOfWorldFile } from './time';
+import { binColumns, datedUpTo, dateWordOf, parseAt, readTime, stepToDate, stepWords, timeOfWorldBody, timeOfWorldFile } from './time';
 import { parseRoute, worldHash } from './route';
 
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -101,7 +101,9 @@ describe('T3, the calendar', () => {
     expect(timeOfWorldBody(Object.create({ x_calendar: 'c' })).calendarNamed).toBeUndefined();
   });
 
-  // A world is anyone's: a calendar past the bound words no dates (the SDK's label cost grows with each count).
+  // The calendar profile's size bounds (standard serial 149): a calendar past one is no calendar in
+  // every reader, so its dates read as numbers.
+  const CALENDAR_BOUNDS = { eras: 256, months: 64, intercalary: 16, except: 8, weekdays: 64, template: 256, name: 256 } as const;
   const months = (n: number) => ({ names: Array.from({ length: n }, (_, i) => `M${i}`), lengths: Array.from({ length: n }, () => 3) });
   const base = () => ({ version: 2, grain: 'day', bundles: { months: months(2) }, format: '{day} {month} {year}' });
   const shapes: Array<[keyof typeof CALENDAR_BOUNDS, (n: number) => object]> = [

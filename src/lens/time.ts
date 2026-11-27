@@ -99,46 +99,10 @@ export function readTime(time: Pick<WorldTime, 'calendarNamed'>, nodes: readonly
   dated.sort((a, b) => a.date - b.date || byString(folded.get(a)!, folded.get(b)!) || byString(a.el.id, b.el.id));
   // The calendar the World names in x_calendar speaks, or with none named the only one (the
   // calendar profile). A calendar on a node the web leaves out is never read: only kept nodes are
-  // offered, so a named calendar the web leaves out is the numbers. One past the bound words no
-  // dates: the numbers, as for a world with no calendar.
-  const found = speakingCalendar(time.calendarNamed === undefined ? {} : { [WORLD_CALENDAR_KEY]: time.calendarNamed }, nodes);
-  const calendar = found && !calendarTooCostly(found.config) ? found : null;
+  // offered, so a named calendar the web leaves out is the numbers. One past the calendar
+  // profile's size bounds is no calendar (the SDK's reader refuses it in every tool): the numbers.
+  const calendar = speakingCalendar(time.calendarNamed === undefined ? {} : { [WORLD_CALENDAR_KEY]: time.calendarNamed }, nodes);
   return { dated, whole, undatedOfDatedKind, stubs, calendar };
-}
-
-/**
- * How much a calendar may hold before Little Lens stops wording dates by it. A world is anyone's,
- * and the SDK's `formatStep` costs more with each era, month, extra day and template character
- * (on SDK 4.203.1, 15,000 eras cost 40 ms a label, 150,000 cost seconds); the time view words a
- * date per row and per tick. At these counts, all at their line at once, a label costs under 2 ms.
- * Atlas and Lantern keep the same counts until one bound for every tool lives in the standard.
- */
-export const CALENDAR_BOUNDS = Object.freeze({
-  eras: 256,
-  months: 256,
-  intercalary: 64,
-  except: 8,
-  weekdays: 256,
-  template: 1000,
-  name: 1000,
-});
-
-/** Does `cfg` hold more than {@link CALENDAR_BOUNDS}? Reads only what the SDK's calendar reader let through. */
-export function calendarTooCostly(cfg: WorldCalendar['config']): boolean {
-  const B = CALENDAR_BOUNDS;
-  const eras = cfg.eras ?? [];
-  const months = cfg.bundles?.months?.names ?? [];
-  const weekdays = cfg.bundles?.week?.names ?? [];
-  const extra = cfg.intercalary ?? [];
-  const names = [cfg.step_name, ...eras.flatMap((e) => [e.name, e.abbrev]), ...months, ...weekdays, ...extra.map((e) => e.name)];
-  return eras.length > B.eras
-    || months.length > B.months
-    || extra.length > B.intercalary
-    || extra.some((e) => (e.except?.length ?? 0) > B.except)
-    || weekdays.length > B.weekdays
-    || (cfg.format?.length ?? 0) > B.template
-    || (cfg.format_intercalary?.length ?? 0) > B.template
-    || names.some((n) => typeof n === 'string' && n.length > B.name);
 }
 
 /** A step in the world's words: the calendar's, else the unit as written and the number, else the number. */

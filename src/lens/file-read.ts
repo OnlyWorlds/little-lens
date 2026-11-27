@@ -35,6 +35,8 @@ export const WORLD_UNREADABLE = "That folder's world.json cannot be read.";
 export const FILE_WORLD_UNREADABLE = "That world file's world.json cannot be read.";
 export const MORE_THAN_ONE = 'That holds more than one world. Open one world at a time.';
 export const NOT_OPENABLE = 'That file is not a world Little Lens can open.';
+/** A file holding world.json, elements/ or spatial/ only in other capitals (the SDK's `name_case`). */
+export const NAME_CASE = 'That file is not a world Little Lens can open: it holds world.json, elements/ or spatial/ in other capitals, where the folder format names them in small letters.';
 export const TOO_BIG = 'That world is too big for Little Lens to open in a browser.';
 
 const enc = new TextEncoder();
@@ -54,8 +56,11 @@ export async function readWorldFileBytes(bytes: Uint8Array): Promise<FileWorld> 
     read = readWorldFile(bytes, { maxBytes: MAX_FILE_BYTES, skip: (p) => !opensInFolder(p) });
   } catch (e) {
     if (e instanceof OwWorldFileError) {
-      if (e.reason === 'not_a_world') throw new Error(NOT_A_WORLD);
+      // A world.json that is there and cannot be read (the SDK's worldFault: too deep, not JSON, a
+      // number too large) is said so, never as a file with no world in it.
+      if (e.reason === 'not_a_world') throw new Error(e.worldFault ? FILE_WORLD_UNREADABLE : NOT_A_WORLD);
       if (e.reason === 'more_than_one') throw new Error(MORE_THAN_ONE);
+      if (e.reason === 'name_case') throw new Error(NAME_CASE);
       if (e.reason === 'too_big' || e.reason === 'too_many') throw new Error(TOO_BIG);
       throw new Error(NOT_OPENABLE);
     }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { writeWorldFile } from '@onlyworlds/sdk';
-import { FILE_WORLD_UNREADABLE, MORE_THAN_ONE, NOT_A_WORLD, NOT_OPENABLE, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
+import { zipSync } from 'fflate';
+import { FILE_WORLD_UNREADABLE, MORE_THAN_ONE, NAME_CASE, NOT_A_WORLD, WORLD_UNREADABLE, readWorldFileBytes, readWorldFolder, worldRootOf } from './file-read';
 
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
@@ -71,10 +72,17 @@ describe('the file read', () => {
     // world.json itself is one level: a value 199 deep inside it is 200, the format's bound.
     const w = await readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(199, enc.encode('e')) }, a], 'w'));
     expect(w.name).toBe('cafe');
-    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(200, enc.encode('e')) }, a], 'w'))).rejects.toThrow(FILE_WORLD_UNREADABLE);
-    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(20000, enc.encode('e')) }, a], 'w'))).rejects.toThrow(FILE_WORLD_UNREADABLE);
-    // Past the bound and not UTF-8: the world cannot be written back out, said in this reader's own sentence.
-    await expect(readWorldFileBytes(writeWorldFile([{ path: 'world.json', data: deep(20000, new Uint8Array([0xe9])) }, a], 'w'))).rejects.toThrow(NOT_OPENABLE);
+    // Past the bound, the SDK's writer refuses to make such a file, so it is zipped by hand, as any tool could.
+    const zipped = (world: Uint8Array) => zipSync({ 'w/world.json': world, [`w/${a.path}`]: a.data });
+    await expect(readWorldFileBytes(zipped(deep(200, enc.encode('e'))))).rejects.toThrow(FILE_WORLD_UNREADABLE);
+    await expect(readWorldFileBytes(zipped(deep(20000, enc.encode('e'))))).rejects.toThrow(FILE_WORLD_UNREADABLE);
+    // Past the bound and not UTF-8: still the world.json that cannot be read, never a file with no world.
+    await expect(readWorldFileBytes(zipped(deep(20000, new Uint8Array([0xe9]))))).rejects.toThrow(FILE_WORLD_UNREADABLE);
+  });
+
+  it('says a world file holding elements/ in other capitals is named wrong, never a world with no elements', async () => {
+    const z = zipSync({ 'w/world.json': enc.encode(JSON.stringify({ id: W, name: 'Caps' })), 'w/Elements/character/a.json': enc.encode(JSON.stringify({ id: id(1), name: 'A' })) });
+    await expect(readWorldFileBytes(z)).rejects.toThrow(NAME_CASE);
   });
 
   it('says the world.json cannot be read when it does not parse, is not UTF-8 or has no id', async () => {
