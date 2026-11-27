@@ -12,7 +12,7 @@ import { REQUEST_LIMIT_MS, readWorldElements, readWorldMeta, type Budget, type W
 const W = '0695db52-5433-7332-8000-db7fe10da375';
 const C = '0695db83-afd7-76ee-8000-00f4295f8866';
 const TOKEN = 'ow_a_tok';
-const META: WorldMeta = { id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null }, counts: { character: 1 } };
+const META: WorldMeta = { id: W, name: 'M', description: '', imageUrl: '', time: { unit: null, now: null, calendarNamed: undefined }, counts: { character: 1 } };
 
 const answer = (status: number, body: unknown = {}, headers: Record<string, string> = {}) =>
   (async () => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers })) as unknown as typeof fetch;

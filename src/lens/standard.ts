@@ -60,6 +60,7 @@ export async function openStandard(id: string): Promise<OpenedStandard | null> {
   const time: WorldTime = {
     unit: typeof world.time_basic_unit === 'string' && world.time_basic_unit.trim() !== '' ? world.time_basic_unit : null,
     now: Number.isInteger(world.now) ? (world.now as number) : null,
+    calendarNamed: (world as unknown as Record<string, unknown>).x_calendar,
   };
   return { world, serial: f.serial, bodies, time, members: Array.isArray(world.members) ? world.members : null };
 }

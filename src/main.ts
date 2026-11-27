@@ -780,7 +780,7 @@ async function openStandardWorld(worldId: string): Promise<void> {
 
 /** The time view: the strip, the moment and the dated list, read from the web's own kept elements. */
 function timePage(l: Loaded, at: number | null): void {
-  const reading = (l.reading ??= readTime(l.graph.nodes));
+  const reading = (l.reading ??= readTime(l.time, l.graph.nodes));
   const switcher = switcherFor(l, 'time');
   const body = h('section', { class: 'time', 'aria-label': 'Time' });
   screen(top(l.name, l.sub), h('main', { class: 'world' }, h('div', { class: 'bar' }, h('h2', { class: 'ttitle' }, 'Time'), switcher), ...l.notes.map((n) => h('p', { class: 'leftout' }, n)), body));
@@ -862,7 +862,7 @@ function draughtPage(l: Loaded, id: string, at: number | null): void {
   const host = h('main', { class: 'draught', 'aria-label': 'Draught' });
   screen(top(l.name, l.sub), h('nav', { class: 'crumbs' }, h('a', { href: worldHash(l.reader, worldId, id) }, `← ${el.name || 'Untitled'}`)), host);
   document.title = `${el.name || 'Untitled'}, its draught · Little Lens`;
-  const reading = (l.reading ??= readTime(l.graph.nodes));
+  const reading = (l.reading ??= readTime(l.time, l.graph.nodes));
   draughtView = {
     key: draughtKey(l.reader, worldId, id),
     handle: mountDraught(host, {

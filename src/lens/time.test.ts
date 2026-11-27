@@ -6,6 +6,8 @@ import { parseRoute, worldHash } from './route';
 
 const id = (n: number) => `00000000-0000-7000-8000-${String(n).padStart(12, '0')}`;
 const el = (n: number, type: string, extra: Record<string, unknown> = {}): Element => ({ id: id(n), type, name: `E${n}`, ...extra }) as Element;
+/** A World that names no calendar in x_calendar. */
+const NAMES_NONE = { calendarNamed: undefined };
 const CAL = { version: 1, grain: 'day', bundles: { year: { steps: 360 } }, eras: [{ name: 'After Founding', abbrev: 'AF', start: 0 }] };
 const calendar = (n: number, cfg: unknown = CAL, extra: Record<string, unknown> = {}) => el(n, 'construct', { supertype: 'calendar', atlas_calendar: cfg, ...extra });
 
@@ -13,28 +15,28 @@ describe('T1, dated by the lens profile table', () => {
   it('dates each of the twelve types by its own field, a whole number only', () => {
     let n = 0;
     for (const [type, field] of Object.entries(DATE_FIELD)) {
-      const r = readTime([el(++n, type, { [field]: 300 })]);
+      const r = readTime(NAMES_NONE, [el(++n, type, { [field]: 300 })]);
       expect(r.dated.map((d) => d.date)).toEqual([300]);
     }
     expect(Object.keys(DATE_FIELD)).toHaveLength(12);
   });
 
   it('leaves a string, a fraction, null and the wrong field undated, and timeless types uncounted', () => {
-    const r = readTime([el(1, 'event', { start_date: '300' }), el(2, 'event', { start_date: 300.5 }), el(3, 'event', { start_date: null }), el(4, 'character', { start_date: 5 }), el(5, 'object', { start_date: 9 }), el(6, 'species')]);
+    const r = readTime(NAMES_NONE, [el(1, 'event', { start_date: '300' }), el(2, 'event', { start_date: 300.5 }), el(3, 'event', { start_date: null }), el(4, 'character', { start_date: 5 }), el(5, 'object', { start_date: 9 }), el(6, 'species')]);
     expect(r.dated).toEqual([]);
     expect(r.undatedOfDatedKind).toBe(4);
     expect(r.whole).toBe(6);
   });
 
   it('fences at the edge with <=, as keel does', () => {
-    const r = readTime([el(1, 'event', { start_date: 10 }), el(2, 'event', { start_date: 20 })]);
+    const r = readTime(NAMES_NONE, [el(1, 'event', { start_date: 10 }), el(2, 'event', { start_date: 20 })]);
     expect(datedUpTo(r.dated, 20)).toBe(2);
     expect(datedUpTo(r.dated, 19)).toBe(1);
     expect(datedUpTo(r.dated, 9)).toBe(0);
   });
 
   it('orders by date, then folded name, then id, and names the field', () => {
-    const r = readTime([el(3, 'event', { start_date: 5, name: 'b' }), el(1, 'event', { start_date: 5, name: 'B' }), el(2, 'character', { birth_date: 1, name: 'a' })]);
+    const r = readTime(NAMES_NONE, [el(3, 'event', { start_date: 5, name: 'b' }), el(1, 'event', { start_date: 5, name: 'B' }), el(2, 'character', { birth_date: 1, name: 'a' })]);
     expect(r.dated.map((d) => d.el.id)).toEqual([id(2), id(1), id(3)]);
     expect(dateWordOf('character')).toBe('born');
     expect(dateWordOf('location')).toBe('founded');
@@ -54,7 +56,7 @@ describe('T2, the web\'s own kept elements', () => {
       el(4, 'character', { known_of: true }),
       el(5, 'zone', { start_date: 4 }),
     ]);
-    const r = readTime(g.nodes);
+    const r = readTime(NAMES_NONE, g.nodes);
     // A Zone is a node of the web since the reader drew it (serial 92), so Time reads its date too.
     expect(r.dated.map((d) => d.date)).toEqual([1, 4]);
     expect(r.stubs).toBe(1);
@@ -66,19 +68,37 @@ describe('T2, the web\'s own kept elements', () => {
 describe('T3, the calendar', () => {
   it('names dates by the one calendar among the kept elements, a JSON string too', () => {
     expect(readCalendarValue(CAL)).not.toBeNull();
-    const one = readTime([calendar(1), el(2, 'event', { start_date: 400 })]);
+    const one = readTime(NAMES_NONE, [calendar(1), el(2, 'event', { start_date: 400 })]);
     expect(one.calendar?.id).toBe(id(1));
     expect(stepWords(400, one.calendar, 'year')).toBe(formatStep(one.calendar!.config, 400));
-    const str = readTime([calendar(1, JSON.stringify(CAL))]);
+    const str = readTime(NAMES_NONE, [calendar(1, JSON.stringify(CAL))]);
     expect(str.calendar?.id).toBe(id(1));
   });
 
   it('reads bare numbers with none, several, or only a hidden calendar', () => {
-    expect(readTime([el(2, 'event', { start_date: 4 })]).calendar).toBeNull();
-    expect(readTime([calendar(1), calendar(3)]).calendar).toBeNull();
-    expect(readTime(buildGraph([calendar(1, CAL, { hidden: true })]).nodes).calendar).toBeNull();
+    expect(readTime(NAMES_NONE, [el(2, 'event', { start_date: 4 })]).calendar).toBeNull();
+    expect(readTime(NAMES_NONE, [calendar(1), calendar(3)]).calendar).toBeNull();
+    expect(readTime(NAMES_NONE, buildGraph([calendar(1, CAL, { hidden: true })]).nodes).calendar).toBeNull();
     expect(stepWords(4, null, 'year')).toBe('year 4');
     expect(stepWords(4, null, null)).toBe('4');
+  });
+
+  it('speaks the calendar the World names in x_calendar, among several; a name that points at none is the numbers', () => {
+    const two = [calendar(1), calendar(3), el(4, 'construct', {})];
+    expect(readTime({ calendarNamed: id(3) }, two).calendar?.id).toBe(id(3));
+    for (const named of [id(9), id(4), '', 42, [id(1)]]) {
+      expect(readTime({ calendarNamed: named }, [calendar(1)]).calendar).toBeNull();
+    }
+    expect(readTime({ calendarNamed: null }, [calendar(1)]).calendar?.id).toBe(id(1));
+    // A named calendar the web leaves out (hidden) is not read: the numbers, never another in its place.
+    expect(readTime({ calendarNamed: id(1) }, buildGraph([calendar(1, CAL, { hidden: true }), calendar(3)]).nodes).calendar).toBeNull();
+  });
+
+  it("reads the World's x_calendar from the world GET and a world file, an own key only", () => {
+    expect(timeOfWorldBody({ x_calendar: 'c' }).calendarNamed).toBe('c');
+    expect(timeOfWorldFile({ x_calendar: null }).calendarNamed).toBeNull();
+    expect(timeOfWorldFile({}).calendarNamed).toBeUndefined();
+    expect(timeOfWorldBody(Object.create({ x_calendar: 'c' })).calendarNamed).toBeUndefined();
   });
 
   // A world is anyone's: a calendar past the bound words no dates (the SDK's label cost grows with each count).
@@ -95,8 +115,8 @@ describe('T3, the calendar', () => {
   ];
   for (const [key, make] of shapes) {
     it(`${key}: ${CALENDAR_BOUNDS[key]} words dates, one more reads the numbers`, () => {
-      expect(readTime([calendar(1, make(CALENDAR_BOUNDS[key]))]).calendar?.id).toBe(id(1));
-      expect(readTime([calendar(1, make(CALENDAR_BOUNDS[key] + 1))]).calendar).toBeNull();
+      expect(readTime(NAMES_NONE, [calendar(1, make(CALENDAR_BOUNDS[key]))]).calendar?.id).toBe(id(1));
+      expect(readTime(NAMES_NONE, [calendar(1, make(CALENDAR_BOUNDS[key] + 1))]).calendar).toBeNull();
     });
   }
 });
@@ -137,7 +157,7 @@ describe('T6, the moment in the address', () => {
 
 describe('the strip\'s arithmetic', () => {
   it('steps to the previous and next distinct date, holding at the ends', () => {
-    const r = readTime([el(1, 'event', { start_date: 10 }), el(2, 'event', { start_date: 10 }), el(3, 'event', { start_date: 30 })]);
+    const r = readTime(NAMES_NONE, [el(1, 'event', { start_date: 10 }), el(2, 'event', { start_date: 10 }), el(3, 'event', { start_date: 30 })]);
     expect(stepToDate(r.dated, 10, 1)).toBe(30);
     expect(stepToDate(r.dated, 30, 1)).toBe(30);
     expect(stepToDate(r.dated, 20, -1)).toBe(10);
@@ -145,11 +165,11 @@ describe('the strip\'s arithmetic', () => {
   });
 
   it('bins into columns, several in one drawn once, one distinct date at the centre', () => {
-    const r = readTime([el(1, 'event', { start_date: 0 }), el(2, 'event', { start_date: 0 }), el(3, 'event', { start_date: 100 })]);
+    const r = readTime(NAMES_NONE, [el(1, 'event', { start_date: 0 }), el(2, 'event', { start_date: 0 }), el(3, 'event', { start_date: 100 })]);
     const cols = binColumns(r.dated, 80, 8);
     expect(cols.map((c) => c.items.length)).toEqual([2, 1]);
     expect(cols[1].x).toBe(72);
-    const single = binColumns(readTime([el(1, 'event', { start_date: 7 }), el(2, 'event', { start_date: 7 })]).dated, 80, 8);
+    const single = binColumns(readTime(NAMES_NONE, [el(1, 'event', { start_date: 7 }), el(2, 'event', { start_date: 7 })]).dated, 80, 8);
     expect(single).toHaveLength(1);
     expect(single[0].x).toBe(32);
   });

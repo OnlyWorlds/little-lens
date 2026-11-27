@@ -4,16 +4,27 @@
  * address holds. Pure: the strip draws from what this returns.
  */
 
-import { DATE_FIELD, approxYearLength, dateOf, formatMidLabel, formatStep, formatYearLabel, resolveCalendar, simpleCaseFold, type WorldCalendar } from '@onlyworlds/sdk';
+import { DATE_FIELD, approxYearLength, dateOf, formatMidLabel, formatStep, formatYearLabel, simpleCaseFold, speakingCalendar, WORLD_CALENDAR_KEY, type WorldCalendar } from '@onlyworlds/sdk';
 import { isKnownOfStub, type Element } from './graph';
 
 /** The world's own time words: its unit (free text, as written) and its now, each when it has one. */
 export interface WorldTime {
   unit: string | null;
   now: number | null;
+  /**
+   * The World's `x_calendar` as written (the calendar profile, "Which calendar speaks"): the id of
+   * the element whose calendar its dates speak; undefined when the World names none. Read by the
+   * SDK's `speakingCalendar`, never judged here.
+   */
+  calendarNamed: unknown;
 }
 
-const NO_TIME: WorldTime = { unit: null, now: null };
+const NO_TIME: WorldTime = { unit: null, now: null, calendarNamed: undefined };
+
+/** The World's `x_calendar`, an own key only. */
+function namedCalendar(world: Record<string, unknown>): unknown {
+  return Object.prototype.hasOwnProperty.call(world, WORLD_CALENDAR_KEY) ? world[WORLD_CALENDAR_KEY] : undefined;
+}
 
 function unitOf(v: unknown): string | null {
   return typeof v === 'string' && v.trim() !== '' ? v : null;
@@ -22,14 +33,14 @@ function unitOf(v: unknown): string | null {
 /** The world GET's fields: `time_range_current` is the now when it is a whole number. */
 export function timeOfWorldBody(body: Record<string, unknown> | null | undefined): WorldTime {
   if (!body || typeof body !== 'object') return NO_TIME;
-  return { unit: unitOf(body.time_basic_unit), now: Number.isInteger(body.time_range_current) ? (body.time_range_current as number) : null };
+  return { unit: unitOf(body.time_basic_unit), now: Number.isInteger(body.time_range_current) ? (body.time_range_current as number) : null, calendarNamed: namedCalendar(body) };
 }
 
 /** A world file's or folder's `world.json`: readers prefer `time_current`, then `time_range_current`. */
 export function timeOfWorldFile(world: Record<string, unknown> | null | undefined): WorldTime {
   if (!world || typeof world !== 'object') return NO_TIME;
   const now = Number.isInteger(world.time_current) ? (world.time_current as number) : Number.isInteger(world.time_range_current) ? (world.time_range_current as number) : null;
-  return { unit: unitOf(world.time_basic_unit), now };
+  return { unit: unitOf(world.time_basic_unit), now, calendarNamed: namedCalendar(world) };
 }
 
 /** The word a row says before its date, by the field it was read from. */
@@ -67,7 +78,7 @@ export interface TimeReading {
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** One reading of the kept nodes (the web's own set: hidden, proposed and room already out, Map, Pin and Marker never in; a Zone is a node). */
-export function readTime(nodes: readonly Element[]): TimeReading {
+export function readTime(time: Pick<WorldTime, 'calendarNamed'>, nodes: readonly Element[]): TimeReading {
   const dated: Dated[] = [];
   let whole = 0;
   let undatedOfDatedKind = 0;
@@ -86,9 +97,11 @@ export function readTime(nodes: readonly Element[]): TimeReading {
   // is folded once, not on every comparison.
   const folded = new Map(dated.map((d) => [d, simpleCaseFold(d.el.name ?? '')]));
   dated.sort((a, b) => a.date - b.date || byString(folded.get(a)!, folded.get(b)!) || byString(a.el.id, b.el.id));
-  // A calendar on a node the web leaves out is never read: only kept nodes are offered. One past
-  // the bound words no dates: the numbers, as for a world with no calendar.
-  const found = resolveCalendar(nodes, undefined, { fallbackToOnly: true });
+  // The calendar the World names in x_calendar speaks, or with none named the only one (the
+  // calendar profile). A calendar on a node the web leaves out is never read: only kept nodes are
+  // offered, so a named calendar the web leaves out is the numbers. One past the bound words no
+  // dates: the numbers, as for a world with no calendar.
+  const found = speakingCalendar(time.calendarNamed === undefined ? {} : { [WORLD_CALENDAR_KEY]: time.calendarNamed }, nodes);
   const calendar = found && !calendarTooCostly(found.config) ? found : null;
   return { dated, whole, undatedOfDatedKind, stubs, calendar };
 }
